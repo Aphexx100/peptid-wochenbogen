@@ -10,6 +10,15 @@ export const EXPO = [
   {k:"pt",   n:"PT-141",     u:"mg", step:0.25, ph:"1,75"},
   {k:"tirz", n:"Tirzepatid", u:"mg", step:0.5,  ph:"2,5"}
 ];
+/* Taegliche Confounder in Abschnitt 02b. Jeder Wert bezieht sich auf den
+   VORTAG der Zeile: Schlaf der letzten Nacht, Training, Protein und Alkohol
+   von gestern. Alkohol zaehlt in 0,5-l-Bierflaschen. */
+export const CONF_TAGE = [
+  {k:"train",   n:"Training",  u:"h",   step:0.5},
+  {k:"schlaf",  n:"Schlaf",    u:"h",   step:0.5},
+  {k:"protein", n:"Protein",   u:"g",   step:5},
+  {k:"alk",     n:"Alkohol",   u:"Fl.", step:0.5}
+];
 export const KERN = [
   {k:"energie",  n:"Energie und Belastbarkeit",                 lo:"leer",           hi:"voll"},
   {k:"schlaf",   n:"Schlafqualität",                            lo:"schlecht",       hi:"sehr gut"},

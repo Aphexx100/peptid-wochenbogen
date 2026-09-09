@@ -3,7 +3,7 @@
    und Auswertung gemeinsam benutzt. Jede nimmt einen Eintrag und gibt eine
    Zahl oder null zurueck, wenn die Daten dafuer nicht reichen. */
 
-import { EXPO, KERN, NEG } from '../schema.js';
+import { EXPO, CONF_TAGE, KERN, NEG } from '../schema.js';
 import { mean } from '../util/format.js';
 
 const WTAG = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
@@ -28,17 +28,43 @@ export function tageKompakt(e) {
   return teile.join('; ');
 }
 
-/** WHO-5, Rohsumme mal vier — Skala 0–100. Null, wenn ein Item fehlt. */
-export function whoScore(e) {
-  if (!e.who || e.who.some((v) => v === null || v === undefined)) return null;
-  return e.who.reduce((a, b) => a + b, 0) * 4;
+/** Kompaktes Tagesprotokoll der Confounder, etwa
+    "Mo Schlaf 7h, Training 1,5h; Di Schlaf 6h, Alkohol 2Fl".
+    Jeder Wert bezieht sich auf den Vortag der genannten Zeile. */
+export function confTageKompakt(e) {
+  const t = e.conf && e.conf.tage;
+  if (!t || !t.start) return '';
+  const teile = [];
+  for (let i = 0; i < 7; i++) {
+    const felder = CONF_TAGE
+      .filter((x) => t[x.k] && t[x.k][i] !== '' && t[x.k][i] !== undefined)
+      .map((x) => `${x.n} ${String(t[x.k][i]).replace('.', ',')}${x.u}`);
+    if (felder.length) {
+      const d = new Date(`${t.start}T12:00:00`);
+      d.setDate(d.getDate() + i);
+      teile.push(`${WTAG[d.getDay()]} ${felder.join(', ')}`);
+    }
+  }
+  return teile.join('; ');
 }
 
+/* WHO-5 und IIEF-5 werden taeglich erfasst; e.who/e.iief tragen das Mittel
+   je Frage ueber die erfassten Tage und sind deshalb keine ganzen Zahlen
+   mehr. Gerundet wird erst der Summenwert — so bleibt die Skala dieselbe
+   wie bei woechentlicher Erfassung und alte Wochen rechnen unveraendert. */
+const summe = (arr, faktor) => {
+  if (!arr || arr.length !== 5 || arr.some((v) => v === null || v === undefined)) return null;
+  return Math.round(arr.reduce((a, b) => a + b, 0) * faktor);
+};
+
+/** WHO-5, Rohsumme mal vier — Skala 0–100. Null, wenn ein Item fehlt. */
+export const whoScore = (e) => summe(e.who, 4);
+
 /** IIEF-5-Summenwert, Skala 5–25. Null, wenn ein Item fehlt. */
-export function iiefScore(e) {
-  if (!e.iief || e.iief.some((v) => v === null || v === undefined)) return null;
-  return e.iief.reduce((a, b) => a + b, 0);
-}
+export const iiefScore = (e) => summe(e.iief, 1);
+
+/** An wie vielen Tagen der Woche ein Instrument erfasst wurde. */
+export const tageErfasst = (map) => (map ? Object.keys(map).length : 0);
 
 /** Primaerendpunkt der Auswertung. */
 export const primary = (e) => iiefScore(e);

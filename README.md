@@ -4,13 +4,17 @@ Wöchentliche Selbstdokumentation eines Peptid-Protokolls. Eine Seite ohne Frame
 und ohne Backend: erfassen, auswerten, exportieren, und auf Wunsch von einem
 Sprachmodell einordnen lassen.
 
-Der Bogen erfasst die Exposition **Tag für Tag** (GLOW-Stack, Kisspeptin, PT-141,
-Tirzepatid — je Tag die gesetzte Menge). Wer im Rekonstitutionsrechner sein aktuelles
-Vial hinterlegt, trägt stattdessen das aufgezogene **Volumen in ml** ein und der Bogen
-rechnet die Wirkstoffmenge selbst aus. Dazu kommen pro Woche sechs Kernbereiche, die drei
-erwarteten GLOW-Wirkungen, WHO-5, IIEF-5, Morgenerektionen, Körpermaße und Kraftwerte,
-Pigmentierung, Negativkontrollen, eine Beobachtungsliste und die Confounder. Daraus
-entstehen Verlaufsgrafiken, eine Wochentabelle und ein CSV-Export.
+Der Bogen läuft in zwei Takten. **Täglich** erfasst er die Exposition (GLOW-Stack,
+Kisspeptin, PT-141, Tirzepatid), die Confounder (Schlaf, Training, Protein, Alkohol —
+jeweils für den Vortag) sowie WHO-5 und IIEF-5. Wer im Rekonstitutionsrechner sein
+aktuelles Vial hinterlegt, trägt die Dosis als aufgezogenes **Volumen in ml** ein und der
+Bogen rechnet die Wirkstoffmenge selbst aus.
+
+**Am Erfassungstag** kommt der Rest dazu: sechs Kernbereiche, die drei erwarteten
+GLOW-Wirkungen, Morgenerektionen, Körpermaße und Kraftwerte, Pigmentierung,
+Negativkontrollen und die Beobachtungsliste. Bis dahin bleiben diese Fragen verborgen —
+wer sie mitten in der Woche beantwortet, bewertet einen Ausschnitt und nennt ihn Woche.
+Aus allem entstehen Verlaufsgrafiken, eine Wochentabelle und ein CSV-Export.
 
 ## Aufbau in einem Absatz
 
@@ -25,7 +29,7 @@ die Architektur in [docs/ARCHITEKTUR.md](docs/ARCHITEKTUR.md).
 ```
 npm install          # esbuild und playwright, nur zum Bauen und Testen
 npm start            # http://localhost:8080
-npm test             # 81 Prüfungen in einem echten Browser
+npm test             # 120 Prüfungen in einem echten Browser
 npm run build        # dist/peptid-wochenbogen.html — eine Datei für Claude
 ```
 

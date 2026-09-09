@@ -23,7 +23,7 @@ src/js/
   state.js              der gemeinsame Laufzeitzustand
   settings.js           gerätegebundene Zugangsdaten, nur localStorage
   util/                 dom, format, date — klein und ohne Abhängigkeiten
-  ui/                   controls, tabs, status, setup, analyse
+  ui/                   controls, tabs, status, setup, analyse, weekly
   form/                 build (Aufbau), model (lesen/füllen), save (Aktionen)
   analysis/             metrics (reine Rechnung), sparkline, report
   storage/              index (Fassade), local, github, claude-db
@@ -59,10 +59,25 @@ exportieren Bindungen schreibgeschützt, ein `export let weeks` ließe sich aus 
 anderen Modul setzen. Ein Objekt löst das ohne Setter-Kaskaden.
 
 ```js
-state.weeks    // { "2026-09-05": {…}, … }  Schlüssel ist das Wochenenddatum
+state.weeks    // { "2026-09-12": {…}, … }  Schlüssel ist der Erfassungstag der Woche
 state.weekKey  // welche Woche das Formular zeigt
-state.cfg      // Protokollstart, Erfassungstag, Erwartungsfenster, Übungsnamen
+state.cfg      // Protokollstart, Erfassungstag, Erwartungsfenster, Übungsnamen, Vials
 ```
+
+## Zwei Takte
+
+Der Wochenschlüssel ist der **nächste** Erfassungstag: die laufende Woche sammelt ihre
+Tage bis dorthin. Täglich erfasst werden Exposition, Confounder, WHO-5 und IIEF-5; alles
+Übrige beurteilt eine ganze Woche und bleibt bis zum Erfassungstag verborgen
+(`ui/weekly.js`, Klasse `weekly` in `index.html`).
+
+Der Schnitt hat einen Grund: Was nur der Tag weiß — eine Injektion, drei Stunden Schlaf,
+zwei Bier — ist am Samstag nicht mehr rekonstruierbar, sondern geraten. Was die Woche
+beurteilt — Hautbild, Gelenke, Kernbereiche — wird schlechter, wenn man es am Mittwoch
+beantwortet und Woche dazu sagt. Die Tagesraster speichern deshalb ihre Rohwerte
+(`dose.tage`, `conf.tage`, `whoTage`, `iiefTage`) **und** die daraus abgeleiteten
+Wochenwerte in der gewohnten Form — so rechnen Auswertung, CSV und Datenblock
+unverändert weiter, ohne dass die Tagesauflösung verloren geht.
 
 ## Die Ablage
 

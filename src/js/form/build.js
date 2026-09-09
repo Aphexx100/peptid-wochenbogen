@@ -7,13 +7,14 @@ import { $ } from '../util/dom.js';
 import { fmt } from '../util/format.js';
 import { CU_ANTEIL, CU_RDA_MG_TAG } from '../constants.js';
 import {
-  EXPO, KERN, GLOWZIEL, WHO, WHO_LEG, IIEF, MORGEN, PT, PT_SIGNS, PIGMENT, NEG,
+  EXPO, CONF_TAGE, KERN, GLOWZIEL, WHO, WHO_LEG, IIEF, MORGEN, PT, PT_SIGNS, PIGMENT, NEG,
   WATCH, CONF_CHECKS, MONTH
 } from '../schema.js';
 import { slider, segment, checkList, segVal, setSegHandler } from '../ui/controls.js';
 import { cuWeek } from '../analysis/metrics.js';
 import { keys } from '../state.js';
 import { iso, weekDays } from '../util/date.js';
+import { renderWeeklyGate } from '../ui/weekly.js';
 
 /* ---- Tagesraster der Exposition ----
    Sieben Zeilen (aeltester Tag zuerst, letzter ist der Erfassungstag), eine
@@ -155,7 +156,10 @@ function expoChanged() {
   const nPt = leer && legacyDose
     ? Number(legacyDose.pt) || 0
     : tage.pt.filter((v) => Number(v) > 0).length;
-  $('ptCard').hidden = !(nPt > 0);
+  /* Sichtbar wird die PT-Karte erst durch das Wochentor — hier steht nur,
+     ob sie ueberhaupt faellig ist. */
+  $('ptCard').dataset.faellig = nPt > 0 ? '1' : '0';
+  renderWeeklyGate();
 }
 
 /** Raster fuer die aktuelle Woche aufbauen. Bereits eingetragene Werte
@@ -180,7 +184,7 @@ export function buildExpo() {
     '</tr></thead><tbody>';
   tage.forEach((d, i) => {
     const wd = WTAG[new Date(`${d}T12:00:00`).getDay()];
-    html += `<tr${d === heute ? ' data-heute="1"' : ''}>` +
+    html += `<tr${d === heute ? ' data-heute="1"' : ''}${d > heute ? ' data-zukunft="1"' : ''}>` +
       `<td class="tag">${wd} ${d.slice(8, 10)}.${d.slice(5, 7)}.</td>` +
       EXPO.map((x) =>
         `<td><input type="number" id="${zellId(x.k, i)}" min="0" ` +
@@ -308,6 +312,113 @@ export function fuelleExpo(dose) {
   expoChanged();
 }
 
+/* ---- Taegliche Confounder (Abschnitt 02b) ----
+   Gleiche sieben Tage wie das Expositionsraster; jede Zeile fragt nach dem
+   Vortag (Schlaf der letzten Nacht, Training, Protein und Alkohol von
+   gestern; Alkohol in 0,5-l-Flaschen). Fuer Auswertung, CSV und Datenblock
+   werden daraus die gewohnten Wochenwerte abgeleitet: Training und Alkohol
+   als Summe, Schlaf und Protein als Durchschnitt. */
+
+const zellIdC = (k, i) => `t${k}${i}`;
+
+let legacyConf = null;
+export function setLegacyConf(c) { legacyConf = c; }
+export function getLegacyConf() { return legacyConf; }
+
+export function readConfTage() {
+  const tage = { start: weekDays(state.weekKey)[0] };
+  let leer = true;
+  CONF_TAGE.forEach((x) => {
+    tage[x.k] = IDX.map((i) => {
+      const v = document.getElementById(zellIdC(x.k, i)).value.trim();
+      if (v !== '') leer = false;
+      return v;
+    });
+  });
+  return { tage, leer };
+}
+
+export function ableitenConf(tage) {
+  const wert = (k) => tage[k].filter((v) => v !== '').map(Number);
+  const summe = (a) => (a.length ? String(+a.reduce((x, y) => x + y, 0).toFixed(1)) : '');
+  const schnitt = (a, d) =>
+    (a.length ? String(+(a.reduce((x, y) => x + y, 0) / a.length).toFixed(d)) : '');
+  return {
+    train: summe(wert('train')),
+    schlaf: schnitt(wert('schlaf'), 1),
+    protein: schnitt(wert('protein'), 0),
+    alk: summe(wert('alk'))
+  };
+}
+
+function renderConfSummary() {
+  const el = $('confSum');
+  const { tage, leer } = readConfTage();
+  if (leer && legacyConf) {
+    el.innerHTML = '<b>Vor der Umstellung als Wochenwerte erfasst:</b> ' +
+      `Training ${komma(legacyConf.train) || '—'} h, Schlaf Ø ${komma(legacyConf.schlaf) || '—'} h, ` +
+      `Protein Ø ${komma(legacyConf.protein) || '—'} g, Alkohol ${komma(legacyConf.alk) || '—'} Einheiten. ` +
+      'Sobald du einen Tag einträgst, ersetzen die Tageswerte diese Zahlen.';
+    return;
+  }
+  const a = ableitenConf(tage);
+  el.innerHTML = '<b>Diese Woche:</b> ' +
+    `Training ${a.train ? `${komma(a.train)} h` : '—'} · ` +
+    `Schlaf Ø ${a.schlaf ? `${komma(a.schlaf)} h` : '—'} · ` +
+    `Protein Ø ${a.protein ? `${komma(a.protein)} g` : '—'} · ` +
+    `Alkohol ${a.alk ? `${komma(a.alk)} Flaschen (à 0,5 l)` : '—'}`;
+}
+
+export function buildConfTage() {
+  const host = $('s-confTage');
+  const alt = {};
+  CONF_TAGE.forEach((x) => {
+    alt[x.k] = IDX.map((i) => {
+      const el = document.getElementById(zellIdC(x.k, i));
+      return el ? el.value : '';
+    });
+  });
+  const tage = weekDays(state.weekKey);
+  const heute = iso(new Date());
+  let html = '<thead><tr><th>Tag</th>' + CONF_TAGE.map((x) =>
+    `<th>${x.n} <span style="text-transform:none;letter-spacing:0">(${x.u})</span></th>`).join('') +
+    '</tr></thead><tbody>';
+  tage.forEach((d, i) => {
+    const wd = WTAG[new Date(`${d}T12:00:00`).getDay()];
+    html += `<tr${d === heute ? ' data-heute="1"' : ''}${d > heute ? ' data-zukunft="1"' : ''}>` +
+      `<td class="tag">${wd} ${d.slice(8, 10)}.${d.slice(5, 7)}.</td>` +
+      CONF_TAGE.map((x) =>
+        `<td><input type="number" id="${zellIdC(x.k, i)}" min="0" step="${x.step}" ` +
+        `inputmode="decimal" aria-label="${x.n} (${x.u}) — Vortag von ${wd} ${d}"></td>`).join('') +
+      '</tr>';
+  });
+  host.innerHTML = `${html}</tbody>`;
+  CONF_TAGE.forEach((x) => IDX.forEach((i) => {
+    const el = document.getElementById(zellIdC(x.k, i));
+    if (alt[x.k][i]) el.value = alt[x.k][i];
+    el.addEventListener('input', renderConfSummary);
+  }));
+  renderConfSummary();
+}
+
+/** Confounder-Raster aus einem gespeicherten Eintrag fuellen. */
+export function fuelleConfTage(conf) {
+  const dates = weekDays(state.weekKey);
+  const map = {};
+  const t = conf && conf.tage;
+  if (t && t.start) {
+    CONF_TAGE.forEach((x) => (t[x.k] || []).forEach((v, i) => {
+      const d = new Date(`${t.start}T12:00:00`);
+      d.setDate(d.getDate() + i);
+      map[`${x.k}|${iso(d)}`] = v;
+    }));
+  }
+  CONF_TAGE.forEach((x) => dates.forEach((d, i) => {
+    document.getElementById(zellIdC(x.k, i)).value = map[`${x.k}|${d}`] || '';
+  }));
+  renderConfSummary();
+}
+
 /** Vier Kraft-Slots; die Namen kommen aus dem Setup und sind aenderbar. */
 export function buildKraft() {
   const host = $('s-kraft');
@@ -331,25 +442,65 @@ export function buildKraft() {
   });
 }
 
+/* ---- WHO-5 und IIEF-5: taeglich erfasst, woechentlich gemittelt ----
+   Die Segmente zeigen immer den heutigen Tag. Gespeichert wird je Tag ein
+   Antwortsatz (whoTage/iiefTage, Schluessel ist das Datum); der Wochenwert
+   in e.who/e.iief ist das Mittel je Frage ueber die erfassten Tage — damit
+   rechnen Auswertung, CSV und Datenblock unveraendert weiter. */
+
+/** Heutige Antworten als Array oder null, wenn ein Item fehlt. */
+export function heutigeAntworten(praefix) {
+  const out = [];
+  for (let i = 0; i < 5; i++) {
+    const v = segVal(`${praefix}${i}`);
+    if (v === null) return null;
+    out.push(v);
+  }
+  return out;
+}
+
+/* Die je Tag gespeicherten Antwortsaetze der laufenden Woche. */
+let tagesSaetze = { who: {}, iief: {} };
+export function setTagesSaetze(who, iief) {
+  tagesSaetze = { who: who || {}, iief: iief || {} };
+}
+export function getTagesSaetze() { return tagesSaetze; }
+
+/** Antwortsaetze mit dem heutigen Stand zusammenfuehren. */
+export function mergeHeute(praefix) {
+  const map = { ...(tagesSaetze[praefix] || {}) };
+  const heute = heutigeAntworten(praefix);
+  if (heute) map[iso(new Date())] = heute;
+  return map;
+}
+
+/** Mittel je Frage ueber alle erfassten Tage; leeres Array ohne Tage. */
+export function tagesMittel(map) {
+  const saetze = Object.keys(map).sort().map((k) => map[k]).filter((a) => Array.isArray(a) && a.length === 5);
+  if (!saetze.length) return [];
+  return [0, 1, 2, 3, 4].map((i) =>
+    +(saetze.reduce((t, a) => t + a[i], 0) / saetze.length).toFixed(2));
+}
+
+function renderTagesInfo(praefix, scoreId, weekId, listId, faktor, max) {
+  const heute = heutigeAntworten(praefix);
+  $(scoreId).textContent = heute ? String(heute.reduce((a, b) => a + b, 0) * faktor) : '—';
+
+  const map = mergeHeute(praefix);
+  const tage = Object.keys(map).sort();
+  const mittel = tagesMittel(map);
+  $(weekId).textContent = mittel.length
+    ? `${fmt(mittel.reduce((a, b) => a + b, 0) * faktor, 0)} von ${max}`
+    : '—';
+  $(listId).textContent = tage.length
+    ? `Erfasst an ${tage.length} von 7 Tagen: ${tage.map((d) => `${WTAG[new Date(`${d}T12:00:00`).getDay()]} ${d.slice(8, 10)}.${d.slice(5, 7)}.`).join(', ')}`
+    : 'Für heute noch nicht erfasst — alle fünf Fragen beantworten, dann zählt der Tag.';
+}
+
 /** WHO-5 und IIEF-5 laufen live mit, sobald alle Items gesetzt sind. */
 export function recalcScores() {
-  let w = 0;
-  let ok = true;
-  for (let i = 0; i < 5; i++) {
-    const v = segVal(`who${i}`);
-    if (v === null) { ok = false; break; }
-    w += v;
-  }
-  $('whoScore').textContent = ok ? String(w * 4) : '—';
-
-  let s = 0;
-  let ok2 = true;
-  for (let j = 0; j < 5; j++) {
-    const u = segVal(`iief${j}`);
-    if (u === null) { ok2 = false; break; }
-    s += u;
-  }
-  $('iiefScore').textContent = ok2 ? String(s) : '—';
+  renderTagesInfo('who', 'whoScore', 'whoWeek', 'whoTage', 4, 100);
+  renderTagesInfo('iief', 'iiefScore', 'iiefWeek', 'iiefTage', 1, 25);
 }
 
 /* ---- Kupferlast ----
@@ -381,6 +532,7 @@ export function buildForm() {
   setSegHandler(recalcScores);
   buildVials();
   buildExpo();
+  buildConfTage();
 
   slider($('s-erwartung'), 'erwartung',
     'Wie stark erwartest du, dass diese Woche einen Effekt zeigt?', 'gar nicht', 'sehr stark', 5);

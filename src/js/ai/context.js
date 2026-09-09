@@ -15,7 +15,7 @@ import { CU_ANTEIL } from '../constants.js';
 import { KERN, GLOWZIEL } from '../schema.js';
 import {
   whoScore, iiefScore, kernMean, negMean, hautMean, gelenkMean, wohlVal,
-  kraftIndex, taillenQuotient, tageKompakt
+  kraftIndex, taillenQuotient, tageKompakt, confTageKompakt, tageErfasst
 } from '../analysis/metrics.js';
 
 function weekLine(k){
@@ -34,7 +34,11 @@ function weekLine(k){
     if(tk) p.push("TAGE: "+tk);
   }
   p.push("Erwartung "+s(e.exp&&e.exp.erwartung));
-  p.push("WHO-5 "+(whoScore(e)===null?"-":whoScore(e))+", IIEF-5 "+(iiefScore(e)===null?"-":iiefScore(e)));
+  /* WHO-5 und IIEF-5 sind Tagesmittel — die Zahl der Messtage gehoert dazu,
+     sonst liest sich ein Wert aus einem Tag wie einer aus sieben. */
+  var nWho=tageErfasst(e.whoTage), nIief=tageErfasst(e.iiefTage);
+  p.push("WHO-5 "+(whoScore(e)===null?"-":whoScore(e))+(nWho?(" (Ø aus "+nWho+" Tagen)"):"")+
+         ", IIEF-5 "+(iiefScore(e)===null?"-":iiefScore(e))+(nIief?(" (Ø aus "+nIief+" Tagen)"):""));
   p.push("Morgenerektionen "+s(e.morgen&&e.morgen.naechte)+"/7");
   var km=kernMean(e), ng=negMean(e);
   p.push("Kern-Ø "+(km===null?"-":km.toFixed(1))+", NEGATIVKONTROLLEN-Ø "+(ng===null?"-":ng.toFixed(1)));
@@ -68,6 +72,8 @@ function weekLine(k){
                     ", Stress "+s(e.conf.stress)+
                     (e.conf.flags&&e.conf.flags.length?(", Flags: "+e.conf.flags.join(",")):"")+
                     (e.conf.sonst?(", sonst: "+e.conf.sonst):""));
+  var ck=confTageKompakt(e);
+  if(ck) p.push("CONFOUNDER-TAGE (jeder Wert betrifft den Vortag): "+ck);
   if(e.watch&&e.watch.length) p.push("Beobachtungsliste: "+e.watch.join(", ")+(e.watchNote?(" ["+e.watchNote+"]"):""));
   if(e.text&&e.text.anders) p.push("Was war anders: "+e.text.anders.slice(0,400));
   if(e.text&&e.text.ohnehin) p.push("Was ohnehin erwartet: "+e.text.ohnehin.slice(0,400));
@@ -83,7 +89,11 @@ export function dataBlock(limitWeeks){
           (state.cfg.glowStart?(". GLOW-Start am "+state.cfg.glowStart):"")+".\n";
   var head="ERFASSTE WOCHEN ("+ks.length+"), älteste zuerst. Skalen 0-10 sofern nicht anders angegeben.\n"+
            "WHO-5 geht bis 100, IIEF-5 bis 25, Morgenerektionen und Tage mit Verlangen bis 7.\n"+
-           "Bei den Gelenk-Items bedeutet ein HÖHERER Wert weniger Beschwerden.\n"+erw+"\n";
+           "Bei den Gelenk-Items bedeutet ein HÖHERER Wert weniger Beschwerden.\n"+
+           "Exposition und Confounder werden täglich erfasst, WHO-5 und IIEF-5 ebenfalls — deren "+
+           "Wochenwert ist das Mittel der erfassten Tage, die Zahl der Tage steht dabei. Training und "+
+           "Alkohol sind Wochensummen (Alkohol in Flaschen à 0,5 l), Schlaf und Protein Tagesmittel. "+
+           "Alle übrigen Angaben beurteilen die Woche als Ganzes.\n"+erw+"\n";
   var body=ks.map(weekLine).join("\n\n");
   if(body.length>42000) body=body.slice(body.length-42000);
   return head+body;

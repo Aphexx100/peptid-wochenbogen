@@ -44,11 +44,15 @@
     <div class="note">
       Der GLOW-Stack ist in sich nicht auflösbar — drei Substanzen, eine Spritze, ein Zeitverlauf. Was dieser Bogen trotzdem hergibt: <b>einen sauberen Zeitverlauf</b> mit gleichbleibenden Fragen, <b>einen echten Innersubjekt-Vergleich für PT-141</b> (weil es nicht täglich läuft), <b>eine Erwartungskontrolle</b> und <b>eine Ereignis-Zeitleiste</b>, falls etwas auftritt.
       <br><br>
-      Zwei Regeln, die den Unterschied machen: <b>immer am selben Wochentag zur selben Zeit</b> ausfüllen, und <b>nie vorher die alten Einträge ansehen</b>. Sonst bewertest du deine Erinnerung an letzte Woche statt diese Woche.
+      Der Bogen läuft in zwei Takten. <b>Täglich</b> trägst du ein, was gesetzt wurde, wie du geschlafen und trainiert hast, und beantwortest die beiden Fragebögen für den Tag — das dauert eine Minute und ist der Teil, der aus dem Gedächtnis nicht rekonstruierbar wäre. <b>Am Erfassungstag</b> schaltet sich der Rest frei: alles, was eine ganze Woche beurteilt. Vorher bleibt es verborgen, denn eine halbe Woche als Woche zu bewerten ist schlimmer als eine Lücke.
+      <br><br>
+      Zwei Regeln, die den Unterschied machen: <b>den Wochenabschluss immer am selben Tag zur selben Zeit</b> ausfüllen, und <b>nie vorher die alten Einträge ansehen</b>. Sonst bewertest du deine Erinnerung an letzte Woche statt diese Woche.
     </div>
   </div>
 
-  <div class="card">
+  <div class="card" id="weeklyNote" hidden></div>
+
+  <div class="card weekly">
     <h2><span class="step">01</span> Erwartung — zuerst, vor allem anderen</h2>
     <p class="hint">Bevor du irgendetwas bewertest. Am Ende lässt sich vergleichen, ob deine Ergebnisse deiner Erwartung folgen oder unabhängig von ihr verlaufen. Das ist die einzige Placebo-Kontrolle, die im Selbstversuch möglich ist.</p>
     <div id="s-erwartung"></div>
@@ -87,6 +91,13 @@
   </div>
 
   <div class="card">
+    <h2><span class="step">02b</span> Confounder — Tag für Tag</h2>
+    <p class="hint">Jede Zeile fragt nach dem <strong>Vortag</strong>: Schlaf der letzten Nacht, dazu Training, Protein und Alkohol von gestern. Alkohol zählt in <strong>0,5-l-Bierflaschen</strong> — ein großes Bier ist eine Flasche, ein Glas Wein näherungsweise auch eine. Am besten morgens ausfüllen, direkt nach dem Aufstehen.</p>
+    <div class="tablewrap"><table class="expo" id="s-confTage"></table></div>
+    <div class="note" id="confSum" style="margin-top:1rem"></div>
+  </div>
+
+  <div class="card weekly">
     <h2><span class="step">★</span> GLOW-Zielgrößen</h2>
     <p class="hint">Die drei Wirkungen, die du vom Stack erwartest — Haut, Gelenke, Wohlbefinden. Sie stehen als eigener Block, damit sie nicht im allgemeinen Kontext untergehen, und werden in der Auswertung gegen deine im Setup hinterlegte Erwartung geprüft: Tritt eine Verbesserung <em>vor</em> dem erwarteten Zeitpunkt auf, ist Erwartung die naheliegendere Erklärung als Kollagenumbau.</p>
     <div id="s-glowziel"></div>
@@ -97,7 +108,7 @@
     <p class="hint" style="margin-top:.8rem">Das Ortsfeld ist wichtiger, als es aussieht: Die Tierdaten zu BPC-157 betreffen die Heilung <em>akuter</em> Verletzungen, nicht diffuse Gelenkbeschwerden. Ein benanntes, abgrenzbares Gelenk ist der einzige Fall, in dem eine Besserung überhaupt einen Mechanismus hinter sich hätte.</p>
   </div>
 
-  <div class="card">
+  <div class="card weekly">
     <h2><span class="step">03</span> Kernbereiche</h2>
     <p class="hint">In der vergangenen Woche insgesamt — nicht heute, nicht der beste Tag. <em>0 = so schlecht wie es bei dir je war, 10 = so gut wie es bei dir je war.</em></p>
     <div id="s-kern"></div>
@@ -105,20 +116,22 @@
 
   <div class="card">
     <h2><span class="step">04</span> Wohlbefinden</h2>
-    <p class="hint">WHO-5-Index, Wortlaut der offiziellen deutschen Fassung, Zeitraum auf eine Woche verkürzt. Durch die Verkürzung ist es formal nicht mehr das validierte Instrument — als gleichbleibendes Maß über Monate bleibt es trotzdem das beste verfügbare.</p>
-    <p class="hint" style="margin-bottom:.8rem"><em>In den letzten sieben Tagen …</em></p>
+    <p class="hint">WHO-5-Index, Wortlaut der offiziellen deutschen Fassung, Zeitraum auf einen Tag verkürzt. Durch die Verkürzung ist es formal nicht mehr das validierte Instrument — als gleichbleibendes Maß über Monate bleibt es trotzdem das beste verfügbare. Der Wochenwert entsteht als Mittel der erfassten Tage.</p>
+    <p class="hint" style="margin-bottom:.8rem"><em>Heute …</em></p>
     <div id="s-who"></div>
-    <div class="score">WHO-5-Score <b id="whoScore">—</b> von 100</div>
+    <div class="score">Heute <b id="whoScore">—</b> von 100 · Woche Ø <b id="whoWeek">—</b></div>
+    <p class="daylist" id="whoTage"></p>
   </div>
 
   <div class="card">
     <h2><span class="step">05</span> Sexualfunktion</h2>
-    <p class="hint">IIEF-5, deutscher Standardwortlaut, Zeitraum auf eine Woche verkürzt. Gleiche Einschränkung wie oben, gleicher Nutzen: die Frage bleibt über Monate identisch.</p>
+    <p class="hint">IIEF-5, deutscher Standardwortlaut, Zeitraum auf einen Tag verkürzt. Gleiche Einschränkung wie oben, gleicher Nutzen: die Frage bleibt über Monate identisch. Auch hier ist der Wochenwert das Mittel der erfassten Tage — <em>an Tagen ohne sexuelle Aktivität die Null-Antworten benutzen, nicht auslassen.</em></p>
     <div id="s-iief"></div>
-    <div class="score">IIEF-5 <b id="iiefScore">—</b> von 25</div>
+    <div class="score">Heute <b id="iiefScore">—</b> von 25 · Woche Ø <b id="iiefWeek">—</b></div>
+    <p class="daylist" id="iiefTage"></p>
   </div>
 
-  <div class="card">
+  <div class="card weekly">
     <h2><span class="step">05b</span> Morgendliche Erektionen</h2>
     <p class="hint">Der wichtigste Einzelmarker in diesem ganzen Bogen. Spontane Erektionen im Schlaf und beim Aufwachen sind androgenabhängig und reagieren auf den Hormonstatus über Tage bis Wochen — nicht auf die Uhrzeit einer einzelnen Injektion. Damit trennen sie das Stehende vom Akuten: Was sich hier bewegt, gehört zur Dauergabe, nicht zu PT-141.</p>
     <div id="s-morgenCount"></div>
@@ -126,7 +139,7 @@
     <p class="hint" style="margin-top:.9rem"><em>Beim Zählen die volle Blase als Erklärung ausschließen — hält die Erektion nach dem Wasserlassen an, zählt sie.</em></p>
   </div>
 
-  <div class="card cond" id="ptCard" hidden>
+  <div class="card cond weekly" id="ptCard" data-faellig="0" hidden>
     <h2><span class="step">06</span> PT-141 — der einzige echte Vergleich</h2>
     <p class="hint">Weil PT-141 nicht täglich läuft, hast du hier Tage mit und Tage ohne — im selben Körper, in derselben Woche. Das ist der einzige Punkt im ganzen Protokoll, an dem eine Zuordnung möglich ist. Entsprechend sorgfältig ausfüllen.</p>
     <div id="s-pt"></div>
@@ -157,20 +170,6 @@
     </div>
     <p class="hint" style="margin-top:.8rem">Die Frage nach der Erkennbarkeit ist die wichtigste des ganzen Bogens: Wenn du an einem Anwendungstag nicht sagen könntest, dass es einer war, ist der beobachtete Effekt vermutlich nicht der Wirkstoff.</p>
 
-    <label class="fl" style="margin-top:1.3rem">Verblindeter Durchgang</label>
-    <p class="hint" style="margin:.1rem 0 .7rem">Nur ausfüllen, wenn du nummerierte Spritzen im Voraus randomisiert vorbereitet hast. Die Vermutung wird <em>vor</em> der Entblindung eingetragen, das tatsächliche Präparat erst danach.</p>
-    <div class="grid3">
-      <div class="field"><label class="fl" for="ptVial">Spritzen-Nr.</label><input type="text" id="ptVial" inputmode="numeric" placeholder="z. B. 7"></div>
-      <div class="field">
-        <label class="fl" for="ptGuess">Deine Vermutung</label>
-        <select id="ptGuess"><option value="">—</option><option value="wirkstoff">Wirkstoff</option><option value="placebo">Placebo</option><option value="unsicher">keine Ahnung</option></select>
-      </div>
-      <div class="field">
-        <label class="fl" for="ptActual">Tatsächlich (nach Entblindung)</label>
-        <select id="ptActual"><option value="">noch verblindet</option><option value="wirkstoff">Wirkstoff</option><option value="placebo">Placebo</option></select>
-      </div>
-    </div>
-
     <label class="fl" style="margin-top:1.2rem">Begleitphänomene an Anwendungstagen</label>
     <p class="hint" style="margin:.1rem 0 .6rem">Strecken, Gähnen und Erektion bilden im Tiermodell <em>einen</em> melanocortin-induzierten Verhaltenskomplex über MC4-Rezeptoren im Nucleus paraventricularis — sie gehören zusammen. Treten sie gemeinsam auf, ist das ein rezeptorspezifisches Muster und damit ein deutlich stärkeres Signal als die Erektion allein.</p>
     <div class="checks neutral" id="s-ptSigns"></div>
@@ -180,7 +179,7 @@
     </div>
   </div>
 
-  <div class="card">
+  <div class="card weekly">
     <h2><span class="step">06b</span> Pigmentierung</h2>
     <p class="hint">MC1-Rezeptoren auf den Melanozyten sind derselbe Rezeptorpfad, über den auch die Bräunung läuft. Beschleunigte Bräunung ist damit ein peripherer Wirknachweis — und gleichzeitig der Grund, warum die Muttermal-Beobachtung ab jetzt zum Protokoll gehört.</p>
     <div id="s-pigment"></div>
@@ -200,13 +199,13 @@
     </div>
   </div>
 
-  <div class="card">
+  <div class="card weekly">
     <h2><span class="step">07</span> Negativkontrollen</h2>
     <p class="hint">Bereiche, auf die keine dieser Substanzen einen Mechanismus hat. Steigen sie mit, ist der Anstieg global — also Erwartung, gute Wochen, besserer Schlaf. Bleiben sie flach, während die Kernbereiche steigen, ist das dein stärkstes Argument dafür, dass etwas Substanzspezifisches passiert.</p>
     <div id="s-neg"></div>
   </div>
 
-  <div class="card">
+  <div class="card weekly">
     <h2><span class="step">08</span> Beobachtungsliste</h2>
     <p class="hint">Nur ankreuzen, wenn diese Woche tatsächlich aufgetreten. Bei einem Stack ist das Datum die einzige Zuordnung, die dir bleibt.</p>
     <div class="checks" id="s-watch"></div>
@@ -216,7 +215,7 @@
     </div>
   </div>
 
-  <div class="card">
+  <div class="card weekly">
     <h2><span class="step">★</span> Körperzusammensetzung</h2>
     <p class="hint">Der Tirzepatid-Endpunkt. Gewicht allein sagt nichts darüber, <em>was</em> abgenommen wurde — dafür braucht es die Umfänge und, wichtiger noch, die Kraftwerte.</p>
     <div class="grid3">
@@ -238,16 +237,10 @@
     <div id="s-kraft"></div>
   </div>
 
-  <div class="card">
-    <h2><span class="step">09</span> Confounder</h2>
-    <p class="hint">Ohne diese Zeilen ist der Rest nicht lesbar. Eine Woche mit Grippe oder drei Nächten Schlaf unter fünf Stunden erklärt fast jede Bewegung in den Kernbereichen.</p>
-    <div class="grid3">
-      <div class="field"><label class="fl" for="cTrain">Training (Std.)</label><input type="number" id="cTrain" min="0" step="0.5" inputmode="decimal"></div>
-      <div class="field"><label class="fl" for="cSchlaf">Schlaf Ø (Std.)</label><input type="number" id="cSchlaf" min="0" max="14" step="0.5" inputmode="decimal"></div>
-      <div class="field"><label class="fl" for="cAlk">Alkohol (Einheiten)</label><input type="number" id="cAlk" min="0" step="1" inputmode="numeric"></div>
-      <div class="field"><label class="fl" for="cProtein">Protein Ø (g/Tag)</label><input type="number" id="cProtein" min="0" step="5" inputmode="numeric"></div>
-    </div>
-    <div style="margin-top:.9rem" id="s-conf"></div>
+  <div class="card weekly">
+    <h2><span class="step">09</span> Confounder der Woche</h2>
+    <p class="hint">Training, Schlaf, Protein und Alkohol laufen täglich in Abschnitt 02b. Hier bleibt, was sich nur über die Woche beurteilen lässt.</p>
+    <div id="s-conf"></div>
     <div class="checks neutral" id="s-confChecks" style="margin-top:.9rem"></div>
     <div class="field" style="margin-top:.8rem">
       <label class="fl" for="cSonst">Sonstige Änderungen</label>
@@ -256,20 +249,13 @@
   </div>
 
   <div class="card">
-    <h2><span class="step">10</span> Zwei Fragen im Klartext</h2>
-    <div class="field">
-      <label class="fl" for="fText1">Was war diese Woche anders?</label>
-      <textarea id="fText1" placeholder="Konkret. Nicht „besser“, sondern was genau."></textarea>
-    </div>
-    <div class="field">
-      <label class="fl" for="fText2">Was davon hättest du auch ohne die Peptide erwartet?</label>
-      <textarea id="fText2" placeholder="Die unbequeme Frage. Sie ist der Grund, warum dieser Bogen mehr wert ist als ein Gefühl."></textarea>
-    </div>
+    <h2><span class="step">✓</span> Speichern</h2>
+    <p class="hint">Speichert die laufende Woche — Tageseinträge sofort, die Wochenfragen am Erfassungstag. Der Knopf darf täglich gedrückt werden, er überschreibt einfach den Stand der Woche.</p>
     <div class="btnrow"><button class="btn" id="saveBtn">Woche speichern</button></div>
     <p class="saveinfo" id="saveInfo"></p>
   </div>
 
-  <div class="card cond" id="monthCard" hidden>
+  <div class="card cond weekly" id="monthCard" data-faellig="0" hidden>
     <h2><span class="step">★</span> Alle vier Wochen fällig</h2>
     <p class="hint">Diese Woche ist ein Vielfaches von vier seit Beginn. Was jetzt ansteht:</p>
     <div class="checks neutral" id="s-month"></div>
@@ -302,13 +288,6 @@
       <span class="val mono" id="tNeg">—</span>
       <p class="sub" id="tNegSub"></p>
     </div>
-  </div>
-
-  <div class="card">
-    <h2>Verblindeter PT-141-Durchgang</h2>
-    <p class="hint">Der einzige Teil dieses Protokolls, der über Anekdote hinausgeht. Entscheidend ist nicht nur die Differenz zwischen Wirkstoff- und Placebo-Wochen, sondern die Trefferquote deiner Vermutung: Rätst du fast immer richtig, war die Verblindung durchlässig und die Differenz ist mit Erwartung kontaminiert.</p>
-    <div class="tablewrap"><table id="blindTable"></table></div>
-    <div class="empty" id="blindEmpty">Noch keine entblindeten Durchgänge erfasst.</div>
   </div>
 
   <div class="card">

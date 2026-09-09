@@ -6,13 +6,15 @@
 
 import { state } from '../state.js';
 import { $ } from '../util/dom.js';
-import { weekNumber } from '../util/date.js';
+import { weekNumber, iso } from '../util/date.js';
 import {
   KERN, GLOWZIEL, MASSE, MORGEN, PT, PT_SIGNS, PIGMENT, NEG, WATCH, CONF_CHECKS, MONTH
 } from '../schema.js';
 import { sVal, setS, segVal, setSeg, checked } from '../ui/controls.js';
 import {
-  recalcScores, readExpo, ableiten, fuelleExpo, setLegacyDose, getLegacyDose
+  recalcScores, readExpo, ableiten, fuelleExpo, setLegacyDose, getLegacyDose,
+  readConfTage, ableitenConf, fuelleConfTage, setLegacyConf, getLegacyConf,
+  mergeHeute, tagesMittel, setTagesSaetze
 } from './build.js';
 
 export function readForm(){
@@ -49,8 +51,11 @@ export function readForm(){
   e.kraft=[0,1,2,3].map(function(i){
     return {name:state.cfg.uebungen[i]||"", kg:$("kw"+i).value, reps:$("kr"+i).value, rir:$("ke"+i).value};
   });
-  for(var i=0;i<5;i++) e.who.push(segVal("who"+i));
-  for(var j=0;j<5;j++) e.iief.push(segVal("iief"+j));
+  /* WHO-5 und IIEF-5 werden taeglich erfasst: der heutige Antwortsatz wird
+     zu den bereits gespeicherten Tagen dieser Woche gelegt, e.who/e.iief
+     tragen das Mittel je Frage. Ein leerer Bogen loescht keinen Tag. */
+  e.whoTage=mergeHeute("who"); e.iiefTage=mergeHeute("iief");
+  e.who=tagesMittel(e.whoTage); e.iief=tagesMittel(e.iiefTage);
   e.morgen={naechte:segVal("mNaechte")};
   MORGEN.forEach(function(x){ e.morgen[x.k]=sVal(x.k); });
   if(e.dose.pt>0){
@@ -60,21 +65,43 @@ export function readForm(){
     e.pt.ausloesung=$("ptAusloesung").value;
     e.pt.signs=[]; PT_SIGNS.forEach(function(s){ if(checked(s.k)) e.pt.signs.push(s.k); });
     e.pt.signsNote=$("ptSignsNote").value.trim();
-    e.pt.vial=$("ptVial").value.trim(); e.pt.guess=$("ptGuess").value; e.pt.actual=$("ptActual").value;
   }
   e.pigment={uv:$("uvStd").value, quelle:$("uvQuelle").value, naevi:$("naevi").value.trim()};
   PIGMENT.forEach(function(x){ e.pigment[x.k]=sVal(x.k); });
   NEG.forEach(function(x){ e.neg[x.k]=sVal(x.k); });
   WATCH.forEach(function(w){ if(checked(w.k)) e.watch.push(w.k); });
   e.watchNote=$("watchNote").value.trim();
-  e.conf={train:$("cTrain").value, schlaf:$("cSchlaf").value, alk:$("cAlk").value,
-          gew:$("cGew").value, bauch:$("cBauch").value, protein:$("cProtein").value,
+  /* Training, Schlaf, Protein und Alkohol kommen aus dem Tagesraster; Summe
+     bei Training und Alkohol, Durchschnitt bei Schlaf und Protein. Alkohol
+     zaehlt in 0,5-l-Flaschen. Wie bei der Exposition bleiben die alten
+     Wochenwerte stehen, solange kein Tag eingetragen ist. */
+  var c=readConfTage(), legacyC=getLegacyConf();
+  var cw=(c.leer&&legacyC)
+    ? {train:legacyC.train||"", schlaf:legacyC.schlaf||"", protein:legacyC.protein||"", alk:legacyC.alk||""}
+    : ableitenConf(c.tage);
+  e.conf={train:cw.train, schlaf:cw.schlaf, alk:cw.alk, protein:cw.protein,
+          gew:$("cGew").value, bauch:$("cBauch").value,
           stress:sVal("cStress"), sonst:$("cSonst").value.trim(), flags:[]};
-  CONF_CHECKS.forEach(function(c){ if(checked(c.k)) e.conf.flags.push(c.k); });
+  if(!c.leer) e.conf.tage=c.tage;
+  CONF_CHECKS.forEach(function(c2){ if(checked(c2.k)) e.conf.flags.push(c2.k); });
   e.month=[]; MONTH.forEach(function(m){ if(checked(m.k)) e.month.push(m.k); });
-  e.text={anders:$("fText1").value.trim(), ohnehin:$("fText2").value.trim()};
+  /* Die beiden Freitextfragen sind entfallen; bereits erfasste Antworten
+     bleiben im gespeicherten Objekt und in CSV und Datenblock lesbar. */
+  var alt=state.weeks[state.weekKey];
+  if(alt&&alt.text&&(alt.text.anders||alt.text.ohnehin)) e.text=alt.text;
   return e;
 }
+/* Ein einzelner Antwortsatz aus der Zeit vor der Tagesumstellung wird dem
+   Erfassungstag der Woche zugeschlagen — irgendein Tag muss er sein, und der
+   Abschlusstag ist der ehrlichste Kandidat. */
+function ganzerTagAls(woche,satz){ var m={}; m[woche]=satz.slice(); return m; }
+
+/* Antwortsatz von heute in die Segmente schreiben, sonst alle leeren. */
+function zeigeHeute(praefix,map){
+  var heute=iso(new Date()), satz=map[heute];
+  for(var i=0;i<5;i++) setSeg(praefix+i, satz?satz[i]:null);
+}
+
 export function fillForm(e){
   if(!e) return;
   setS("erwartung", e.exp&&e.exp.erwartung);
@@ -92,15 +119,21 @@ export function fillForm(e){
     var kf=(e.kraft&&e.kraft[i])||{};
     $("kw"+i).value=kf.kg||""; $("kr"+i).value=kf.reps||""; $("ke"+i).value=kf.rir||"";
   });
-  (e.who||[]).forEach(function(v,i){ setSeg("who"+i,v); });
-  (e.iief||[]).forEach(function(v,i){ setSeg("iief"+i,v); });
+  /* Die Segmente zeigen den heutigen Tag: den gespeicherten Satz von heute,
+     sonst leer — jeder Tag wird frisch beantwortet. Wochen aus der Zeit vor
+     der Tagesumstellung bringen ihren einen Satz als heutigen Stand mit. */
+  var wt=e.whoTage||(Array.isArray(e.who)&&e.who.length===5&&e.who.every(function(v){return v!==null&&v!==undefined;})
+    ?ganzerTagAls(e.week,e.who):{});
+  var it=e.iiefTage||(Array.isArray(e.iief)&&e.iief.length===5&&e.iief.every(function(v){return v!==null&&v!==undefined;})
+    ?ganzerTagAls(e.week,e.iief):{});
+  setTagesSaetze(wt,it);
+  zeigeHeute("who",wt); zeigeHeute("iief",it);
   setSeg("mNaechte", e.morgen?e.morgen.naechte:null);
   MORGEN.forEach(function(x){ setS(x.k, e.morgen&&e.morgen[x.k]); });
   PT.forEach(function(x){ setS(x.k, e.pt&&e.pt[x.k]); });
   if(e.pt){ $("ptDosis").value=e.pt.dosis||""; $("ptEintritt").value=e.pt.eintritt||"";
     $("ptDauer").value=e.pt.dauer||""; $("ptBlind").value=e.pt.blind||"";
-    $("ptAusloesung").value=e.pt.ausloesung||""; $("ptSignsNote").value=e.pt.signsNote||"";
-    $("ptVial").value=e.pt.vial||""; $("ptGuess").value=e.pt.guess||""; $("ptActual").value=e.pt.actual||""; }
+    $("ptAusloesung").value=e.pt.ausloesung||""; $("ptSignsNote").value=e.pt.signsNote||""; }
   if(e.pigment){ $("uvStd").value=e.pigment.uv||""; $("uvQuelle").value=e.pigment.quelle||"";
     $("naevi").value=e.pigment.naevi||""; }
   PIGMENT.forEach(function(x){ setS(x.k, e.pigment&&e.pigment[x.k], 0); });
@@ -113,10 +146,9 @@ export function fillForm(e){
     i.checked=!!on; i.parentElement.dataset.on=on?"1":"0";
   });
   $("watchNote").value=e.watchNote||"";
-  if(e.conf){ $("cTrain").value=e.conf.train||""; $("cSchlaf").value=e.conf.schlaf||"";
-    $("cAlk").value=e.conf.alk||""; $("cGew").value=e.conf.gew||""; $("cBauch").value=e.conf.bauch||"";
-    $("cProtein").value=e.conf.protein||"";
+  setLegacyConf(e.conf&&!e.conf.tage?e.conf:null);
+  fuelleConfTage(e.conf||null);
+  if(e.conf){ $("cGew").value=e.conf.gew||""; $("cBauch").value=e.conf.bauch||"";
     setS("cStress",e.conf.stress); $("cSonst").value=e.conf.sonst||""; }
-  if(e.text){ $("fText1").value=e.text.anders||""; $("fText2").value=e.text.ohnehin||""; }
   recalcScores();
 }

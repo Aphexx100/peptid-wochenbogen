@@ -10,7 +10,8 @@
 import { state } from './state.js';
 import { $ } from './util/dom.js';
 import { currentWeekKey } from './util/date.js';
-import { buildForm, buildKraft, buildExpo, buildVials } from './form/build.js';
+import { buildForm, buildKraft, buildExpo, buildVials, buildConfTage } from './form/build.js';
+import { initWeeklyGate } from './ui/weekly.js';
 import { fillForm } from './form/model.js';
 import {
   saveWeekAction, saveCfgZeit, saveCfgGlow, saveCfgUebungen, saveVials, fillSetup
@@ -83,6 +84,7 @@ async function start() {
   buildForm();
   initTabs();
   initRechner();
+  initWeeklyGate();
   wireEvents();
 
   $('stamp').textContent = `Woche bis ${state.weekKey}`;
@@ -101,6 +103,7 @@ async function start() {
   buildVials();
   state.weekKey = currentWeekKey();
   buildExpo();
+  buildConfTage();
   $('stamp').textContent = `Woche bis ${state.weekKey}`;
 
   state.weeks = await loadWeeks();

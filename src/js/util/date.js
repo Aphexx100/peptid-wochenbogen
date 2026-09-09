@@ -3,13 +3,20 @@ import { state } from '../state.js';
 const pad = (n) => String(n).padStart(2, '0');
 export const iso = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 
-/** Woche = Datum des juengsten vergangenen (oder heutigen) Erfassungstags. */
+/** Woche = Datum des NAECHSTEN Erfassungstags (heute, wenn er heute ist).
+    Die laufende Woche sammelt ihre Tage bis zum Abschlusstag; erst an dem
+    Tag werden die Wochenfragen freigeschaltet. */
 export function currentWeekKey() {
   const t = new Date();
   t.setHours(12, 0, 0, 0);
-  const back = (t.getDay() - Number(state.cfg.day) + 7) % 7;
-  t.setDate(t.getDate() - back);
+  const vor = (Number(state.cfg.day) - t.getDay() + 7) % 7;
+  t.setDate(t.getDate() + vor);
   return iso(t);
+}
+
+/** Heute ist der Erfassungstag der laufenden Woche — Wochenfragen offen. */
+export function istAbschlussTag() {
+  return iso(new Date()) === state.weekKey;
 }
 
 /** Fortlaufende Wochennummer seit Protokollbeginn, null ohne Startdatum. */

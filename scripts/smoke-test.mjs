@@ -63,6 +63,38 @@ async function laufe(browser, url, label, mitModulTest) {
   pruefe('Kraftfelder aufgebaut', (await seite.locator('#kw0').count()) === 1);
   const expoZellen = await seite.locator('#s-expo input').count();
   pruefe('Tagesraster: 7 Tage × 4 Substanzen', expoZellen === 28, `${expoZellen} Zellen`);
+  const confZellen = await seite.locator('#s-confTage input').count();
+  pruefe('Confounder-Tagesraster: 7 Tage × 4 Werte', confZellen === 28, `${confZellen} Zellen`);
+
+  /* Freischaltung der Wochenfragen. Erst ein Erfassungstag, der nicht heute
+     ist — dann muss alles Wöchentliche verborgen sein und die Ausnahme
+     greifen. Danach der heutige Tag, damit der Rest des Tests ausfüllen kann. */
+  const heuteWt = new Date().getDay();
+  const andererWt = (heuteWt + 3) % 7;
+  const setzeTag = async (wt) => {
+    await seite.click('#tab-setup');
+    await seite.selectOption('#cfgDay', String(wt));
+    await seite.click('#cfgSave');
+    await seite.waitForTimeout(300);
+    await seite.click('#tab-bogen');
+  };
+
+  await setzeTag(andererWt);
+  pruefe('Wochenfragen außerhalb des Erfassungstags verborgen', await seite.locator('#s-kern').isHidden());
+  const offeneKarten = await seite.locator('.card:visible h2').allInnerTexts();
+  pruefe('Nur Tages- und Rahmenkarten offen', offeneKarten.length === 8, offeneKarten.join(' | '));
+  pruefe('Tagesfelder bleiben sichtbar', await seite.locator('#s-expo').isVisible());
+  pruefe('WHO-5 und IIEF-5 bleiben täglich offen',
+    (await seite.locator('#s-who').isVisible()) && (await seite.locator('#s-iief').isVisible()));
+  pruefe('Sperrhinweis nennt den Öffnungstag',
+    /Wochenfragen noch geschlossen/.test(await seite.locator('#weeklyNote').innerText()));
+  await seite.click('#gateOpen');
+  pruefe('„Trotzdem ausfüllen" öffnet die Wochenfragen', await seite.locator('#s-kern').isVisible());
+
+  await setzeTag(heuteWt);
+  pruefe('Am Erfassungstag sind die Wochenfragen offen', await seite.locator('#s-kern').isVisible());
+  pruefe('Abschlusshinweis erscheint',
+    /Wochenabschluss/.test(await seite.locator('#weeklyNote').innerText()));
 
   /* Rechner: GLOW 70 mg in 3 ml, Dosis 2,8 mg -> 12,0 I.E. */
   await seite.click('#tab-setup');
@@ -91,6 +123,22 @@ async function laufe(browser, url, label, mitModulTest) {
   pruefe('WHO-5 rechnet live', (await seite.locator('#whoScore').innerText()) === '80');
   for (let i = 0; i < 5; i++) await seite.click(`[data-seg="iief${i}"][data-val="4"]`);
   pruefe('IIEF-5 rechnet live', (await seite.locator('#iiefScore').innerText()) === '20');
+  pruefe('WHO-5 zählt den Tag als Messtag',
+    /Erfasst an 1 von 7 Tagen/.test(await seite.locator('#whoTage').innerText()));
+  pruefe('WHO-5 weist den Wochenschnitt aus',
+    /80 von 100/.test(await seite.locator('#whoWeek').innerText()));
+
+  /* Tägliche Confounder: Training und Alkohol summieren, Schlaf und Protein
+     mitteln. Alkohol zählt in 0,5-l-Flaschen. */
+  for (let i = 0; i < 7; i++) await seite.fill(`#tschlaf${i}`, '7');
+  await seite.fill('#ttrain0', '1.5');
+  await seite.fill('#ttrain3', '1.5');
+  await seite.fill('#talk5', '2');
+  await seite.fill('#tprotein0', '180');
+  const cs = await seite.locator('#confSum').innerText();
+  pruefe('Confounder-Raster summiert Training', /Training 3 h/.test(cs), cs.slice(0, 110));
+  pruefe('Confounder-Raster mittelt den Schlaf', /Schlaf Ø 7 h/.test(cs), cs.slice(0, 110));
+  pruefe('Alkohol zählt in 0,5-l-Flaschen', /Alkohol 2 Flaschen \(à 0,5 l\)/.test(cs), cs.slice(0, 110));
 
   /* Tagesraster: sieben GLOW-Tage eintragen, Zusammenfassung und
      Kupferhinweis rechnen mit; ein PT-141-Tag blendet die PT-Karte ein. */
@@ -102,6 +150,15 @@ async function laufe(browser, url, label, mitModulTest) {
   pruefe('PT-Karte ohne PT-141-Tag verborgen', await seite.locator('#ptCard').isHidden());
   await seite.fill('#xpt2', '1.75');
   pruefe('PT-Karte erscheint bei PT-141-Tag', await seite.locator('#ptCard').isVisible());
+  /* Die PT-Karte hat zwei Bedingungen — Anwendung UND Wochenabschluss.
+     Das Tor darf ihre eigene nicht überstimmen und umgekehrt. Dafür ein
+     dritter Wochentag: die Ausnahme oben gilt weiter für ihre eigene Woche,
+     und die trägt bei gleichem Wochentag denselben Schlüssel. */
+  await setzeTag((heuteWt + 5) % 7);
+  pruefe('PT-Karte bleibt außerhalb des Erfassungstags zu', await seite.locator('#ptCard').isHidden());
+  await seite.click('#gateOpen');
+  pruefe('PT-Karte kommt mit den Wochenfragen zurück', await seite.locator('#ptCard').isVisible());
+  await setzeTag(heuteWt);
 
   /* Speichern und nach dem Neuladen wiederfinden */
   await seite.fill('#cGew', '90.5');
@@ -114,6 +171,7 @@ async function laufe(browser, url, label, mitModulTest) {
   await seite.waitForTimeout(500);
   pruefe('Tageseintrag überlebt das Neuladen', (await seite.inputValue('#xglow0')) === '2.8');
   pruefe('IIEF-5 überlebt das Neuladen', (await seite.locator('#iiefScore').innerText()) === '20');
+  pruefe('Schlaf-Tageswert überlebt das Neuladen', (await seite.inputValue('#tschlaf0')) === '7');
 
   /* Vials: Rechner-Preset als aktuelles GLOW-Vial übernehmen — die Spalte
      läuft danach in ml, der bestehende mg-Eintrag wird umgerechnet und die
@@ -154,6 +212,8 @@ async function laufe(browser, url, label, mitModulTest) {
   pruefe('Datenblock nennt Tirzepatid als Confounder', ctx.includes('Tirzepatid'));
   pruefe('Datenblock nennt das Erwartungsfenster', ctx.includes('ERWARTUNGSFENSTER'));
   pruefe('Datenblock trägt das Tagesprotokoll', /TAGE: .*GLOW 2,8mg/.test(ctx));
+  pruefe('Datenblock trägt die Confounder-Tage', /CONFOUNDER-TAGE .*Schlaf 7h/.test(ctx));
+  pruefe('Datenblock nennt die Zahl der Messtage', /IIEF-5 20 \(Ø aus 1 Tagen\)/.test(ctx));
   pruefe('Analyse-Knöpfe ohne Quelle deaktiviert', await seite.locator('#askWeek').isDisabled());
 
   /* Setup: Ablagefelder */
@@ -174,6 +234,8 @@ async function laufe(browser, url, label, mitModulTest) {
     pruefe('CSV benutzt Semikolon', zeilen[0].split(';').length > 80, `${zeilen[0].split(';').length} Spalten`);
     pruefe('CSV enthält den gespeicherten Wert', /90[.,]5/.test(zeilen[1]));
     pruefe('CSV führt das Tagesprotokoll', zeilen[0].includes('Tagesprotokoll') && /GLOW 2,8mg/.test(zeilen[1]));
+    pruefe('CSV führt die Confounder-Tage',
+      zeilen[0].includes('Confounder-Tagesprotokoll') && /Schlaf 7h/.test(zeilen[1]));
   } else {
     await seite.click('#tab-aus');
     const dl = seite.waitForEvent('download', { timeout: 5000 }).catch(() => null);

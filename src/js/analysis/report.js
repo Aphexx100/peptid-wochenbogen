@@ -123,53 +123,6 @@ function renderKontrollen(list, libV) {
       : 'Kontrollen bewegen sich mit. Ein Anstieg im Primärendpunkt ist dann vermutlich global, nicht substanzspezifisch.';
 }
 
-/* ---- Verblindeter PT-141-Durchgang ---- */
-
-function renderBlind(list) {
-  const bl = list.filter(
-    (e) => e.pt && e.pt.actual && (e.pt.actual === 'wirkstoff' || e.pt.actual === 'placebo')
-  );
-  const bt = $('blindTable');
-  if (!bl.length) {
-    bt.innerHTML = '';
-    $('blindEmpty').hidden = false;
-    return;
-  }
-  $('blindEmpty').hidden = true;
-
-  const verlangen = (arr) =>
-    mean(arr.map((x) => (x.pt && x.pt.ptMit !== undefined && x.pt.ptMit !== null ? x.pt.ptMit : null)));
-  const drug = bl.filter((e) => e.pt.actual === 'wirkstoff');
-  const plac = bl.filter((e) => e.pt.actual === 'placebo');
-  const md = verlangen(drug);
-  const mp = verlangen(plac);
-  const guessed = bl.filter((e) => e.pt.guess === 'wirkstoff' || e.pt.guess === 'placebo');
-  const right = guessed.filter((e) => e.pt.guess === e.pt.actual).length;
-  const rate = guessed.length ? right / guessed.length : null;
-  const verdict =
-    rate === null
-      ? '—'
-      : rate >= 0.85
-        ? 'Verblindung durchlässig — Differenz mit Erwartung kontaminiert'
-        : rate >= 0.65
-          ? 'Teilweise durchlässig — Differenz vorsichtig lesen'
-          : 'Verblindung weitgehend gehalten — Differenz ist belastbar';
-
-  bt.innerHTML =
-    '<tbody>' +
-    `<tr><td>Entblindete Durchgänge</td><td class="n">${bl.length} (${drug.length} Wirkstoff / ${plac.length} Placebo)</td></tr>` +
-    `<tr><td>Verlangen Wirkstoff-Wochen</td><td class="n">${md === null ? '—' : fmt(md, 2)}</td></tr>` +
-    `<tr><td>Verlangen Placebo-Wochen</td><td class="n">${mp === null ? '—' : fmt(mp, 2)}</td></tr>` +
-    `<tr><td><b>Differenz</b></td><td class="n"><b>${
-      md === null || mp === null ? '—' : (md - mp >= 0 ? '+' : '') + fmt(md - mp, 2)
-    }</b></td></tr>` +
-    `<tr><td>Trefferquote der Vermutung</td><td class="n">${
-      rate === null ? '—' : `${right} von ${guessed.length} · ${Math.round(rate * 100)} %`
-    }</td></tr>` +
-    `<tr><td>Bewertung</td><td>${verdict}</td></tr>` +
-    '</tbody>';
-}
-
 /* ---- PT-141 gesamt ---- */
 
 function renderPt(list) {
@@ -222,6 +175,10 @@ export function buildSeries(list, exps) {
     { n: 'Erwartung', v: exps, max: 10 },
     { n: 'Kernbereiche Ø', v: list.map(kernMean), max: 10 },
     { n: 'WHO-5', v: list.map(whoScore), max: 100 },
+    { n: 'Schlaf Ø (h/Nacht)', v: list.map((e) => (e.conf ? num(e.conf.schlaf) : null)), max: 'auto' },
+    { n: 'Training (h/Woche)', v: list.map((e) => (e.conf ? num(e.conf.train) : null)), max: 'auto' },
+    { n: 'Protein Ø (g/Tag)', v: list.map((e) => (e.conf ? num(e.conf.protein) : null)), max: 'auto' },
+    { n: 'Alkohol (Flaschen à 0,5 l/Woche)', v: list.map((e) => (e.conf ? num(e.conf.alk) : null)), max: 'auto' },
     { n: 'Negativkontrollen Ø', v: list.map(negMean), max: 10 },
     { n: 'Bräunungsgeschwindigkeit', v: list.map((e) => (e.pigment ? e.pigment.pTempo : null)), max: 10 },
     { n: 'UV-Stunden', v: list.map((e) => (e.pigment && e.pigment.uv !== '' ? Number(e.pigment.uv) : null)), max: 20 },
@@ -301,7 +258,6 @@ export function renderAus() {
   const exps = renderKacheln(list, libs, libV);
   renderMuskel(list);
   renderKontrollen(list, libV);
-  renderBlind(list);
   renderPt(list);
   renderSparks(list, exps, labels);
   renderWeekTable(ks);

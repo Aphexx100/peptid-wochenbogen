@@ -8,7 +8,9 @@ import { $ } from '../util/dom.js';
 import { currentWeekKey, weekNumber } from '../util/date.js';
 import { saveWeek as ablageWeek, saveConfig as ablageConfig } from '../storage/index.js';
 import { readForm } from './model.js';
-import { buildKraft, buildExpo, renderCu, readVials, refreshExpoUnits } from './build.js';
+import {
+  buildKraft, buildExpo, buildConfTage, renderCu, readVials, refreshExpoUnits
+} from './build.js';
 import { renderStatus } from '../ui/status.js';
 
 function melde(id, r) {
@@ -40,6 +42,7 @@ export async function saveCfgZeit() {
   state.cfg.day = Number($('cfgDay').value);
   state.weekKey = currentWeekKey();
   buildExpo();
+  buildConfTage();
   $('stamp').textContent = `Woche bis ${state.weekKey}`;
   renderStatus();
   await persistCfg('cfgInfo');

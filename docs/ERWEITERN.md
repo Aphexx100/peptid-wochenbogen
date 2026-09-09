@@ -37,6 +37,24 @@ keinen Wert — das ist richtig so und wird als Lücke geführt, nicht als Null.
 **Eine Frage nie löschen, wenn sie schon Daten hat.** Auskommentieren entfernt sie aus
 Formular und CSV, die alten Werte bleiben in den gespeicherten Objekten erhalten.
 
+## Eine Frage täglich statt wöchentlich stellen
+
+Wöchentliche Karten in `index.html` tragen die Klasse `weekly` und sind bis zum
+Erfassungstag verborgen; `src/js/ui/weekly.js` schaltet sie frei. Eine Karte wird
+täglich, indem die Klasse verschwindet — mehr ist an der Sichtbarkeit nicht zu tun.
+
+Hat die Karte eine **eigene** Bedingung (die PT-141-Karte erscheint nur bei Anwendung,
+die Monatskarte jede vierte Woche), steht diese in `data-faellig` statt in `hidden`.
+Wer stattdessen `hidden` setzt, verliert: Karte und Wochentor überschreiben sich dann
+gegenseitig, je nachdem, wer zuletzt gerendert hat.
+
+Soll die Frage darüber hinaus **je Tag einen eigenen Wert** tragen, braucht sie ein
+Raster wie `EXPO` oder `CONF_TAGE` — siehe unten — oder, bei Fragebögen, das Muster von
+WHO-5 und IIEF-5 in `src/js/form/build.js`: die Oberfläche zeigt immer den heutigen Tag,
+gespeichert wird ein Antwortsatz je Datum, und der Wochenwert entsteht als Mittel. Der
+Vorteil dieses Musters ist, dass `e.who`/`e.iief` ihre alte Form behalten und Auswertung,
+CSV und Datenblock unverändert weiterrechnen.
+
 ## Eine Substanz im Tagesraster ergänzen
 
 Auch das ist eine Zeile in `src/js/schema.js`, in der Liste `EXPO`:
@@ -145,7 +163,7 @@ grep -n '#[0-9a-fA-F]\{3,6\}' src/css/app.css   # muss leer bleiben
 ## Nach jeder Änderung
 
 ```bash
-npm run check     # baut die Einzeldatei und fährt beide Fassungen durch 52 Prüfungen
+npm run check     # baut die Einzeldatei und fährt beide Fassungen durch 120 Prüfungen
 ```
 
 Der Rauchtest startet einen echten Browser, füllt den Bogen aus, speichert, lädt neu und
