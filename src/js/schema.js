@@ -2,6 +2,14 @@
    Ein neues Item entsteht durch eine neue Zeile in einer dieser Listen —
    Formular, CSV, Datenblock und Sparklines lesen alle aus denselben Arrays.
    Siehe docs/ERWEITERN.md. */
+/* Substanzen des Tagesrasters in Abschnitt 02. `k` ist zugleich der Schluessel
+   in dose.tage; `step` steuert die Schrittweite des Zahlenfeldes. */
+export const EXPO = [
+  {k:"glow", n:"GLOW",       u:"mg", step:0.1,  ph:"2,8"},
+  {k:"kiss", n:"Kisspeptin", u:"µg", step:5,    ph:"100"},
+  {k:"pt",   n:"PT-141",     u:"mg", step:0.25, ph:"1,75"},
+  {k:"tirz", n:"Tirzepatid", u:"mg", step:0.5,  ph:"2,5"}
+];
 export const KERN = [
   {k:"energie",  n:"Energie und Belastbarkeit",                 lo:"leer",           hi:"voll"},
   {k:"schlaf",   n:"Schlafqualität",                            lo:"schlecht",       hi:"sehr gut"},

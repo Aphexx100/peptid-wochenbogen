@@ -3,8 +3,30 @@
    und Auswertung gemeinsam benutzt. Jede nimmt einen Eintrag und gibt eine
    Zahl oder null zurueck, wenn die Daten dafuer nicht reichen. */
 
-import { KERN, NEG } from '../schema.js';
+import { EXPO, KERN, NEG } from '../schema.js';
 import { mean } from '../util/format.js';
+
+const WTAG = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
+
+/** Kompaktes Tagesprotokoll der Exposition, etwa
+    "Mo GLOW 2,8mg + PT-141 1,75mg; Mi GLOW 2,8mg".
+    Leerer String, wenn die Woche keine Tagesdaten traegt. */
+export function tageKompakt(e) {
+  const t = e.dose && e.dose.tage;
+  if (!t || !t.start) return '';
+  const teile = [];
+  for (let i = 0; i < 7; i++) {
+    const subs = EXPO
+      .filter((x) => t[x.k] && Number(t[x.k][i]) > 0)
+      .map((x) => `${x.n} ${String(t[x.k][i]).replace('.', ',')}${x.u}`);
+    if (subs.length) {
+      const d = new Date(`${t.start}T12:00:00`);
+      d.setDate(d.getDate() + i);
+      teile.push(`${WTAG[d.getDay()]} ${subs.join(' + ')}`);
+    }
+  }
+  return teile.join('; ');
+}
 
 /** WHO-5, Rohsumme mal vier — Skala 0–100. Null, wenn ein Item fehlt. */
 export function whoScore(e) {

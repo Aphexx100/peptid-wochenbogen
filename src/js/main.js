@@ -10,7 +10,7 @@
 import { state } from './state.js';
 import { $ } from './util/dom.js';
 import { currentWeekKey } from './util/date.js';
-import { buildForm, buildKraft } from './form/build.js';
+import { buildForm, buildKraft, buildExpo } from './form/build.js';
 import { fillForm } from './form/model.js';
 import { saveWeekAction, saveCfgZeit, saveCfgGlow, saveCfgUebungen, fillSetup } from './form/save.js';
 import { renderStatus } from './ui/status.js';
@@ -73,12 +73,14 @@ function uebernehmeCfg(c) {
 }
 
 async function start() {
+  /* Der Wochenschluessel muss vor buildForm() stehen — das Tagesraster der
+     Exposition traegt die Kalenderdaten der aktuellen Woche. */
+  state.weekKey = currentWeekKey();
   buildForm();
   initTabs();
   initRechner();
   wireEvents();
 
-  state.weekKey = currentWeekKey();
   $('stamp').textContent = `Woche bis ${state.weekKey}`;
   $('cfgDay').value = String(state.cfg.day);
   renderStatus();
@@ -93,6 +95,7 @@ async function start() {
   fillSetup();
   buildKraft();
   state.weekKey = currentWeekKey();
+  buildExpo();
   $('stamp').textContent = `Woche bis ${state.weekKey}`;
 
   state.weeks = await loadWeeks();

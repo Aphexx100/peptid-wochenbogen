@@ -20,3 +20,15 @@ export function weekNumber(key) {
 }
 
 export const daysBetween = (a, b) => Math.floor((Date.parse(b) - Date.parse(a)) / 86400000);
+
+/** Die sieben Kalendertage einer Woche, aeltester zuerst — der letzte ist der
+    Erfassungstag, also der Wochenschluessel selbst. */
+export function weekDays(key) {
+  const out = [];
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(`${key}T12:00:00`);
+    d.setDate(d.getDate() - i);
+    out.push(iso(d));
+  }
+  return out;
+}

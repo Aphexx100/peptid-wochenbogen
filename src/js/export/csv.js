@@ -13,7 +13,7 @@ import {
   KERN, GLOWZIEL, MASSE, MORGEN, PT_SIGNS, PIGMENT, NEG, WATCH, CONF_CHECKS
 } from '../schema.js';
 import {
-  whoScore, iiefScore, hautMean, gelenkMean, kraftIndex, taillenQuotient, cuWeek
+  whoScore, iiefScore, hautMean, gelenkMean, kraftIndex, taillenQuotient, cuWeek, tageKompakt
 } from '../analysis/metrics.js';
 
 function cell(v){ var s=(v===null||v===undefined)?"":String(v);
@@ -22,7 +22,7 @@ export function buildCsv(){
   var cols=["Woche","Datum",
     "GLOW Injektionen","GLOW mg je Dosis","Kisspeptin Injektionen","Kisspeptin µg je Dosis",
     "PT-141 Anwendungen","PT-141 mg je Dosis","Kupfer mg/Woche",
-    "Tirzepatid mg/Woche","Sonstige Medikamente","Gewicht kg","Taille cm","Protein g","Erwartung"]
+    "Tirzepatid mg/Woche","Tagesprotokoll","Sonstige Medikamente","Gewicht kg","Taille cm","Protein g","Erwartung"]
     .concat(KERN.map(function(x){return x.n;}))
     .concat(["WHO-5","IIEF-5"])
     .concat(["Morgen mit Erektion (0-7)"]).concat(MORGEN.map(function(x){return "Morgen: "+x.n;}))
@@ -46,7 +46,7 @@ export function buildCsv(){
            e.dose?e.dose.kiss:"", e.dose?e.dose.dKiss:"",
            e.dose?e.dose.pt:"", e.dose?e.dose.dPt:"",
            cuW>0?cuW.toFixed(2).replace(".",","):"",
-           e.dose?e.dose.tirz:"", e.dose?e.dose.sonstMed:"",
+           e.dose?e.dose.tirz:"", tageKompakt(e), e.dose?e.dose.sonstMed:"",
            e.conf?e.conf.gew:"", e.conf?e.conf.bauch:"", e.conf?e.conf.protein:"",
            e.exp?e.exp.erwartung:""]
       .concat(KERN.map(function(x){return e.kern?e.kern[x.k]:"";}))

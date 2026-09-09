@@ -15,7 +15,7 @@ import { CU_ANTEIL } from '../constants.js';
 import { KERN, GLOWZIEL } from '../schema.js';
 import {
   whoScore, iiefScore, kernMean, negMean, hautMean, gelenkMean, wohlVal,
-  kraftIndex, taillenQuotient
+  kraftIndex, taillenQuotient, tageKompakt
 } from '../analysis/metrics.js';
 
 function weekLine(k){
@@ -30,6 +30,8 @@ function weekLine(k){
            (cuW>0?(", elementares Kupfer "+cuW.toFixed(2)+" mg/Woche"):"")+
            (e.dose.sonstMed?(", sonst: "+e.dose.sonstMed):"")+
            (e.dose.abw?(" ["+e.dose.abw+"]"):""));
+    var tk=tageKompakt(e);
+    if(tk) p.push("TAGE: "+tk);
   }
   p.push("Erwartung "+s(e.exp&&e.exp.erwartung));
   p.push("WHO-5 "+(whoScore(e)===null?"-":whoScore(e))+", IIEF-5 "+(iiefScore(e)===null?"-":iiefScore(e)));

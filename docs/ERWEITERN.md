@@ -37,6 +37,23 @@ keinen Wert — das ist richtig so und wird als Lücke geführt, nicht als Null.
 **Eine Frage nie löschen, wenn sie schon Daten hat.** Auskommentieren entfernt sie aus
 Formular und CSV, die alten Werte bleiben in den gespeicherten Objekten erhalten.
 
+## Eine Substanz im Tagesraster ergänzen
+
+Auch das ist eine Zeile in `src/js/schema.js`, in der Liste `EXPO`:
+
+```js
+export const EXPO = [
+  …
+  { k: 'neu', n: 'Anzeigename', u: 'mg', step: 0.5 }
+];
+```
+
+Das Raster in Abschnitt 02 bekommt die neue Spalte von selbst, ebenso das
+Tagesprotokoll im Datenblock und in der CSV. Die abgeleiteten Wochensummen
+(`dose.n_…`/`dose.d_…`) entstehen nur für die drei ursprünglichen Substanzen —
+wer für eine neue Substanz eigene Kennzahlen braucht, ergänzt sie in
+`src/js/analysis/metrics.js` und liest die Tageswerte aus `dose.tage.neu`.
+
 ## Eine Verlaufsgrafik hinzufügen
 
 Eine Zeile in `buildSeries()` in `src/js/analysis/report.js`:

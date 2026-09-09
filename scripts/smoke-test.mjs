@@ -61,6 +61,8 @@ async function laufe(browser, url, label, mitModulTest) {
   const segmente = await seite.locator('[data-seg]').count();
   pruefe('Segmentfragen aufgebaut', segmente >= 60, `${segmente} gefunden`);
   pruefe('Kraftfelder aufgebaut', (await seite.locator('#kw0').count()) === 1);
+  const expoZellen = await seite.locator('#s-expo input').count();
+  pruefe('Tagesraster: 7 Tage × 4 Substanzen', expoZellen === 28, `${expoZellen} Zellen`);
 
   /* Rechner: GLOW 70 mg in 3 ml, Dosis 2,8 mg -> 12,0 I.E. */
   await seite.click('#tab-setup');
@@ -90,11 +92,16 @@ async function laufe(browser, url, label, mitModulTest) {
   for (let i = 0; i < 5; i++) await seite.click(`[data-seg="iief${i}"][data-val="4"]`);
   pruefe('IIEF-5 rechnet live', (await seite.locator('#iiefScore').innerText()) === '20');
 
-  /* Kupferhinweis rechnet mit */
-  await seite.fill('#nGlow', '7');
-  await seite.dispatchEvent('#nGlow', 'input');
+  /* Tagesraster: sieben GLOW-Tage eintragen, Zusammenfassung und
+     Kupferhinweis rechnen mit; ein PT-141-Tag blendet die PT-Karte ein. */
+  for (let i = 0; i < 7; i++) await seite.fill(`#xglow${i}`, '2.8');
+  const sum = await seite.locator('#expoSum').innerText();
+  pruefe('Tagesraster leitet die Wochensumme ab', /GLOW: 7 Injektionstage à 2,8 mg/.test(sum), sum.slice(0, 90));
   const cu = await seite.locator('#cuNote').innerText();
   pruefe('Kupferlast wird beziffert', /2,21 mg elementares Kupfer/.test(cu), cu.slice(0, 90));
+  pruefe('PT-Karte ohne PT-141-Tag verborgen', await seite.locator('#ptCard').isHidden());
+  await seite.fill('#xpt2', '1.75');
+  pruefe('PT-Karte erscheint bei PT-141-Tag', await seite.locator('#ptCard').isVisible());
 
   /* Speichern und nach dem Neuladen wiederfinden */
   await seite.fill('#cGew', '90.5');
@@ -105,7 +112,7 @@ async function laufe(browser, url, label, mitModulTest) {
 
   await seite.reload({ waitUntil: 'networkidle' });
   await seite.waitForTimeout(500);
-  pruefe('Wert überlebt das Neuladen', (await seite.inputValue('#nGlow')) === '7');
+  pruefe('Tageseintrag überlebt das Neuladen', (await seite.inputValue('#xglow0')) === '2.8');
   pruefe('IIEF-5 überlebt das Neuladen', (await seite.locator('#iiefScore').innerText()) === '20');
 
   /* Auswertung */
@@ -121,6 +128,7 @@ async function laufe(browser, url, label, mitModulTest) {
   pruefe('Datenblock auch ohne KI einsehbar', ctx.length > 500, `${ctx.length} Zeichen`);
   pruefe('Datenblock nennt Tirzepatid als Confounder', ctx.includes('Tirzepatid'));
   pruefe('Datenblock nennt das Erwartungsfenster', ctx.includes('ERWARTUNGSFENSTER'));
+  pruefe('Datenblock trägt das Tagesprotokoll', /TAGE: .*GLOW 2,8mg/.test(ctx));
   pruefe('Analyse-Knöpfe ohne Quelle deaktiviert', await seite.locator('#askWeek').isDisabled());
 
   /* Setup: Ablagefelder */
@@ -140,6 +148,7 @@ async function laufe(browser, url, label, mitModulTest) {
     pruefe('CSV hat Kopfzeile und eine Datenzeile', zeilen.length === 2, `${zeilen.length} Zeilen`);
     pruefe('CSV benutzt Semikolon', zeilen[0].split(';').length > 80, `${zeilen[0].split(';').length} Spalten`);
     pruefe('CSV enthält den gespeicherten Wert', /90[.,]5/.test(zeilen[1]));
+    pruefe('CSV führt das Tagesprotokoll', zeilen[0].includes('Tagesprotokoll') && /GLOW 2,8mg/.test(zeilen[1]));
   } else {
     await seite.click('#tab-aus');
     const dl = seite.waitForEvent('download', { timeout: 5000 }).catch(() => null);

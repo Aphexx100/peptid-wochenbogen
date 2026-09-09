@@ -4,10 +4,11 @@ Wöchentliche Selbstdokumentation eines Peptid-Protokolls. Eine Seite ohne Frame
 und ohne Backend: erfassen, auswerten, exportieren, und auf Wunsch von einem
 Sprachmodell einordnen lassen.
 
-Der Bogen erfasst pro Woche die Exposition (GLOW-Stack, Kisspeptin, PT-141, Tirzepatid),
-sechs Kernbereiche, die drei erwarteten GLOW-Wirkungen, WHO-5, IIEF-5, Morgenerektionen,
-Körpermaße und Kraftwerte, Pigmentierung, Negativkontrollen, eine Beobachtungsliste und
-die Confounder. Daraus entstehen Verlaufsgrafiken, eine Wochentabelle und ein CSV-Export.
+Der Bogen erfasst die Exposition **Tag für Tag** (GLOW-Stack, Kisspeptin, PT-141,
+Tirzepatid — je Tag die gesetzte Menge), dazu pro Woche sechs Kernbereiche, die drei
+erwarteten GLOW-Wirkungen, WHO-5, IIEF-5, Morgenerektionen, Körpermaße und Kraftwerte,
+Pigmentierung, Negativkontrollen, eine Beobachtungsliste und die Confounder. Daraus
+entstehen Verlaufsgrafiken, eine Wochentabelle und ein CSV-Export.
 
 ## Aufbau in einem Absatz
 
@@ -22,7 +23,7 @@ die Architektur in [docs/ARCHITEKTUR.md](docs/ARCHITEKTUR.md).
 ```
 npm install          # esbuild und playwright, nur zum Bauen und Testen
 npm start            # http://localhost:8080
-npm test             # 52 Prüfungen in einem echten Browser
+npm test             # 63 Prüfungen in einem echten Browser
 npm run build        # dist/peptid-wochenbogen.html — eine Datei für Claude
 ```
 

@@ -55,29 +55,18 @@
   </div>
 
   <div class="card">
-    <h2><span class="step">02</span> Exposition dieser Woche</h2>
-    <p class="hint">Was tatsächlich gesetzt wurde, nicht was geplant war. <strong>Obere Reihe: Anzahl der Injektionen in dieser Woche. Untere Reihe: Dosis je einzelner Injektion</strong> — nicht die Wochensumme. Achte auf die Einheiten, sie sind je Substanz verschieden.</p>
+    <h2><span class="step">02</span> Exposition — Tag für Tag</h2>
+    <p class="hint">Was tatsächlich gesetzt wurde, nicht was geplant war — <strong>je Tag die gesetzte Menge</strong>, leer gelassen heißt: an dem Tag nichts. Bei mehreren Injektionen desselben Wirkstoffs an einem Tag die Tagesgesamtmenge eintragen. Achte auf die Einheiten, sie sind je Substanz verschieden. Am besten trägst du jeden Tag direkt nach der Injektion ein — die restlichen Abschnitte bleiben Wochenfragen und kommen am Erfassungstag dran.</p>
 
-    <label class="fl">Anzahl Injektionen diese Woche</label>
-    <div class="grid3" style="margin-bottom:1rem">
-      <div class="field"><label class="fl" for="nGlow">GLOW <span style="text-transform:none;letter-spacing:0">(Stück)</span></label><input type="number" id="nGlow" min="0" max="21" step="1" value="0" inputmode="numeric"></div>
-      <div class="field"><label class="fl" for="nKiss">Kisspeptin <span style="text-transform:none;letter-spacing:0">(Stück)</span></label><input type="number" id="nKiss" min="0" max="21" step="1" value="0" inputmode="numeric"></div>
-      <div class="field"><label class="fl" for="nPt">PT-141 <span style="text-transform:none;letter-spacing:0">(Stück)</span></label><input type="number" id="nPt" min="0" max="14" step="1" value="0" inputmode="numeric"></div>
-    </div>
+    <div class="tablewrap"><table class="expo" id="s-expo"></table></div>
+    <p class="hint" style="margin:.7rem 0 1rem">Kisspeptin wird im Graumarkt üblicherweise in <strong>Mikrogramm</strong> dosiert (50–200 µg), PT-141, GLOW und Tirzepatid in <strong>Milligramm</strong>. Beim GLOW ist die Gesamtmenge des Gemischs gemeint; wie viel davon GHK-Cu ist, legst du einmalig im Setup fest.</p>
 
-    <label class="fl">Dosis je einzelner Injektion</label>
-    <div class="grid3" style="margin-bottom:1rem">
-      <div class="field"><label class="fl" for="dGlow">GLOW <span style="text-transform:none;letter-spacing:0">(mg gesamt)</span></label><input type="number" id="dGlow" min="0" step="0.1" inputmode="decimal" placeholder="z. B. 2,8"></div>
-      <div class="field"><label class="fl" for="dKiss">Kisspeptin <span style="text-transform:none;letter-spacing:0">(µg)</span></label><input type="number" id="dKiss" min="0" step="5" inputmode="decimal" placeholder="z. B. 100"></div>
-      <div class="field"><label class="fl" for="dPt">PT-141 <span style="text-transform:none;letter-spacing:0">(mg)</span></label><input type="number" id="dPt" min="0" step="0.25" inputmode="decimal" placeholder="z. B. 1,75"></div>
-    </div>
-    <p class="hint" style="margin-bottom:1rem">Kisspeptin wird im Graumarkt üblicherweise in <strong>Mikrogramm</strong> dosiert (50–200 µg), PT-141 und GLOW in <strong>Milligramm</strong>. Beim GLOW ist die Gesamtmenge des Gemischs gemeint; wie viel davon GHK-Cu ist, legst du einmalig im Setup fest.</p>
-
+    <div class="note" id="expoSum" style="margin-bottom:1rem"></div>
     <div class="note" id="cuNote" style="margin-bottom:1rem"></div>
 
-    <div class="grid2">
-      <div class="field"><label class="fl" for="nTirz">Tirzepatid <span style="text-transform:none;letter-spacing:0">(mg in dieser Woche)</span></label><input type="number" id="nTirz" min="0" step="0.5" inputmode="decimal" placeholder="z. B. 2,5"></div>
-      <div class="field"><label class="fl" for="nSonstMed">Sonstige Medikamente, Supplemente</label><input type="text" id="nSonstMed" placeholder="Kreatin, …"></div>
+    <div class="field">
+      <label class="fl" for="nSonstMed">Sonstige Medikamente, Supplemente</label>
+      <input type="text" id="nSonstMed" placeholder="Kreatin, …">
     </div>
     <div class="field">
       <label class="fl" for="abw">Abweichungen, Auslassungen, neue Charge</label>

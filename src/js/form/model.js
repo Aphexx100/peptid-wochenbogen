@@ -11,16 +11,31 @@ import {
   KERN, GLOWZIEL, MASSE, MORGEN, PT, PT_SIGNS, PIGMENT, NEG, WATCH, CONF_CHECKS, MONTH
 } from '../schema.js';
 import { sVal, setS, segVal, setSeg, checked } from '../ui/controls.js';
-import { recalcScores, renderCu } from './build.js';
+import {
+  recalcScores, readExpo, ableiten, fuelleExpo, setLegacyDose, getLegacyDose
+} from './build.js';
 
 export function readForm(){
   var e={week:state.weekKey, nr:weekNumber(state.weekKey), saved:new Date().toISOString(),
     exp:{}, kern:{}, who:[], iief:[], pt:{}, neg:{}, watch:[], conf:{}, text:{}};
   e.exp.erwartung=sVal("erwartung");
-  e.dose={glow:Number($("nGlow").value)||0, kiss:Number($("nKiss").value)||0, pt:Number($("nPt").value)||0,
-          dGlow:$("dGlow").value, dKiss:$("dKiss").value, dPt:$("dPt").value, ghk:state.cfg.ghk,
-          tirz:$("nTirz").value, sonstMed:$("nSonstMed").value.trim(),
-          abw:$("abw").value.trim(), stellen:$("stellen").value.trim()};
+  /* Wochensummen aus dem Tagesraster ableiten. Ist das Raster leer und die
+     Woche wurde vor der Umstellung als Wochensumme erfasst, bleiben die alten
+     Summen erhalten, statt sie mit Nullen zu ueberschreiben. */
+  var g=readExpo(), legacy=getLegacyDose();
+  if(g.leer&&legacy){
+    e.dose={glow:legacy.glow||0, kiss:legacy.kiss||0, pt:legacy.pt||0,
+            dGlow:legacy.dGlow||"", dKiss:legacy.dKiss||"", dPt:legacy.dPt||"", ghk:state.cfg.ghk,
+            tirz:legacy.tirz||""};
+  }else{
+    var a=ableiten(g.tage);
+    e.dose={glow:a.n_glow, kiss:a.n_kiss, pt:a.n_pt,
+            dGlow:a.d_glow, dKiss:a.d_kiss, dPt:a.d_pt, ghk:state.cfg.ghk,
+            tirz:a.tirz, tage:g.tage};
+  }
+  e.dose.sonstMed=$("nSonstMed").value.trim();
+  e.dose.abw=$("abw").value.trim();
+  e.dose.stellen=$("stellen").value.trim();
   KERN.forEach(function(x){ e.kern[x.k]=sVal(x.k); });
   e.glow={ort:$("gGelenkOrt").value.trim()};
   GLOWZIEL.forEach(function(x){ e.glow[x.k]=sVal(x.k); });
@@ -57,12 +72,12 @@ export function readForm(){
 export function fillForm(e){
   if(!e) return;
   setS("erwartung", e.exp&&e.exp.erwartung);
-  if(e.dose){ $("nGlow").value=e.dose.glow||0; $("nKiss").value=e.dose.kiss||0; $("nPt").value=e.dose.pt||0;
-    $("dGlow").value=e.dose.dGlow||""; $("dKiss").value=e.dose.dKiss||""; $("dPt").value=e.dose.dPt||"";
-    $("nTirz").value=e.dose.tirz||""; $("nSonstMed").value=e.dose.sonstMed||"";
-    $("abw").value=e.dose.abw||""; $("stellen").value=e.dose.stellen||"";
-    $("ptCard").hidden=!(Number(e.dose.pt)>0); }
-  renderCu();
+  /* Erst den Bestandsschutz setzen, dann das Raster fuellen — fuelleExpo()
+     aktualisiert Zusammenfassung, Kupferlast und PT-Karte gleich mit. */
+  setLegacyDose(e.dose&&!e.dose.tage?e.dose:null);
+  fuelleExpo(e.dose&&e.dose.tage);
+  if(e.dose){ $("nSonstMed").value=e.dose.sonstMed||"";
+    $("abw").value=e.dose.abw||""; $("stellen").value=e.dose.stellen||""; }
   KERN.forEach(function(x){ setS(x.k, e.kern&&e.kern[x.k]); });
   GLOWZIEL.forEach(function(x){ setS(x.k, e.glow&&e.glow[x.k]); });
   $("gGelenkOrt").value=(e.glow&&e.glow.ort)||"";
