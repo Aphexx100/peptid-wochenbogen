@@ -1,0 +1,42 @@
+/* Farb-Tokens und Themes.
+   Hier und nur hier werden Farben definiert. Jede Regel in app.css greift
+   ueber var(--name) darauf zu, damit ein Theme-Wechsel an genau einer Stelle passiert.
+   Drei Bloecke sind noetig: :root (hell), prefers-color-scheme (System-Dunkel)
+   und [data-theme="dark"] (explizite Wahl im Claude-Viewer). */
+
+:root{
+  --ground:#F4F3F1; --surface:#FFFFFF; --surface-2:#EAE7E3; --surface-3:#DDD8D2;
+  --border:#D6D1CB; --border-soft:#E4E0DA;
+  --ink:#1A1714; --ink-2:#46403A; --muted:#756E66;
+  --accent:#A85A2A; --accent-soft:#F3E3D7; --on-accent:#FFFFFF;
+  --good:#2F6B4F; --good-bg:#DFEDE5;
+  --warn:#8A6212; --warn-bg:#F3E9D4;
+  --alert:#A33A32; --alert-bg:#F4DFDC;
+  --grid:#E3DFD9;
+  --shadow:0 1px 2px rgba(26,23,20,.06), 0 10px 28px -20px rgba(26,23,20,.35);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --ground:#14120F; --surface:#1C1917; --surface-2:#262220; --surface-3:#332D28;
+    --border:#38322D; --border-soft:#2A2522;
+    --ink:#EBE7E2; --ink-2:#C2BAB2; --muted:#8F877E;
+    --accent:#D9905C; --accent-soft:#2C1F16; --on-accent:#1A1714;
+    --good:#74C093; --good-bg:#1D2C24;
+    --warn:#D6AB56; --warn-bg:#2E2718;
+    --alert:#E0837A; --alert-bg:#331F1D;
+    --grid:#2B2622;
+    --shadow:0 1px 2px rgba(0,0,0,.5), 0 10px 28px -20px rgba(0,0,0,.9);
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#14120F; --surface:#1C1917; --surface-2:#262220; --surface-3:#332D28;
+  --border:#38322D; --border-soft:#2A2522;
+  --ink:#EBE7E2; --ink-2:#C2BAB2; --muted:#8F877E;
+  --accent:#D9905C; --accent-soft:#2C1F16; --on-accent:#1A1714;
+  --good:#74C093; --good-bg:#1D2C24;
+  --warn:#D6AB56; --warn-bg:#2E2718;
+  --alert:#E0837A; --alert-bg:#331F1D;
+  --grid:#2B2622;
+  --shadow:0 1px 2px rgba(0,0,0,.5), 0 10px 28px -20px rgba(0,0,0,.9);
+}
+

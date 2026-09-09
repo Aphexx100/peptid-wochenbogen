@@ -1,0 +1,537 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<meta name="description" content="Wöchentliche Selbstdokumentation eines Peptid-Protokolls: Erfassung, Auswertung und Rekonstitutionsrechner.">
+<meta name="robots" content="noindex, nofollow">
+<title>Peptid-Wochenbogen</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="src/css/tokens.css">
+<link rel="stylesheet" href="src/css/app.css">
+</head>
+<body>
+
+<div class="app">
+
+<header>
+  <div class="brandline">
+    <h1>Peptid-Wochenbogen</h1>
+    <span class="stamp" id="stamp"></span>
+  </div>
+  <div class="statusrow" id="statusrow"></div>
+</header>
+
+<div class="tabs" role="tablist">
+  <button role="tab" id="tab-bogen" aria-controls="p-bogen" aria-selected="true">Bogen</button>
+  <button role="tab" id="tab-aus" aria-controls="p-aus" aria-selected="false">Auswertung</button>
+  <button role="tab" id="tab-claude" aria-controls="p-claude" aria-selected="false">Analyse</button>
+  <button role="tab" id="tab-setup" aria-controls="p-setup" aria-selected="false">Setup</button>
+</div>
+
+<div class="offline" id="offline" hidden>
+  Keine Synchronisierung aktiv. Die Wochen liegen nur in diesem Browser — unter Setup lässt sich ein privates GitHub-Repository als Ablage eintragen.
+</div>
+
+<!-- ==================== BOGEN ==================== -->
+<section class="panel" id="p-bogen" role="tabpanel" aria-labelledby="tab-bogen">
+
+  <div class="card">
+    <h2><span class="step">00</span> Was dieser Bogen leisten kann</h2>
+    <div class="note">
+      Der GLOW-Stack ist in sich nicht auflösbar — drei Substanzen, eine Spritze, ein Zeitverlauf. Was dieser Bogen trotzdem hergibt: <b>einen sauberen Zeitverlauf</b> mit gleichbleibenden Fragen, <b>einen echten Innersubjekt-Vergleich für PT-141</b> (weil es nicht täglich läuft), <b>eine Erwartungskontrolle</b> und <b>eine Ereignis-Zeitleiste</b>, falls etwas auftritt.
+      <br><br>
+      Zwei Regeln, die den Unterschied machen: <b>immer am selben Wochentag zur selben Zeit</b> ausfüllen, und <b>nie vorher die alten Einträge ansehen</b>. Sonst bewertest du deine Erinnerung an letzte Woche statt diese Woche.
+    </div>
+  </div>
+
+  <div class="card">
+    <h2><span class="step">01</span> Erwartung — zuerst, vor allem anderen</h2>
+    <p class="hint">Bevor du irgendetwas bewertest. Am Ende lässt sich vergleichen, ob deine Ergebnisse deiner Erwartung folgen oder unabhängig von ihr verlaufen. Das ist die einzige Placebo-Kontrolle, die im Selbstversuch möglich ist.</p>
+    <div id="s-erwartung"></div>
+  </div>
+
+  <div class="card">
+    <h2><span class="step">02</span> Exposition dieser Woche</h2>
+    <p class="hint">Was tatsächlich gesetzt wurde, nicht was geplant war. <strong>Obere Reihe: Anzahl der Injektionen in dieser Woche. Untere Reihe: Dosis je einzelner Injektion</strong> — nicht die Wochensumme. Achte auf die Einheiten, sie sind je Substanz verschieden.</p>
+
+    <label class="fl">Anzahl Injektionen diese Woche</label>
+    <div class="grid3" style="margin-bottom:1rem">
+      <div class="field"><label class="fl" for="nGlow">GLOW <span style="text-transform:none;letter-spacing:0">(Stück)</span></label><input type="number" id="nGlow" min="0" max="21" step="1" value="0" inputmode="numeric"></div>
+      <div class="field"><label class="fl" for="nKiss">Kisspeptin <span style="text-transform:none;letter-spacing:0">(Stück)</span></label><input type="number" id="nKiss" min="0" max="21" step="1" value="0" inputmode="numeric"></div>
+      <div class="field"><label class="fl" for="nPt">PT-141 <span style="text-transform:none;letter-spacing:0">(Stück)</span></label><input type="number" id="nPt" min="0" max="14" step="1" value="0" inputmode="numeric"></div>
+    </div>
+
+    <label class="fl">Dosis je einzelner Injektion</label>
+    <div class="grid3" style="margin-bottom:1rem">
+      <div class="field"><label class="fl" for="dGlow">GLOW <span style="text-transform:none;letter-spacing:0">(mg gesamt)</span></label><input type="number" id="dGlow" min="0" step="0.1" inputmode="decimal" placeholder="z. B. 2,8"></div>
+      <div class="field"><label class="fl" for="dKiss">Kisspeptin <span style="text-transform:none;letter-spacing:0">(µg)</span></label><input type="number" id="dKiss" min="0" step="5" inputmode="decimal" placeholder="z. B. 100"></div>
+      <div class="field"><label class="fl" for="dPt">PT-141 <span style="text-transform:none;letter-spacing:0">(mg)</span></label><input type="number" id="dPt" min="0" step="0.25" inputmode="decimal" placeholder="z. B. 1,75"></div>
+    </div>
+    <p class="hint" style="margin-bottom:1rem">Kisspeptin wird im Graumarkt üblicherweise in <strong>Mikrogramm</strong> dosiert (50–200 µg), PT-141 und GLOW in <strong>Milligramm</strong>. Beim GLOW ist die Gesamtmenge des Gemischs gemeint; wie viel davon GHK-Cu ist, legst du einmalig im Setup fest.</p>
+
+    <div class="note" id="cuNote" style="margin-bottom:1rem"></div>
+
+    <div class="grid2">
+      <div class="field"><label class="fl" for="nTirz">Tirzepatid <span style="text-transform:none;letter-spacing:0">(mg in dieser Woche)</span></label><input type="number" id="nTirz" min="0" step="0.5" inputmode="decimal" placeholder="z. B. 2,5"></div>
+      <div class="field"><label class="fl" for="nSonstMed">Sonstige Medikamente, Supplemente</label><input type="text" id="nSonstMed" placeholder="Kreatin, …"></div>
+    </div>
+    <div class="field">
+      <label class="fl" for="abw">Abweichungen, Auslassungen, neue Charge</label>
+      <input type="text" id="abw" placeholder="z. B. Do ausgelassen, neues Vial ab Fr">
+    </div>
+    <div class="field">
+      <label class="fl" for="stellen">Einstichstellen — Auffälligkeiten</label>
+      <input type="text" id="stellen" placeholder="Rötung, Knoten, Verhärtung, Verfärbung …">
+    </div>
+  </div>
+
+  <div class="card">
+    <h2><span class="step">★</span> GLOW-Zielgrößen</h2>
+    <p class="hint">Die drei Wirkungen, die du vom Stack erwartest — Haut, Gelenke, Wohlbefinden. Sie stehen als eigener Block, damit sie nicht im allgemeinen Kontext untergehen, und werden in der Auswertung gegen deine im Setup hinterlegte Erwartung geprüft: Tritt eine Verbesserung <em>vor</em> dem erwarteten Zeitpunkt auf, ist Erwartung die naheliegendere Erklärung als Kollagenumbau.</p>
+    <div id="s-glowziel"></div>
+    <div class="field" style="margin-top:1rem">
+      <label class="fl" for="gGelenkOrt">Betroffene Gelenke — welche, seit wann</label>
+      <input type="text" id="gGelenkOrt" placeholder="z. B. rechte Schulter seit Frühjahr, Knie beidseits bei Belastung">
+    </div>
+    <p class="hint" style="margin-top:.8rem">Das Ortsfeld ist wichtiger, als es aussieht: Die Tierdaten zu BPC-157 betreffen die Heilung <em>akuter</em> Verletzungen, nicht diffuse Gelenkbeschwerden. Ein benanntes, abgrenzbares Gelenk ist der einzige Fall, in dem eine Besserung überhaupt einen Mechanismus hinter sich hätte.</p>
+  </div>
+
+  <div class="card">
+    <h2><span class="step">03</span> Kernbereiche</h2>
+    <p class="hint">In der vergangenen Woche insgesamt — nicht heute, nicht der beste Tag. <em>0 = so schlecht wie es bei dir je war, 10 = so gut wie es bei dir je war.</em></p>
+    <div id="s-kern"></div>
+  </div>
+
+  <div class="card">
+    <h2><span class="step">04</span> Wohlbefinden</h2>
+    <p class="hint">WHO-5-Index, Wortlaut der offiziellen deutschen Fassung, Zeitraum auf eine Woche verkürzt. Durch die Verkürzung ist es formal nicht mehr das validierte Instrument — als gleichbleibendes Maß über Monate bleibt es trotzdem das beste verfügbare.</p>
+    <p class="hint" style="margin-bottom:.8rem"><em>In den letzten sieben Tagen …</em></p>
+    <div id="s-who"></div>
+    <div class="score">WHO-5-Score <b id="whoScore">—</b> von 100</div>
+  </div>
+
+  <div class="card">
+    <h2><span class="step">05</span> Sexualfunktion</h2>
+    <p class="hint">IIEF-5, deutscher Standardwortlaut, Zeitraum auf eine Woche verkürzt. Gleiche Einschränkung wie oben, gleicher Nutzen: die Frage bleibt über Monate identisch.</p>
+    <div id="s-iief"></div>
+    <div class="score">IIEF-5 <b id="iiefScore">—</b> von 25</div>
+  </div>
+
+  <div class="card">
+    <h2><span class="step">05b</span> Morgendliche Erektionen</h2>
+    <p class="hint">Der wichtigste Einzelmarker in diesem ganzen Bogen. Spontane Erektionen im Schlaf und beim Aufwachen sind androgenabhängig und reagieren auf den Hormonstatus über Tage bis Wochen — nicht auf die Uhrzeit einer einzelnen Injektion. Damit trennen sie das Stehende vom Akuten: Was sich hier bewegt, gehört zur Dauergabe, nicht zu PT-141.</p>
+    <div id="s-morgenCount"></div>
+    <div id="s-morgen"></div>
+    <p class="hint" style="margin-top:.9rem"><em>Beim Zählen die volle Blase als Erklärung ausschließen — hält die Erektion nach dem Wasserlassen an, zählt sie.</em></p>
+  </div>
+
+  <div class="card cond" id="ptCard" hidden>
+    <h2><span class="step">06</span> PT-141 — der einzige echte Vergleich</h2>
+    <p class="hint">Weil PT-141 nicht täglich läuft, hast du hier Tage mit und Tage ohne — im selben Körper, in derselben Woche. Das ist der einzige Punkt im ganzen Protokoll, an dem eine Zuordnung möglich ist. Entsprechend sorgfältig ausfüllen.</p>
+    <div id="s-pt"></div>
+    <div class="grid2" style="margin-top:.4rem">
+      <div class="field"><label class="fl" for="ptDosis">Dosis je Anwendung (mg)</label><input type="text" id="ptDosis" placeholder="z. B. 0,75" inputmode="decimal"></div>
+      <div class="field"><label class="fl" for="ptEintritt">Wirkeintritt (Min.)</label><input type="number" id="ptEintritt" min="0" step="5" inputmode="numeric"></div>
+      <div class="field"><label class="fl" for="ptDauer">Wirkdauer (Std.)</label><input type="number" id="ptDauer" min="0" step="0.5" inputmode="decimal"></div>
+      <div class="field">
+        <label class="fl" for="ptBlind">Wäre der Tag ohne Wissen erkennbar gewesen?</label>
+        <select id="ptBlind">
+          <option value="">—</option>
+          <option value="ja">ja, eindeutig</option>
+          <option value="wahrscheinlich">wahrscheinlich</option>
+          <option value="unsicher">unsicher</option>
+          <option value="nein">nein</option>
+        </select>
+      </div>
+      <div class="field">
+        <label class="fl" for="ptAusloesung">Auslösung des Effekts</label>
+        <select id="ptAusloesung">
+          <option value="">—</option>
+          <option value="spontan">spontan, ohne sexuellen Reiz</option>
+          <option value="gemischt">teils spontan, teils reizgebunden</option>
+          <option value="reiz">nur bei sexuellem Reiz oder Gedanken</option>
+          <option value="garnicht">kein Effekt</option>
+        </select>
+      </div>
+    </div>
+    <p class="hint" style="margin-top:.8rem">Die Frage nach der Erkennbarkeit ist die wichtigste des ganzen Bogens: Wenn du an einem Anwendungstag nicht sagen könntest, dass es einer war, ist der beobachtete Effekt vermutlich nicht der Wirkstoff.</p>
+
+    <label class="fl" style="margin-top:1.3rem">Verblindeter Durchgang</label>
+    <p class="hint" style="margin:.1rem 0 .7rem">Nur ausfüllen, wenn du nummerierte Spritzen im Voraus randomisiert vorbereitet hast. Die Vermutung wird <em>vor</em> der Entblindung eingetragen, das tatsächliche Präparat erst danach.</p>
+    <div class="grid3">
+      <div class="field"><label class="fl" for="ptVial">Spritzen-Nr.</label><input type="text" id="ptVial" inputmode="numeric" placeholder="z. B. 7"></div>
+      <div class="field">
+        <label class="fl" for="ptGuess">Deine Vermutung</label>
+        <select id="ptGuess"><option value="">—</option><option value="wirkstoff">Wirkstoff</option><option value="placebo">Placebo</option><option value="unsicher">keine Ahnung</option></select>
+      </div>
+      <div class="field">
+        <label class="fl" for="ptActual">Tatsächlich (nach Entblindung)</label>
+        <select id="ptActual"><option value="">noch verblindet</option><option value="wirkstoff">Wirkstoff</option><option value="placebo">Placebo</option></select>
+      </div>
+    </div>
+
+    <label class="fl" style="margin-top:1.2rem">Begleitphänomene an Anwendungstagen</label>
+    <p class="hint" style="margin:.1rem 0 .6rem">Strecken, Gähnen und Erektion bilden im Tiermodell <em>einen</em> melanocortin-induzierten Verhaltenskomplex über MC4-Rezeptoren im Nucleus paraventricularis — sie gehören zusammen. Treten sie gemeinsam auf, ist das ein rezeptorspezifisches Muster und damit ein deutlich stärkeres Signal als die Erektion allein.</p>
+    <div class="checks neutral" id="s-ptSigns"></div>
+    <div class="field" style="margin-top:.8rem">
+      <label class="fl" for="ptSignsNote">Zeitlicher Ablauf der Begleitphänomene</label>
+      <input type="text" id="ptSignsNote" placeholder="z. B. Strecken ab ca. 40 Min, vor der Erektion, hielt 2 Std">
+    </div>
+  </div>
+
+  <div class="card">
+    <h2><span class="step">06b</span> Pigmentierung</h2>
+    <p class="hint">MC1-Rezeptoren auf den Melanozyten sind derselbe Rezeptorpfad, über den auch die Bräunung läuft. Beschleunigte Bräunung ist damit ein peripherer Wirknachweis — und gleichzeitig der Grund, warum die Muttermal-Beobachtung ab jetzt zum Protokoll gehört.</p>
+    <div id="s-pigment"></div>
+    <div class="grid2" style="margin-top:.4rem">
+      <div class="field"><label class="fl" for="uvStd">UV-Exposition diese Woche (Std.)</label><input type="number" id="uvStd" min="0" step="0.5" inputmode="decimal"></div>
+      <div class="field">
+        <label class="fl" for="uvQuelle">Hauptquelle</label>
+        <select id="uvQuelle"><option value="">—</option><option>Sonne beiläufig</option><option>Sonne gezielt</option><option>Solarium</option><option>keine</option></select>
+      </div>
+    </div>
+    <div class="field" style="margin-top:.7rem">
+      <label class="fl" for="naevi">Muttermale — neue, veränderte, auffällige</label>
+      <input type="text" id="naevi" placeholder="Ort, was verändert, seit wann">
+    </div>
+    <div class="note" style="margin-top:.9rem">
+      <b>Einmalig und zeitkritisch:</b> Eine dermatoskopische Basisdokumentation deiner Muttermale ist jetzt mehr wert als in drei Monaten — je weiter die Pigmentierung fortschreitet, desto weniger sagt ein späterer Ausgangsbefund aus. Es geht nicht um Risiko, sondern um Lesbarkeit: Wenn alle Male nachdunkeln, verlierst du „ein Mal hat sich verändert" als Warnsignal, solange kein Vorher existiert.
+    </div>
+  </div>
+
+  <div class="card">
+    <h2><span class="step">07</span> Negativkontrollen</h2>
+    <p class="hint">Bereiche, auf die keine dieser Substanzen einen Mechanismus hat. Steigen sie mit, ist der Anstieg global — also Erwartung, gute Wochen, besserer Schlaf. Bleiben sie flach, während die Kernbereiche steigen, ist das dein stärkstes Argument dafür, dass etwas Substanzspezifisches passiert.</p>
+    <div id="s-neg"></div>
+  </div>
+
+  <div class="card">
+    <h2><span class="step">08</span> Beobachtungsliste</h2>
+    <p class="hint">Nur ankreuzen, wenn diese Woche tatsächlich aufgetreten. Bei einem Stack ist das Datum die einzige Zuordnung, die dir bleibt.</p>
+    <div class="checks" id="s-watch"></div>
+    <div class="field" style="margin-top:.8rem">
+      <label class="fl" for="watchNote">Wenn etwas angekreuzt: wann, wie stark, wie lange</label>
+      <input type="text" id="watchNote" placeholder="z. B. Di + Mi, leicht, je 2 Std nach Injektion">
+    </div>
+  </div>
+
+  <div class="card">
+    <h2><span class="step">★</span> Körperzusammensetzung</h2>
+    <p class="hint">Der Tirzepatid-Endpunkt. Gewicht allein sagt nichts darüber, <em>was</em> abgenommen wurde — dafür braucht es die Umfänge und, wichtiger noch, die Kraftwerte.</p>
+    <div class="grid3">
+      <div class="field"><label class="fl" for="cGew">Gewicht (kg)</label><input type="number" id="cGew" min="0" step="0.1" inputmode="decimal"></div>
+      <div class="field"><label class="fl" for="cBauch">Taille / Bauch (cm)</label><input type="number" id="cBauch" min="0" step="0.5" inputmode="decimal"></div>
+      <div class="field"><label class="fl" for="mBrust">Brustumfang (cm)</label><input type="number" id="mBrust" min="0" step="0.5" inputmode="decimal"></div>
+      <div class="field"><label class="fl" for="mArmR">Oberarm rechts (cm)</label><input type="number" id="mArmR" min="0" step="0.5" inputmode="decimal"></div>
+      <div class="field"><label class="fl" for="mArmL">Oberarm links (cm)</label><input type="number" id="mArmL" min="0" step="0.5" inputmode="decimal"></div>
+      <div class="field"><label class="fl" for="mBeinR">Oberschenkel rechts (cm)</label><input type="number" id="mBeinR" min="0" step="0.5" inputmode="decimal"></div>
+      <div class="field"><label class="fl" for="mBeinL">Oberschenkel links (cm)</label><input type="number" id="mBeinL" min="0" step="0.5" inputmode="decimal"></div>
+    </div>
+
+    <div class="note" style="margin-top:1rem">
+      <b>Damit die Zahlen etwas taugen:</b> immer am selben Wochentag im selben Abstand zur Tirzepatid-Injektion messen (die Wassereinlagerung schwankt über die Woche), morgens nüchtern vor dem Training, Muskel entspannt statt angespannt — such dir eins aus und bleib dabei. Messpunkt mit Abstand zu einem Knochenpunkt festlegen und notieren, etwa 15 cm über dem Ellenbogengelenk, sonst misst du jede Woche eine andere Stelle. Die Messfehlerspanne eines Maßbands liegt bei etwa einem halben bis einem Zentimeter — also in derselben Größenordnung wie die Veränderung, die du suchst.
+    </div>
+
+    <label class="fl" style="margin-top:1.3rem">Kraftwerte — der bessere Muskelindikator</label>
+    <p class="hint" style="margin:.1rem 0 .7rem">Trag den schwersten Arbeitssatz der Woche ein. Verlust an kontraktilem Gewebe zeigt sich im Kraftwert Wochen früher als am Maßband, und die Streuung ist kleiner. Übungsnamen legst du im Setup fest.</p>
+    <div id="s-kraft"></div>
+  </div>
+
+  <div class="card">
+    <h2><span class="step">09</span> Confounder</h2>
+    <p class="hint">Ohne diese Zeilen ist der Rest nicht lesbar. Eine Woche mit Grippe oder drei Nächten Schlaf unter fünf Stunden erklärt fast jede Bewegung in den Kernbereichen.</p>
+    <div class="grid3">
+      <div class="field"><label class="fl" for="cTrain">Training (Std.)</label><input type="number" id="cTrain" min="0" step="0.5" inputmode="decimal"></div>
+      <div class="field"><label class="fl" for="cSchlaf">Schlaf Ø (Std.)</label><input type="number" id="cSchlaf" min="0" max="14" step="0.5" inputmode="decimal"></div>
+      <div class="field"><label class="fl" for="cAlk">Alkohol (Einheiten)</label><input type="number" id="cAlk" min="0" step="1" inputmode="numeric"></div>
+      <div class="field"><label class="fl" for="cProtein">Protein Ø (g/Tag)</label><input type="number" id="cProtein" min="0" step="5" inputmode="numeric"></div>
+    </div>
+    <div style="margin-top:.9rem" id="s-conf"></div>
+    <div class="checks neutral" id="s-confChecks" style="margin-top:.9rem"></div>
+    <div class="field" style="margin-top:.8rem">
+      <label class="fl" for="cSonst">Sonstige Änderungen</label>
+      <input type="text" id="cSonst" placeholder="neues Supplement, Medikament, Urlaub, Zeitzone …">
+    </div>
+  </div>
+
+  <div class="card">
+    <h2><span class="step">10</span> Zwei Fragen im Klartext</h2>
+    <div class="field">
+      <label class="fl" for="fText1">Was war diese Woche anders?</label>
+      <textarea id="fText1" placeholder="Konkret. Nicht „besser“, sondern was genau."></textarea>
+    </div>
+    <div class="field">
+      <label class="fl" for="fText2">Was davon hättest du auch ohne die Peptide erwartet?</label>
+      <textarea id="fText2" placeholder="Die unbequeme Frage. Sie ist der Grund, warum dieser Bogen mehr wert ist als ein Gefühl."></textarea>
+    </div>
+    <div class="btnrow"><button class="btn" id="saveBtn">Woche speichern</button></div>
+    <p class="saveinfo" id="saveInfo"></p>
+  </div>
+
+  <div class="card cond" id="monthCard" hidden>
+    <h2><span class="step">★</span> Alle vier Wochen fällig</h2>
+    <p class="hint">Diese Woche ist ein Vielfaches von vier seit Beginn. Was jetzt ansteht:</p>
+    <div class="checks neutral" id="s-month"></div>
+  </div>
+</section>
+
+<!-- ==================== AUSWERTUNG ==================== -->
+<section class="panel" id="p-aus" role="tabpanel" aria-labelledby="tab-aus" hidden>
+
+  <div class="tiles">
+    <div class="tile wide">
+      <span class="lab">IIEF-5 — Primärendpunkt</span>
+      <span class="val mono" id="tLib">—<span class="unit">/ 25</span></span>
+      <p class="sub" id="tLibSub">Letzte erfasste Woche.</p>
+    </div>
+    <div class="tile"><span class="lab">IIEF-5 — erste vs. letzte Wochen</span><span class="val mono" id="tLibDelta">—</span><p class="sub" id="tLibDeltaSub">Ab vier Wochen berechenbar.</p></div>
+    <div class="tile"><span class="lab">Morgen mit Erektion Ø</span><span class="val mono" id="tLibTage">—</span><p class="sub">von 7 — Zählwert, nicht Einschätzung</p></div>
+    <div class="tile wide">
+      <span class="lab">Erwartung ↔ IIEF-5</span>
+      <span class="val mono" id="tCorr">—</span>
+      <p class="sub" id="tCorrSub">Ab etwa sechs Wochen aussagekräftig.</p>
+    </div>
+    <div class="tile"><span class="lab">Gewicht</span><span class="val mono" id="tGew">—</span><p class="sub" id="tGewSub">Ab vier Wochen berechenbar.</p></div>
+    <div class="tile"><span class="lab">Muskel — Erhalt</span><span class="val mono" id="tMuskel">—</span><p class="sub" id="tMuskelSub">Kraft und Umfang gegen den Gewichtsverlauf.</p></div>
+    <div class="tile"><span class="lab">Wochen erfasst</span><span class="val mono" id="tWeeks">0</span><p class="sub">lückenlos ist besser als lang</p></div>
+    <div class="tile"><span class="lab">Morgen mit Erektion Ø</span><span class="val mono" id="tMorgen">—</span><p class="sub">von 7 — Androgen-Proxy</p></div>
+    <div class="tile"><span class="lab">Erwartung Ø</span><span class="val mono" id="tExp">—</span><p class="sub">von 10</p></div>
+    <div class="tile wide">
+      <span class="lab">Negativkontrollen — Drift</span>
+      <span class="val mono" id="tNeg">—</span>
+      <p class="sub" id="tNegSub"></p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Verblindeter PT-141-Durchgang</h2>
+    <p class="hint">Der einzige Teil dieses Protokolls, der über Anekdote hinausgeht. Entscheidend ist nicht nur die Differenz zwischen Wirkstoff- und Placebo-Wochen, sondern die Trefferquote deiner Vermutung: Rätst du fast immer richtig, war die Verblindung durchlässig und die Differenz ist mit Erwartung kontaminiert.</p>
+    <div class="tablewrap"><table id="blindTable"></table></div>
+    <div class="empty" id="blindEmpty">Noch keine entblindeten Durchgänge erfasst.</div>
+  </div>
+
+  <div class="card">
+    <h2>PT-141 — Wochen mit gegen Wochen ohne</h2>
+    <p class="hint">Verlangen an Anwendungstagen gegen Tage ohne, gemittelt über alle Wochen mit mindestens einer Anwendung.</p>
+    <div class="tablewrap"><table id="ptTable"></table></div>
+    <div class="empty" id="ptEmpty">Noch keine Woche mit PT-141-Anwendung erfasst.</div>
+  </div>
+
+  <div class="card">
+    <h2>Verläufe</h2>
+    <p class="hint">Antippen oder mit der Maus fahren, um einzelne Wochen zu lesen. Jede Kurve ist eine Reihe — Farbe trägt hier keine Bedeutung.</p>
+    <div id="sparks"></div>
+    <div class="empty" id="sparkEmpty">Ab der zweiten erfassten Woche erscheinen hier Kurven.</div>
+  </div>
+
+  <div class="card">
+    <h2>Alle Wochen</h2>
+    <div class="tablewrap"><table id="weekTable"></table></div>
+    <div class="empty" id="weekEmpty">Noch keine Wochen erfasst.</div>
+    <div class="btnrow"><button class="btn ghost" id="expBtn">Alles als CSV exportieren</button></div>
+    <p class="saveinfo" id="expInfo"></p>
+  </div>
+</section>
+
+<!-- ==================== ANALYSE ==================== -->
+<section class="panel" id="p-claude" role="tabpanel" aria-labelledby="tab-claude" hidden>
+
+  <div class="offline" id="sampleOff" hidden>
+    Die Analyse-Funktion ist in dieser Ansicht nicht verfügbar. Der Rest des Bogens funktioniert normal.
+  </div>
+
+  <div class="card" id="sampleIntro">
+    <h2>Analyse durch Claude</h2>
+    <p class="hint">Deine gespeicherten Wochen werden mitsamt dem Protokollkontext an Claude geschickt und ausgewertet. Der Kontext enthält, was du nimmst, was die Evidenz dazu hergibt und welche Confounder laufen — vor allem das Tirzepatid. Claude sieht dabei ausschließlich, was in diesem Bogen steht; es gibt keine Erinnerung zwischen den Aufrufen und keinen Zugriff auf andere Daten.</p>
+    <p class="hint" style="margin-bottom:0"><em>Quelle: <span id="aiQuelle">—</span>. Die Aufrufe laufen über dein eigenes Kontingent. Beim ersten Mal wirst du um Erlaubnis gefragt.</em></p>
+  </div>
+
+  <div class="card">
+    <h2><span class="step">A</span> Wochenkommentar</h2>
+    <p class="hint">Kurze Einordnung der zuletzt gespeicherten Woche vor dem Hintergrund der vorherigen. Was ist auffällig, was ist Rauschen, was hat einen konkurrierenden Erklärungskandidaten.</p>
+    <div class="btnrow two">
+      <button class="btn" id="askWeek">Letzte Woche einordnen</button>
+      <button class="btn ghost" id="stopWeek" hidden>Abbrechen</button>
+    </div>
+    <div class="answer" id="outWeek" hidden></div>
+    <p class="saveinfo" id="infoWeek"></p>
+  </div>
+
+  <div class="card">
+    <h2><span class="step">B</span> Gesamtauswertung</h2>
+    <p class="hint">Die vollständige Serie: Trend im Primärendpunkt, Erwartungskorrelation, Negativkontrollen, PT-141-Vergleich und Blindtest, Gewichtsverlauf. Braucht mindestens vier erfasste Wochen, um sinnvoll zu sein.</p>
+    <div class="btnrow two">
+      <button class="btn" id="askAll">Gesamtserie auswerten</button>
+      <button class="btn ghost" id="stopAll" hidden>Abbrechen</button>
+    </div>
+    <div class="answer" id="outAll" hidden></div>
+    <p class="saveinfo" id="infoAll"></p>
+  </div>
+
+  <div class="card">
+    <h2><span class="step">C</span> Eigene Frage</h2>
+    <p class="hint">Frag etwas zu deinen eigenen Daten. Zum Beispiel: „Ist mein IIEF-5 in den PT-141-Wochen höher als in den Wochen ohne?" oder „Welche Woche war die auffälligste und warum?"</p>
+    <div class="field">
+      <textarea id="askBox" placeholder="Deine Frage …"></textarea>
+    </div>
+    <div class="btnrow two">
+      <button class="btn" id="askFree">Frage stellen</button>
+      <button class="btn ghost" id="stopFree" hidden>Abbrechen</button>
+    </div>
+    <div class="answer" id="outFree" hidden></div>
+    <p class="saveinfo" id="infoFree"></p>
+  </div>
+
+  <div class="card">
+    <h2>Was Claude geschickt wird</h2>
+    <p class="hint">Zur Kontrolle — genau dieser Text geht raus, nichts sonst.</p>
+    <div class="btnrow"><button class="btn ghost" id="showCtx">Datenblock anzeigen</button></div>
+    <pre class="ctxdump" id="ctxDump" hidden></pre>
+  </div>
+</section>
+
+<!-- ==================== SETUP ==================== -->
+<section class="panel" id="p-setup" role="tabpanel" aria-labelledby="tab-setup" hidden>
+  <div class="card">
+    <h2>Rahmen</h2>
+    <p class="hint">Einmal setzen. Der Wochentag legt fest, wann der Bogen fällig ist — Konsistenz schlägt Genauigkeit.</p>
+    <div class="grid2">
+      <div class="field"><label class="fl" for="cfgStart">Beginn des Protokolls</label><input type="date" id="cfgStart"></div>
+      <div class="field">
+        <label class="fl" for="cfgDay">Fester Erfassungstag</label>
+        <select id="cfgDay">
+          <option value="0">Sonntag</option><option value="1">Montag</option><option value="2">Dienstag</option>
+          <option value="3">Mittwoch</option><option value="4">Donnerstag</option><option value="5">Freitag</option>
+          <option value="6" selected>Samstag</option>
+        </select>
+      </div>
+    </div>
+    <div class="btnrow"><button class="btn ghost" id="cfgSave">Setup speichern</button></div>
+    <p class="saveinfo" id="cfgInfo"></p>
+  </div>
+
+  <div class="card">
+    <h2>Erwartung vorab festlegen</h2>
+    <p class="hint">Trag ein, ab welcher Woche du eine Verbesserung erwartest — <em>bevor</em> du sie beobachtest. Das ist die einzige Vorab-Registrierung, die dir hier möglich ist, und sie ist mehr wert als jede spätere Erklärung: Tritt eine Besserung deutlich früher auf als vorhergesagt, ist Erwartung der wahrscheinlichere Kandidat. Tritt sie im vorhergesagten Fenster auf, wird es interessant.</p>
+    <div class="grid2">
+      <div class="field"><label class="fl" for="cfgGlowStart">GLOW-Start (Datum)</label><input type="date" id="cfgGlowStart"></div>
+      <div class="field"><label class="fl" for="cfgErwHaut">Haut — erwartet ab Woche</label><input type="number" id="cfgErwHaut" min="1" max="52" step="1" value="9" inputmode="numeric"></div>
+      <div class="field"><label class="fl" for="cfgErwGelenk">Gelenke — erwartet ab Woche</label><input type="number" id="cfgErwGelenk" min="1" max="52" step="1" value="9" inputmode="numeric"></div>
+      <div class="field"><label class="fl" for="cfgErwWohl">Wohlbefinden — erwartet ab Woche</label><input type="number" id="cfgErwWohl" min="1" max="52" step="1" value="9" inputmode="numeric"></div>
+      <div class="field"><label class="fl" for="cfgGhk">GHK-Cu je GLOW-Dosis (mg)</label><input type="number" id="cfgGhk" min="0" step="0.1" value="2" inputmode="decimal"></div>
+    </div>
+    <p class="hint" style="margin-top:.6rem">Beim üblichen 70-mg-GLOW-Fläschchen entfallen etwa 2 mg GHK-Cu auf eine 2,8-mg-Dosis. Daraus rechnet der Bogen die wöchentliche Kupferlast: GHK-Cu besteht zu rund 15,8 % seiner Masse aus elementarem Kupfer, subkutan gegeben unter Umgehung der Aufnahmeregulation im Darm.</p>
+    <div class="btnrow"><button class="btn ghost" id="cfgSave2">Erwartung speichern</button></div>
+    <p class="saveinfo" id="cfgInfo2"></p>
+  </div>
+
+  <div class="card">
+    <h2>Rekonstitutionsrechner</h2>
+    <p class="hint">Vial-Menge, Wasservolumen und Zieldosis eingeben — heraus kommen die Einheiten auf der Insulinspritze, die Reichweite des Vials und eine Warnung, wenn die Dosis für deine Spritze zu groß oder zu fein zum Ablesen ist.</p>
+
+    <div class="btnrow" style="grid-template-columns:repeat(3,1fr);gap:.3rem;margin:0 0 1rem">
+      <button class="btn ghost" data-preset="glow" style="font-size:.82rem;padding:.5rem .3rem">GLOW</button>
+      <button class="btn ghost" data-preset="kiss" style="font-size:.82rem;padding:.5rem .3rem">Kisspeptin</button>
+      <button class="btn ghost" data-preset="pt" style="font-size:.82rem;padding:.5rem .3rem">PT-141</button>
+    </div>
+
+    <div class="grid2">
+      <div class="field"><label class="fl" for="rcVial">Vial-Inhalt (mg)</label><input type="number" id="rcVial" min="0" step="0.5" value="70" inputmode="decimal"></div>
+      <div class="field"><label class="fl" for="rcWasser">Bac Water (ml)</label><input type="number" id="rcWasser" min="0.1" step="0.1" value="3" inputmode="decimal"></div>
+      <div class="field"><label class="fl" for="rcDosis">Zieldosis</label><input type="number" id="rcDosis" min="0" step="0.1" value="2.8" inputmode="decimal"></div>
+      <div class="field">
+        <label class="fl" for="rcEinheit">Einheit der Zieldosis</label>
+        <select id="rcEinheit"><option value="1">mg</option><option value="0.001">µg</option></select>
+      </div>
+      <div class="field">
+        <label class="fl" for="rcSpritze">Spritze</label>
+        <select id="rcSpritze"><option value="30" selected>30 I.E. / 0,3 ml</option><option value="50">50 I.E. / 0,5 ml</option><option value="100">100 I.E. / 1,0 ml</option></select>
+      </div>
+      <div class="field"><label class="fl" for="rcFreq">Anwendung alle … Tage</label><input type="number" id="rcFreq" min="1" step="1" value="1" inputmode="numeric"></div>
+    </div>
+
+    <div class="rcout" id="rcOut"></div>
+    <p class="hint" style="margin-top:.9rem">Gilt für <strong>U-100</strong>-Spritzen, also 100 I.E. je Milliliter. Prüf das einmal auf der Verpackung — bei einer U-40-Spritze wären alle Einheitenangaben um den Faktor 2,5 falsch.</p>
+  </div>
+
+  <div class="card">
+    <h2>Übungen für die Kraftwerte</h2>
+    <p class="hint">Vier Übungen, die du regelmäßig machst und die sich sauber vergleichen lassen — je eine für Beine, Rücken, Brust und Schultern ist ein brauchbarer Schnitt.</p>
+    <div class="grid2" id="s-kraftNamen"></div>
+    <div class="btnrow"><button class="btn ghost" id="cfgSave3">Übungen speichern</button></div>
+    <p class="saveinfo" id="cfgInfo3"></p>
+  </div>
+
+  <div class="card">
+    <h2>Datenablage</h2>
+    <p class="hint">Der Bogen speichert immer zuerst in diesem Browser. Zusätzlich kann er die Wochen in ein privates GitHub-Repository schreiben — dann liegen sie versioniert und geräteübergreifend, ohne dass ein fremder Dienst sie sieht.</p>
+    <p class="saveinfo" id="storeState"></p>
+
+    <div class="field">
+      <label class="fl" for="stBackend">Ablage</label>
+      <select id="stBackend">
+        <option value="auto">automatisch wählen</option>
+        <option value="local">nur dieser Browser</option>
+        <option value="github">GitHub-Repository</option>
+        <option value="claude">Claude-Datenbank</option>
+      </select>
+    </div>
+
+    <div class="grid2">
+      <div class="field"><label class="fl" for="ghOwner">GitHub-Benutzer</label><input type="text" id="ghOwner" autocomplete="off" spellcheck="false"></div>
+      <div class="field"><label class="fl" for="ghRepo">Daten-Repository</label><input type="text" id="ghRepo" autocomplete="off" spellcheck="false" placeholder="peptid-daten"></div>
+      <div class="field"><label class="fl" for="ghBranch">Branch</label><input type="text" id="ghBranch" autocomplete="off" spellcheck="false" placeholder="main"></div>
+      <div class="field"><label class="fl" for="ghPfad">Unterordner</label><input type="text" id="ghPfad" autocomplete="off" spellcheck="false" placeholder="daten"></div>
+    </div>
+    <div class="field">
+      <label class="fl" for="ghToken">Zugriffsschlüssel (fine-grained, Contents: Read and write)</label>
+      <input type="password" id="ghToken" autocomplete="off" spellcheck="false" placeholder="github_pat_…">
+    </div>
+    <p class="hint">Der Schlüssel bleibt in diesem Browser und geht nur an api.github.com. Er steht nicht im Repository. Auf einem zweiten Gerät trägst du ihn einmal neu ein.</p>
+    <div class="btnrow two">
+      <button class="btn ghost" id="ghTest">Verbindung prüfen</button>
+      <button class="btn ghost" id="ghPush">Alle lokalen Wochen hochladen</button>
+    </div>
+    <div class="btnrow"><button class="btn" id="stSave">Ablage speichern</button></div>
+    <p class="saveinfo" id="stInfo"></p>
+  </div>
+
+  <div class="card">
+    <h2>Analyse ohne Claude-Viewer</h2>
+    <p class="hint">Läuft der Bogen als Webseite statt als Claude-Artifact, gibt es keine eingebaute Analysefunktion. Mit einem eigenen Anthropic-Schlüssel spricht die Seite direkt mit der API — dieselben Auswertungsregeln, abgerechnet über dein API-Konto.</p>
+    <div class="field">
+      <label class="fl" for="anKey">Anthropic API-Schlüssel</label>
+      <input type="password" id="anKey" autocomplete="off" spellcheck="false" placeholder="sk-ant-…">
+    </div>
+    <div class="field">
+      <label class="fl" for="anModel">Modell</label>
+      <input type="text" id="anModel" autocomplete="off" spellcheck="false" placeholder="claude-sonnet-4-5">
+    </div>
+    <p class="hint">Auch dieser Schlüssel bleibt im Browser. Er geht ausschließlich an api.anthropic.com. Nach dem Speichern die Seite neu laden.</p>
+    <div class="btnrow"><button class="btn" id="anSave">Schlüssel speichern</button></div>
+    <p class="saveinfo" id="anInfo"></p>
+  </div>
+
+  <div class="card">
+    <h2>Wie du den Bogen ausfüllst, damit er etwas wert ist</h2>
+    <div class="note">
+      <b>Gleicher Tag, gleiche Uhrzeit, gleicher Zustand.</b> Nicht nach dem Training, nicht nach zwei Gläsern Wein, nicht am Morgen nach einer schlechten Nacht — es sei denn, das ist jedes Mal so.
+      <br><br>
+      <b>Nicht zurückblättern.</b> Erst speichern, dann die Auswertung ansehen. Wer die Vorwoche kennt, bewertet die Differenz statt den Zustand.
+      <br><br>
+      <b>Lücken ehrlich lassen.</b> Eine ausgelassene Woche ist unschön, eine nachgetragene Woche ist Erfindung. Lieber eine Lücke im Verlauf als eine erfundene Zahl darin.
+      <br><br>
+      <b>Vier Wochen sind das Minimum, zwölf sind die Antwort.</b> Alles darunter ist Rauschen — bei Hautbild und Haaren gilt das doppelt.
+    </div>
+  </div>
+</section>
+
+</div>
+
+<script type="module" src="src/js/main.js"></script>
+</body>
+</html>

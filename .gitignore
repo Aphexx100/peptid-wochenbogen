@@ -1,0 +1,10 @@
+node_modules/
+dist/
+.DS_Store
+*.log
+
+# Nie ins Repository: Zugangsdaten und eigene Daten.
+# Die Wochen gehören ins private Datenrepository, nicht hierher.
+.env
+*.token
+daten/
