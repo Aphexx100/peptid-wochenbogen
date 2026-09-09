@@ -8,7 +8,7 @@ import { $ } from '../util/dom.js';
 import { currentWeekKey, weekNumber } from '../util/date.js';
 import { saveWeek as ablageWeek, saveConfig as ablageConfig } from '../storage/index.js';
 import { readForm } from './model.js';
-import { buildKraft, buildExpo, renderCu } from './build.js';
+import { buildKraft, buildExpo, renderCu, readVials, refreshExpoUnits } from './build.js';
 import { renderStatus } from '../ui/status.js';
 
 function melde(id, r) {
@@ -55,6 +55,13 @@ export async function saveCfgGlow() {
   renderStatus();
   renderCu();
   await persistCfg('cfgInfo2');
+}
+
+/** Aktuelle Vials aus der Karte im Bogen. Stellt die Rasterspalten um. */
+export async function saveVials() {
+  state.cfg.vials = readVials();
+  refreshExpoUnits();
+  await persistCfg('vialInfo');
 }
 
 /** Die vier Uebungsnamen der Kraftwerte. */

@@ -115,6 +115,31 @@ async function laufe(browser, url, label, mitModulTest) {
   pruefe('Tageseintrag überlebt das Neuladen', (await seite.inputValue('#xglow0')) === '2.8');
   pruefe('IIEF-5 überlebt das Neuladen', (await seite.locator('#iiefScore').innerText()) === '20');
 
+  /* Vials: Rechner-Preset als aktuelles GLOW-Vial übernehmen — die Spalte
+     läuft danach in ml, der bestehende mg-Eintrag wird umgerechnet und die
+     Wirkstoffmenge je Zelle ausgewiesen. */
+  pruefe('Vial-Karte aufgebaut', (await seite.locator('#s-vials input').count()) === 8);
+  await seite.click('#tab-setup');
+  await seite.click('[data-preset="glow"]');
+  await seite.click('[data-vialziel="glow"]');
+  await seite.waitForTimeout(400);
+  pruefe('Rechner meldet die Vial-Übernahme',
+    /GLOW-Vial übernommen/.test(await seite.locator('#rcUebInfo').innerText()));
+  await seite.click('#tab-bogen');
+  pruefe('Vial-Karte zeigt die Konzentration', /23,33 mg\/ml/.test(await seite.locator('#vKonzglow').innerText()));
+  pruefe('GLOW-Spalte läuft jetzt in ml', /\(ml\)/.test(await seite.locator('#xhglow').innerText()));
+  pruefe('mg-Eintrag wurde in ml umgerechnet', (await seite.inputValue('#xglow0')) === '0.12');
+  pruefe('Wirkstoffmenge wird je Zelle ausgewiesen', /= 2,8 mg/.test(await seite.locator('#cglow0').innerText()));
+  const sumMl = await seite.locator('#expoSum').innerText();
+  pruefe('Wochensumme bleibt in mg', /GLOW: 7 Injektionstage à 2,8 mg/.test(sumMl), sumMl.slice(0, 90));
+
+  await seite.click('#saveBtn');
+  await seite.waitForTimeout(500);
+  await seite.reload({ waitUntil: 'networkidle' });
+  await seite.waitForTimeout(500);
+  pruefe('ml-Eintrag überlebt das Neuladen', (await seite.inputValue('#xglow0')) === '0.12');
+  pruefe('Vial überlebt das Neuladen', (await seite.inputValue('#vMgglow')) === '70');
+
   /* Auswertung */
   await seite.click('#tab-aus');
   await seite.waitForTimeout(300);

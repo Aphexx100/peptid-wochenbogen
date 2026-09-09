@@ -32,18 +32,51 @@ let legacyDose = null;
 export function setLegacyDose(d) { legacyDose = d; }
 export function getLegacyDose() { return legacyDose; }
 
-/** Raster auslesen. `leer` heisst: keine einzige Tageseingabe. */
+/* ---- Aktuelle Vials ----
+   Ist fuer eine Substanz ein Vial hinterlegt (Inhalt in mg, Wasser in ml),
+   laeuft ihre Spalte im Tagesraster in ml: eingetragen wird das aufgezogene
+   Volumen, die Wirkstoffmenge entsteht aus der Konzentration. Gespeichert
+   wird trotzdem immer die Wirkstoffmenge in der Einheit der Substanz —
+   Auswertung, CSV und Datenblock bleiben damit vial-unabhaengig. */
+
+/** Konzentration in mg/ml aus den gespeicherten Vials; 0 = kein Vial. */
+export function vialKonz(k) {
+  const v = state.cfg.vials && state.cfg.vials[k];
+  if (!v || !(Number(v.mg) > 0) || !(Number(v.ml) > 0)) return 0;
+  return Number(v.mg) / Number(v.ml);
+}
+
+/* Welche Konzentration jede Rasterspalte gerade benutzt (0 = direkte
+   Eingabe in mg/µg). Beim Umschalten werden eingetragene Werte umgerechnet. */
+const modus = {};
+
+const rund3 = (v) => Math.round(v * 1000) / 1000;
+
+/** ml einer Zelle in die Substanz-Einheit umrechnen (µg-Substanzen ×1000). */
+const mlZuMenge = (ml, x, konz) => rund3(ml * konz * (x.u === 'µg' ? 1000 : 1));
+const mengeZuMl = (menge, x, konz) => rund3(menge / (x.u === 'µg' ? 1000 : 1) / konz);
+
+/** Raster auslesen. `tage` traegt immer die Wirkstoffmenge in der Einheit der
+    Substanz; `tageMl` die ml-Rohwerte der Spalten im ml-Modus. */
 export function readExpo() {
-  const tage = { start: weekDays(state.weekKey)[0] };
+  const start = weekDays(state.weekKey)[0];
+  const tage = { start };
+  const tageMl = { start };
   let leer = true;
+  let hatMl = false;
   EXPO.forEach((x) => {
+    const konz = modus[x.k] || 0;
+    if (konz > 0) hatMl = true;
+    tageMl[x.k] = [];
     tage[x.k] = IDX.map((i) => {
       const v = document.getElementById(zellId(x.k, i)).value.trim();
       if (Number(v) > 0) leer = false;
-      return v;
+      if (!(konz > 0)) { tageMl[x.k].push(''); return v; }
+      tageMl[x.k].push(v);
+      return Number(v) > 0 ? String(mlZuMenge(Number(v), x, konz)) : '';
     });
   });
-  return { tage, leer };
+  return { tage, tageMl, hatMl, leer };
 }
 
 /** Wochensummen aus dem Raster: Injektionstage, haeufigste Tagesdosis,
@@ -98,7 +131,24 @@ function renderExpoSummary() {
   el.innerHTML = `<b>Diese Woche:</b> ${teil.join(' · ')}`;
 }
 
+/** Menge huebsch anzeigen: bis zwei Nachkommastellen, ohne Nullenrest. */
+const mengeText = (v, u) => `${komma(+Number(v).toFixed(u === 'µg' ? 1 : 2))} ${u}`;
+
+/* Die berechnete Wirkstoffmenge unter jeder ml-Zelle nachfuehren. */
+function renderMengen() {
+  EXPO.forEach((x) => {
+    const konz = modus[x.k] || 0;
+    IDX.forEach((i) => {
+      const span = document.getElementById(`c${x.k}${i}`);
+      if (!span) return;
+      const v = Number(document.getElementById(zellId(x.k, i)).value);
+      span.textContent = konz > 0 && v > 0 ? `= ${mengeText(mlZuMenge(v, x, konz), x.u)}` : '';
+    });
+  });
+}
+
 function expoChanged() {
+  renderMengen();
   renderExpoSummary();
   renderCu();
   const { tage, leer } = readExpo();
@@ -119,20 +169,24 @@ export function buildExpo() {
       return el ? el.value : '';
     });
   });
+  EXPO.forEach((x) => { modus[x.k] = vialKonz(x.k); });
   const tage = weekDays(state.weekKey);
   const heute = iso(new Date());
+  const einheit = (x) => (modus[x.k] > 0 ? 'ml' : x.u);
   /* Die Einheit darf nicht in die Grossschreibung der Kopfzeile geraten —
      aus "µg" wuerde sonst optisch "MG", und das ist der Faktor tausend. */
   let html = '<thead><tr><th>Tag</th>' + EXPO.map((x) =>
-    `<th>${x.n} <span style="text-transform:none;letter-spacing:0">(${x.u})</span></th>`).join('') +
+    `<th id="xh${x.k}">${x.n} <span style="text-transform:none;letter-spacing:0">(${einheit(x)})</span></th>`).join('') +
     '</tr></thead><tbody>';
   tage.forEach((d, i) => {
     const wd = WTAG[new Date(`${d}T12:00:00`).getDay()];
     html += `<tr${d === heute ? ' data-heute="1"' : ''}>` +
       `<td class="tag">${wd} ${d.slice(8, 10)}.${d.slice(5, 7)}.</td>` +
       EXPO.map((x) =>
-        `<td><input type="number" id="${zellId(x.k, i)}" min="0" step="${x.step}" ` +
-        `inputmode="decimal" aria-label="${x.n} (${x.u}) am ${wd} ${d}"></td>`).join('') +
+        `<td><input type="number" id="${zellId(x.k, i)}" min="0" ` +
+        `step="${modus[x.k] > 0 ? 0.01 : x.step}" inputmode="decimal" ` +
+        `aria-label="${x.n} (${einheit(x)}) am ${wd} ${d}">` +
+        `<span class="xcalc" id="c${x.k}${i}"></span></td>`).join('') +
       '</tr>';
   });
   host.innerHTML = `${html}</tbody>`;
@@ -144,18 +198,109 @@ export function buildExpo() {
   expoChanged();
 }
 
-/** Raster aus einem gespeicherten Eintrag fuellen; `tage` darf fehlen.
+/** Nach dem Speichern oder Uebernehmen eines Vials: Spalten umstellen.
+    Eingetragene Werte werden mitgenommen — beim Wechsel auf ml aus der
+    Wirkstoffmenge zurueckgerechnet, beim Wegfall des Vials wieder in die
+    Wirkstoffmenge; ein blosser Konzentrationswechsel laesst ml-Werte stehen,
+    denn aufgezogen wurde, was aufgezogen wurde. */
+export function refreshExpoUnits() {
+  EXPO.forEach((x) => {
+    const alt = modus[x.k] || 0;
+    const neu = vialKonz(x.k);
+    if ((alt > 0) !== (neu > 0)) {
+      IDX.forEach((i) => {
+        const el = document.getElementById(zellId(x.k, i));
+        const v = Number(el.value);
+        if (!(v > 0)) return;
+        el.value = neu > 0 ? String(mengeZuMl(v, x, neu)) : String(mlZuMenge(v, x, alt));
+      });
+    }
+    modus[x.k] = neu;
+    const u = neu > 0 ? 'ml' : x.u;
+    const th = document.getElementById(`xh${x.k}`);
+    if (th) th.innerHTML = `${x.n} <span style="text-transform:none;letter-spacing:0">(${u})</span>`;
+    IDX.forEach((i) => {
+      document.getElementById(zellId(x.k, i)).step = neu > 0 ? 0.01 : x.step;
+    });
+  });
+  expoChanged();
+}
+
+/* ---- Karte "Aktuelle Vials" ---- */
+
+function vialKonzText(x) {
+  const mg = Number($(`vMg${x.k}`).value);
+  const ml = Number($(`vMl${x.k}`).value);
+  if (!(mg > 0 && ml > 0)) return 'kein Vial hinterlegt — Eingabe direkt in ' + x.u;
+  const konz = mg / ml;
+  const inU = x.u === 'µg' ? `${fmt(konz * 1000, 0)} µg/ml` : `${fmt(konz, 2)} mg/ml`;
+  return `${inU} — 0,1 ml (10 I.E.) entsprechen ${mengeText(mlZuMenge(0.1, x, konz), x.u)}`;
+}
+
+function renderVialKonz() {
+  EXPO.forEach((x) => { $(`vKonz${x.k}`).textContent = vialKonzText(x); });
+}
+
+/** Felder der Vial-Karte in cfg.vials uebernehmen (ohne zu speichern). */
+export function readVials() {
+  const out = {};
+  EXPO.forEach((x) => {
+    const mg = Number($(`vMg${x.k}`).value);
+    const ml = Number($(`vMl${x.k}`).value);
+    if (mg > 0 && ml > 0) out[x.k] = { mg, ml };
+  });
+  return out;
+}
+
+/** Vial-Karte aufbauen und aus cfg.vials fuellen. */
+export function buildVials() {
+  const host = $('s-vials');
+  host.innerHTML = '';
+  EXPO.forEach((x) => {
+    const v = (state.cfg.vials && state.cfg.vials[x.k]) || {};
+    const d = document.createElement('div');
+    d.className = 'grid3';
+    d.style.marginBottom = '.7rem';
+    d.innerHTML =
+      `<div class="field" style="grid-column:1/-1;margin:0 0 .3rem">` +
+      `<label class="fl" style="margin:0">${x.n}</label></div>` +
+      `<div class="field"><label class="fl" for="vMg${x.k}">Vial-Inhalt (mg)</label>` +
+      `<input type="number" id="vMg${x.k}" min="0" step="0.5" inputmode="decimal" value="${v.mg || ''}"></div>` +
+      `<div class="field"><label class="fl" for="vMl${x.k}">Bac Water (ml)</label>` +
+      `<input type="number" id="vMl${x.k}" min="0" step="0.1" inputmode="decimal" value="${v.ml || ''}"></div>` +
+      `<div class="field" style="align-self:end"><span class="vkonz" id="vKonz${x.k}"></span></div>`;
+    host.appendChild(d);
+  });
+  EXPO.forEach((x) => ['vMg', 'vMl'].forEach((p) => {
+    $(`${p}${x.k}`).addEventListener('input', renderVialKonz);
+  }));
+  renderVialKonz();
+}
+
+/** Raster aus einem gespeicherten Eintrag fuellen; `dose` darf fehlen.
+    Spalten im ml-Modus bekommen die ml-Rohwerte (oder rechnen die
+    Wirkstoffmenge zurueck), die uebrigen die Wirkstoffmenge direkt.
     Zugeordnet wird ueber das Kalenderdatum, damit ein spaeter geaenderter
     Erfassungstag die Werte nicht in falsche Zeilen schiebt. */
-export function fuelleExpo(tage) {
+export function fuelleExpo(dose) {
   const dates = weekDays(state.weekKey);
   const map = {};
+  const tage = dose && dose.tage;
+  const tageMl = dose && dose.tageMl;
   if (tage && tage.start) {
-    EXPO.forEach((x) => (tage[x.k] || []).forEach((v, i) => {
-      const d = new Date(`${tage.start}T12:00:00`);
-      d.setDate(d.getDate() + i);
-      map[`${x.k}|${iso(d)}`] = v;
-    }));
+    EXPO.forEach((x) => {
+      const konz = modus[x.k] || 0;
+      (tage[x.k] || []).forEach((v, i) => {
+        const d = new Date(`${tage.start}T12:00:00`);
+        d.setDate(d.getDate() + i);
+        let wert = v;
+        if (konz > 0) {
+          const ml = tageMl && tageMl[x.k] && tageMl[x.k][i];
+          wert = ml || (Number(v) > 0 ? String(mengeZuMl(Number(v), x, konz)) : '');
+        }
+        map[`${x.k}|${iso(d)}`] = wert;
+      });
+    });
   }
   EXPO.forEach((x) => dates.forEach((d, i) => {
     document.getElementById(zellId(x.k, i)).value = map[`${x.k}|${d}`] || '';
@@ -234,6 +379,7 @@ export function renderCu() {
 /** Einmalig beim Start: alle Regler, Segmente und Listen erzeugen. */
 export function buildForm() {
   setSegHandler(recalcScores);
+  buildVials();
   buildExpo();
 
   slider($('s-erwartung'), 'erwartung',

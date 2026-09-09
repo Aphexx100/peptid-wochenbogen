@@ -7,6 +7,10 @@
 import { $ } from '../util/dom.js';
 import { fmt } from '../util/format.js';
 import { CU_ANTEIL, HALTBAR_TAGE, RC_PRESETS, GLOW_VIAL } from '../constants.js';
+import { state } from '../state.js';
+import { EXPO } from '../schema.js';
+import { saveConfig } from '../storage/index.js';
+import { buildVials, refreshExpoUnits } from '../form/build.js';
 
 const FELDER = ['rcVial', 'rcWasser', 'rcDosis', 'rcEinheit', 'rcSpritze', 'rcFreq'];
 
@@ -104,5 +108,31 @@ export function initRechner() {
       renderRc();
     });
   });
+
+  /* Vial-Inhalt und Wasservolumen als aktuelles Vial in den Bogen schreiben.
+     Die Zieldosis spielt dafuer keine Rolle — massgeblich ist, was im Vial
+     ist und womit es aufgezogen wurde. */
+  document.querySelectorAll('[data-vialziel]').forEach((b) => {
+    b.addEventListener('click', async () => {
+      const info = $('rcUebInfo');
+      const mg = Number($('rcVial').value);
+      const ml = Number($('rcWasser').value);
+      const x = EXPO.find((s) => s.k === b.dataset.vialziel);
+      if (!(mg > 0 && ml > 0) || !x) {
+        info.textContent = 'Erst Vial-Inhalt und Wasservolumen oben eingeben.';
+        info.className = 'saveinfo bad';
+        return;
+      }
+      state.cfg.vials = { ...(state.cfg.vials || {}), [x.k]: { mg, ml } };
+      buildVials();
+      refreshExpoUnits();
+      const r = await saveConfig(state.cfg);
+      info.textContent = r.ok
+        ? `${x.n}-Vial übernommen: ${fmt(mg / ml, 2)} mg/ml. Steht jetzt im Bogen unter „Aktuelle Vials".`
+        : r.text;
+      info.className = `saveinfo ${r.ok ? 'ok' : 'bad'}`;
+    });
+  });
+
   renderRc();
 }

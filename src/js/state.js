@@ -12,7 +12,12 @@ export const state = {
   cfg: {
     start: '', day: 6, glowStart: '',
     erwHaut: 9, erwGelenk: 9, erwWohl: 9, ghk: 2,
-    uebungen: ['Kniebeuge', 'Rudern', 'Bankdrücken', 'Schulterdrücken']
+    uebungen: ['Kniebeuge', 'Rudern', 'Bankdrücken', 'Schulterdrücken'],
+    /* Aktuelle Vials je Substanz: { glow: {mg, ml}, … }. Aus Inhalt und
+       Wasservolumen entsteht die Konzentration, mit der die ml-Eintraege des
+       Tagesrasters in Wirkstoffmengen umgerechnet werden. Ohne Vial wird die
+       Substanz weiter direkt in mg bzw. µg erfasst. */
+    vials: {}
   }
 };
 

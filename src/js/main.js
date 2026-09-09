@@ -10,9 +10,11 @@
 import { state } from './state.js';
 import { $ } from './util/dom.js';
 import { currentWeekKey } from './util/date.js';
-import { buildForm, buildKraft, buildExpo } from './form/build.js';
+import { buildForm, buildKraft, buildExpo, buildVials } from './form/build.js';
 import { fillForm } from './form/model.js';
-import { saveWeekAction, saveCfgZeit, saveCfgGlow, saveCfgUebungen, fillSetup } from './form/save.js';
+import {
+  saveWeekAction, saveCfgZeit, saveCfgGlow, saveCfgUebungen, saveVials, fillSetup
+} from './form/save.js';
 import { renderStatus } from './ui/status.js';
 import { initTabs } from './ui/tabs.js';
 import { initAnalyse } from './ui/analyse.js';
@@ -53,6 +55,7 @@ async function exportCsv() {
 
 function wireEvents() {
   $('saveBtn').addEventListener('click', saveWeekAction);
+  $('vialSave').addEventListener('click', saveVials);
   $('cfgSave').addEventListener('click', saveCfgZeit);
   $('cfgSave2').addEventListener('click', saveCfgGlow);
   $('cfgSave3').addEventListener('click', saveCfgUebungen);
@@ -70,6 +73,7 @@ function uebernehmeCfg(c) {
   if (c.erwWohl) state.cfg.erwWohl = c.erwWohl;
   if (c.ghk !== undefined) state.cfg.ghk = c.ghk;
   if (c.uebungen && c.uebungen.length === 4) state.cfg.uebungen = c.uebungen;
+  if (c.vials) state.cfg.vials = c.vials;
 }
 
 async function start() {
@@ -94,6 +98,7 @@ async function start() {
   uebernehmeCfg(await loadConfig());
   fillSetup();
   buildKraft();
+  buildVials();
   state.weekKey = currentWeekKey();
   buildExpo();
   $('stamp').textContent = `Woche bis ${state.weekKey}`;

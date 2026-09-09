@@ -55,8 +55,16 @@
   </div>
 
   <div class="card">
+    <h2><span class="step">01b</span> Aktuelle Vials</h2>
+    <p class="hint">Womit gerade gespritzt wird: Vial-Inhalt und Wasservolumen je Substanz. Daraus entsteht die Konzentration, mit der die ml-Einträge in Abschnitt 02 in Wirkstoffmengen umgerechnet werden. Der bequemste Weg führt über den <strong>Rekonstitutionsrechner unter Setup</strong> — dort ausrechnen und mit einem Klick als aktuelles Vial übernehmen. Ohne hinterlegtes Vial wird die Substanz in Abschnitt 02 weiter direkt in mg bzw. µg erfasst.</p>
+    <div id="s-vials"></div>
+    <div class="btnrow"><button class="btn ghost" id="vialSave">Vials speichern</button></div>
+    <p class="saveinfo" id="vialInfo"></p>
+  </div>
+
+  <div class="card">
     <h2><span class="step">02</span> Exposition — Tag für Tag</h2>
-    <p class="hint">Was tatsächlich gesetzt wurde, nicht was geplant war — <strong>je Tag die gesetzte Menge</strong>, leer gelassen heißt: an dem Tag nichts. Bei mehreren Injektionen desselben Wirkstoffs an einem Tag die Tagesgesamtmenge eintragen. Achte auf die Einheiten, sie sind je Substanz verschieden. Am besten trägst du jeden Tag direkt nach der Injektion ein — die restlichen Abschnitte bleiben Wochenfragen und kommen am Erfassungstag dran.</p>
+    <p class="hint">Was tatsächlich gesetzt wurde, nicht was geplant war — <strong>je Tag die gesetzte Menge</strong>, leer gelassen heißt: an dem Tag nichts. Bei mehreren Injektionen desselben Wirkstoffs an einem Tag die Tagesgesamtmenge eintragen. Ist oben ein Vial hinterlegt, trägst du das <strong>aufgezogene Volumen in ml</strong> ein (10 I.E. auf der U-100-Spritze = 0,1 ml) und die Wirkstoffmenge wird daneben ausgerechnet; ohne Vial gilt die Einheit im Spaltenkopf. Am besten trägst du jeden Tag direkt nach der Injektion ein — die restlichen Abschnitte bleiben Wochenfragen und kommen am Erfassungstag dran.</p>
 
     <div class="tablewrap"><table class="expo" id="s-expo"></table></div>
     <p class="hint" style="margin:.7rem 0 1rem">Kisspeptin wird im Graumarkt üblicherweise in <strong>Mikrogramm</strong> dosiert (50–200 µg), PT-141, GLOW und Tirzepatid in <strong>Milligramm</strong>. Beim GLOW ist die Gesamtmenge des Gemischs gemeint; wie viel davon GHK-Cu ist, legst du einmalig im Setup fest.</p>
@@ -445,6 +453,16 @@
 
     <div class="rcout" id="rcOut"></div>
     <p class="hint" style="margin-top:.9rem">Gilt für <strong>U-100</strong>-Spritzen, also 100 I.E. je Milliliter. Prüf das einmal auf der Verpackung — bei einer U-40-Spritze wären alle Einheitenangaben um den Faktor 2,5 falsch.</p>
+
+    <label class="fl" style="margin-top:1.3rem">Als aktuelles Vial in den Bogen übernehmen</label>
+    <p class="hint" style="margin:.1rem 0 .6rem">Schreibt Vial-Inhalt und Wasservolumen von oben in die Karte <strong>Aktuelle Vials</strong> des Bogens und speichert sie — die Tageseinträge der Substanz laufen dann in ml und werden über diese Konzentration umgerechnet.</p>
+    <div class="btnrow" style="grid-template-columns:repeat(4,1fr);gap:.3rem;margin:0">
+      <button class="btn ghost" data-vialziel="glow" style="font-size:.82rem;padding:.5rem .3rem">GLOW</button>
+      <button class="btn ghost" data-vialziel="kiss" style="font-size:.82rem;padding:.5rem .3rem">Kisspeptin</button>
+      <button class="btn ghost" data-vialziel="pt" style="font-size:.82rem;padding:.5rem .3rem">PT-141</button>
+      <button class="btn ghost" data-vialziel="tirz" style="font-size:.82rem;padding:.5rem .3rem">Tirzepatid</button>
+    </div>
+    <p class="saveinfo" id="rcUebInfo"></p>
   </div>
 
   <div class="card">

@@ -32,6 +32,12 @@ export function readForm(){
     e.dose={glow:a.n_glow, kiss:a.n_kiss, pt:a.n_pt,
             dGlow:a.d_glow, dKiss:a.d_kiss, dPt:a.d_pt, ghk:state.cfg.ghk,
             tirz:a.tirz, tage:g.tage};
+    /* ml-Rohwerte und Vial-Stand mitschreiben, wenn in ml erfasst wurde —
+       so bleibt nachvollziehbar, was aufgezogen wurde und womit. */
+    if(g.hatMl){
+      e.dose.tageMl=g.tageMl;
+      e.dose.vials=JSON.parse(JSON.stringify(state.cfg.vials||{}));
+    }
   }
   e.dose.sonstMed=$("nSonstMed").value.trim();
   e.dose.abw=$("abw").value.trim();
@@ -75,7 +81,7 @@ export function fillForm(e){
   /* Erst den Bestandsschutz setzen, dann das Raster fuellen — fuelleExpo()
      aktualisiert Zusammenfassung, Kupferlast und PT-Karte gleich mit. */
   setLegacyDose(e.dose&&!e.dose.tage?e.dose:null);
-  fuelleExpo(e.dose&&e.dose.tage);
+  fuelleExpo(e.dose||null);
   if(e.dose){ $("nSonstMed").value=e.dose.sonstMed||"";
     $("abw").value=e.dose.abw||""; $("stellen").value=e.dose.stellen||""; }
   KERN.forEach(function(x){ setS(x.k, e.kern&&e.kern[x.k]); });
