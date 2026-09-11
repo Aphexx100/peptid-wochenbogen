@@ -55,6 +55,16 @@ gespeichert wird ein Antwortsatz je Datum, und der Wochenwert entsteht als Mitte
 Vorteil dieses Musters ist, dass `e.who`/`e.iief` ihre alte Form behalten und Auswertung,
 CSV und Datenblock unverändert weiterrechnen.
 
+## Eine Notizspalte im Tagesraster ergänzen
+
+Eine Zeile in `EXPO_TEXT` in `src/js/schema.js` (`k`, `n`, `kurz` für den Spaltenkopf,
+`ph` als Platzhalter). Die Spalte erscheint rechts im Raster, wird je Tag unter
+`dose.notizen` gespeichert und als Text mit Tagesangabe in `dose.<k>` abgeleitet. Damit
+sie in CSV und Datenblock auftaucht, dort `dose.<k>` ergänzen.
+
+Die Karte des Rasters trägt die Klasse `wide` und darf als einzige über die Lesebreite
+von 46rem hinaus bis 72rem wachsen. Weitere breite Karten bekommen dieselbe Klasse.
+
 ## Eine Substanz im Tagesraster ergänzen
 
 Auch das ist eine Zeile in `src/js/schema.js`, in der Liste `EXPO`:
@@ -163,7 +173,7 @@ grep -n '#[0-9a-fA-F]\{3,6\}' src/css/app.css   # muss leer bleiben
 ## Nach jeder Änderung
 
 ```bash
-npm run check     # baut die Einzeldatei und fährt beide Fassungen durch 120 Prüfungen
+npm run check     # baut die Einzeldatei und fährt beide Fassungen durch 135 Prüfungen
 ```
 
 Der Rauchtest startet einen echten Browser, füllt den Bogen aus, speichert, lädt neu und

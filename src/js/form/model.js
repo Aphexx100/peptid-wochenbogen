@@ -14,7 +14,7 @@ import { sVal, setS, segVal, setSeg, checked } from '../ui/controls.js';
 import {
   recalcScores, readExpo, ableiten, fuelleExpo, setLegacyDose, getLegacyDose,
   readConfTage, ableitenConf, fuelleConfTage, setLegacyConf, getLegacyConf,
-  mergeHeute, tagesMittel, setTagesSaetze
+  mergeHeute, tagesMittel, setTagesSaetze, readNotizen, ableitenNotizen, fuelleNotizen
 } from './build.js';
 
 export function readForm(){
@@ -41,9 +41,12 @@ export function readForm(){
       e.dose.vials=JSON.parse(JSON.stringify(state.cfg.vials||{}));
     }
   }
-  e.dose.sonstMed=$("nSonstMed").value.trim();
-  e.dose.abw=$("abw").value.trim();
-  e.dose.stellen=$("stellen").value.trim();
+  /* Medikamente, Abweichungen und Einstichstellen stehen je Tag im Raster.
+     Die Wochenfelder bleiben als abgeleiteter Text mit Tagesangabe
+     erhalten, damit CSV und Datenblock sie unveraendert lesen. */
+  var nz=readNotizen(), nw=ableitenNotizen(nz.tage);
+  e.dose.sonstMed=nw.sonstMed; e.dose.abw=nw.abw; e.dose.stellen=nw.stellen;
+  if(!nz.leer) e.dose.notizen=nz.tage;
   KERN.forEach(function(x){ e.kern[x.k]=sVal(x.k); });
   e.glow={ort:$("gGelenkOrt").value.trim()};
   GLOWZIEL.forEach(function(x){ e.glow[x.k]=sVal(x.k); });
@@ -109,8 +112,7 @@ export function fillForm(e){
      aktualisiert Zusammenfassung, Kupferlast und PT-Karte gleich mit. */
   setLegacyDose(e.dose&&!e.dose.tage?e.dose:null);
   fuelleExpo(e.dose||null);
-  if(e.dose){ $("nSonstMed").value=e.dose.sonstMed||"";
-    $("abw").value=e.dose.abw||""; $("stellen").value=e.dose.stellen||""; }
+  fuelleNotizen(e.dose||null);
   KERN.forEach(function(x){ setS(x.k, e.kern&&e.kern[x.k]); });
   GLOWZIEL.forEach(function(x){ setS(x.k, e.glow&&e.glow[x.k]); });
   $("gGelenkOrt").value=(e.glow&&e.glow.ort)||"";

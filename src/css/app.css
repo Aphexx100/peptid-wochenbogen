@@ -4,7 +4,13 @@
 *{box-sizing:border-box}
 body{margin:0;background:var(--ground);color:var(--ink);
   font-family:Archivo,"Segoe UI",Helvetica,Arial,sans-serif;font-size:16px;line-height:1.5;-webkit-font-smoothing:antialiased}
-.app{max-width:46rem;margin:0 auto;padding:0 1rem 4rem}
+/* Lesebreite 46rem fuer alles; nur Karten mit `.wide` (das Tagesraster der
+   Exposition mit seinen Notizspalten) duerfen bis zur vollen Breite
+   ausgreifen. So bleiben Fliesstext und Regler lesbar, die Tabelle nicht
+   eingequetscht. */
+.app{max-width:74rem;margin:0 auto;padding:0 1rem 4rem}
+.app > header,.app > .tabs,.app > .offline,.panel > *:not(.wide){max-width:46rem;margin-left:auto;margin-right:auto}
+.card.wide > .hint{max-width:52rem}
 .mono{font-family:"IBM Plex Mono",ui-monospace,monospace;font-variant-numeric:tabular-nums}
 
 header{padding:1.6rem 0 .9rem}
@@ -136,6 +142,12 @@ tbody tr:last-child td{border-bottom:none}
 .expo tr[data-heute="1"] td.tag{color:var(--accent);font-weight:600}
 /* Tage, die noch nicht dran sind — eintragbar, aber sichtbar nicht fällig. */
 .expo tr[data-zukunft="1"]{opacity:.45}
+.expo td{vertical-align:top}
+.expo input[type="text"]{min-width:10.5rem;min-height:2.3rem;padding:.35rem .5rem;font-size:.85rem}
+.expo th.notiz{white-space:nowrap}
+.expo .erste{border-left:1px solid var(--border-soft);padding-left:.8rem}
+/* Beim seitlichen Scrollen auf dem Telefon bleibt der Tag stehen. */
+.expo td.tag,.expo thead th:first-child{position:sticky;left:0;z-index:1;background:var(--surface)}
 .expo input[type="number"]{min-width:4.6rem;min-height:2.3rem;padding:.35rem .5rem;font-size:.88rem}
 .expo .xcalc{display:block;font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:.68rem;
   color:var(--muted);min-height:.95rem;padding:.15rem .1rem 0;font-variant-numeric:tabular-nums}

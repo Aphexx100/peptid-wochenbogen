@@ -29,7 +29,8 @@ function weekLine(k){
            ", Tirzepatid "+s(e.dose.tirz)+" mg/Woche"+
            (cuW>0?(", elementares Kupfer "+cuW.toFixed(2)+" mg/Woche"):"")+
            (e.dose.sonstMed?(", sonst: "+e.dose.sonstMed):"")+
-           (e.dose.abw?(" ["+e.dose.abw+"]"):""));
+           (e.dose.abw?(" [Abweichungen: "+e.dose.abw+"]"):"")+
+           (e.dose.stellen?(" [Einstichstellen: "+e.dose.stellen+"]"):""));
     var tk=tageKompakt(e);
     if(tk) p.push("TAGE: "+tk);
   }

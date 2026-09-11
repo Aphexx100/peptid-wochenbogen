@@ -10,6 +10,15 @@ export const EXPO = [
   {k:"pt",   n:"PT-141",     u:"mg", step:0.25, ph:"1,75"},
   {k:"tirz", n:"Tirzepatid", u:"mg", step:0.5,  ph:"2,5"}
 ];
+/* Freitextspalten des Tagesrasters in Abschnitt 02 — je Tag eine Notiz.
+   Getrennt von EXPO, weil dort gerechnet wird und hier nur notiert. Die
+   Wochenfelder dose.sonstMed/abw/stellen entstehen daraus als Liste mit
+   Tagesangabe ("Mo 07.09.: Kreatin; Mi 09.09.: …"). */
+export const EXPO_TEXT = [
+  {k:"sonstMed", n:"Sonstige Medikamente, Supplemente", kurz:"Sonst. Med./Suppl.", ph:"Kreatin, Vit. D …"},
+  {k:"abw",      n:"Abweichungen, Auslassungen, neue Charge", kurz:"Abweichungen", ph:"ausgelassen, neue Charge …"},
+  {k:"stellen",  n:"Einstichstellen — Auffälligkeiten", kurz:"Einstichstellen", ph:"Rötung, Knoten …"}
+];
 /* Taegliche Confounder in Abschnitt 02b. Jeder Wert bezieht sich auf den
    VORTAG der Zeile: Schlaf der letzten Nacht, Training, Protein und Alkohol
    von gestern. Alkohol zaehlt in 0,5-l-Bierflaschen. */

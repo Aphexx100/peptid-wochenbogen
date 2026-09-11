@@ -7,7 +7,7 @@ import { $ } from '../util/dom.js';
 import { fmt } from '../util/format.js';
 import { CU_ANTEIL, CU_RDA_MG_TAG } from '../constants.js';
 import {
-  EXPO, CONF_TAGE, KERN, GLOWZIEL, WHO, WHO_LEG, IIEF, MORGEN, PT, PT_SIGNS, PIGMENT, NEG,
+  EXPO, EXPO_TEXT, CONF_TAGE, KERN, GLOWZIEL, WHO, WHO_LEG, IIEF, MORGEN, PT, PT_SIGNS, PIGMENT, NEG,
   WATCH, CONF_CHECKS, MONTH
 } from '../schema.js';
 import { slider, segment, checkList, segVal, setSegHandler } from '../ui/controls.js';
@@ -26,6 +26,8 @@ import { renderWeeklyGate } from '../ui/weekly.js';
 const WTAG = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 const IDX = [0, 1, 2, 3, 4, 5, 6];
 const zellId = (k, i) => `x${k}${i}`;
+const zellIdN = (k, i) => `n${k}${i}`;
+const tagLabel = (d) => `${WTAG[new Date(`${d}T12:00:00`).getDay()]} ${d.slice(8, 10)}.${d.slice(5, 7)}.`;
 
 /* Wochensummen einer vor der Umstellung erfassten Woche — gesetzt von
    fillForm(), gelesen von Zusammenfassung, Kupferlast und readForm(). */
@@ -173,6 +175,13 @@ export function buildExpo() {
       return el ? el.value : '';
     });
   });
+  const altN = {};
+  EXPO_TEXT.forEach((x) => {
+    altN[x.k] = IDX.map((i) => {
+      const el = document.getElementById(zellIdN(x.k, i));
+      return el ? el.value : '';
+    });
+  });
   EXPO.forEach((x) => { modus[x.k] = vialKonz(x.k); });
   const tage = weekDays(state.weekKey);
   const heute = iso(new Date());
@@ -181,6 +190,7 @@ export function buildExpo() {
      aus "µg" wuerde sonst optisch "MG", und das ist der Faktor tausend. */
   let html = '<thead><tr><th>Tag</th>' + EXPO.map((x) =>
     `<th id="xh${x.k}">${x.n} <span style="text-transform:none;letter-spacing:0">(${einheit(x)})</span></th>`).join('') +
+    EXPO_TEXT.map((x, j) => `<th class="notiz${j ? '' : ' erste'}" title="${x.n}">${x.kurz}</th>`).join('') +
     '</tr></thead><tbody>';
   tage.forEach((d, i) => {
     const wd = WTAG[new Date(`${d}T12:00:00`).getDay()];
@@ -191,6 +201,10 @@ export function buildExpo() {
         `step="${modus[x.k] > 0 ? 0.01 : x.step}" inputmode="decimal" ` +
         `aria-label="${x.n} (${einheit(x)}) am ${wd} ${d}">` +
         `<span class="xcalc" id="c${x.k}${i}"></span></td>`).join('') +
+      EXPO_TEXT.map((x, j) =>
+        `<td class="notiz${j ? '' : ' erste'}"><input type="text" id="${zellIdN(x.k, i)}"` +
+        `${d === heute ? ` placeholder="${x.ph}"` : ''} ` +
+        `autocomplete="off" aria-label="${x.n} am ${wd} ${d}"></td>`).join('') +
       '</tr>';
   });
   host.innerHTML = `${html}</tbody>`;
@@ -199,7 +213,70 @@ export function buildExpo() {
     if (alt[x.k][i]) el.value = alt[x.k][i];
     el.addEventListener('input', expoChanged);
   }));
+  EXPO_TEXT.forEach((x) => IDX.forEach((i) => {
+    if (altN[x.k][i]) document.getElementById(zellIdN(x.k, i)).value = altN[x.k][i];
+  }));
   expoChanged();
+}
+
+/* ---- Tagesnotizen (Freitextspalten des Rasters) ----
+   Gespeichert als dose.notizen = {start, sonstMed[7], abw[7], stellen[7]}.
+   Die Wochenfelder dose.sonstMed/abw/stellen werden daraus abgeleitet —
+   als Liste mit Tagesangabe, damit CSV und Datenblock sie ohne Umbau
+   weiterlesen und die Zuordnung zum Tag erhalten bleibt. */
+
+/** Notizspalten auslesen. `leer` heisst: keine einzige Notiz. */
+export function readNotizen() {
+  const tage = { start: weekDays(state.weekKey)[0] };
+  let leer = true;
+  EXPO_TEXT.forEach((x) => {
+    tage[x.k] = IDX.map((i) => {
+      const v = document.getElementById(zellIdN(x.k, i)).value.trim();
+      if (v) leer = false;
+      return v;
+    });
+  });
+  return { tage, leer };
+}
+
+/** Je Notizspalte ein Wochentext: "Mo 07.09.: Kreatin; Mi 09.09.: …". */
+export function ableitenNotizen(tage) {
+  const out = {};
+  EXPO_TEXT.forEach((x) => {
+    const teile = [];
+    (tage[x.k] || []).forEach((v, i) => {
+      if (!v) return;
+      const d = new Date(`${tage.start}T12:00:00`);
+      d.setDate(d.getDate() + i);
+      teile.push(`${tagLabel(iso(d))}: ${v}`);
+    });
+    out[x.k] = teile.join('; ');
+  });
+  return out;
+}
+
+/** Notizspalten aus einem gespeicherten Eintrag fuellen. Wochen aus der Zeit
+    vor der Tagesumstellung tragen je Feld nur einen Text fuer die ganze
+    Woche; der landet in der Zeile des Erfassungstags — sichtbar und
+    aenderbar, statt beim naechsten Speichern still zu verschwinden. */
+export function fuelleNotizen(dose) {
+  const dates = weekDays(state.weekKey);
+  const map = {};
+  const n = dose && dose.notizen;
+  if (n && n.start) {
+    EXPO_TEXT.forEach((x) => (n[x.k] || []).forEach((v, i) => {
+      const d = new Date(`${n.start}T12:00:00`);
+      d.setDate(d.getDate() + i);
+      map[`${x.k}|${iso(d)}`] = v;
+    }));
+  } else if (dose) {
+    EXPO_TEXT.forEach((x) => {
+      if (dose[x.k]) map[`${x.k}|${state.weekKey}`] = dose[x.k];
+    });
+  }
+  EXPO_TEXT.forEach((x) => dates.forEach((d, i) => {
+    document.getElementById(zellIdN(x.k, i)).value = map[`${x.k}|${d}`] || '';
+  }));
 }
 
 /** Nach dem Speichern oder Uebernehmen eines Vials: Spalten umstellen.

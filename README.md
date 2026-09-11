@@ -5,7 +5,8 @@ und ohne Backend: erfassen, auswerten, exportieren, und auf Wunsch von einem
 Sprachmodell einordnen lassen.
 
 Der Bogen läuft in zwei Takten. **Täglich** erfasst er die Exposition (GLOW-Stack,
-Kisspeptin, PT-141, Tirzepatid), die Confounder (Schlaf, Training, Protein, Alkohol —
+Kisspeptin, PT-141, Tirzepatid, dazu je Tag sonstige Medikamente, Abweichungen und
+Auffälligkeiten an der Einstichstelle), die Confounder (Schlaf, Training, Protein, Alkohol —
 jeweils für den Vortag) sowie WHO-5 und IIEF-5. Wer im Rekonstitutionsrechner sein
 aktuelles Vial hinterlegt, trägt die Dosis als aufgezogenes **Volumen in ml** ein und der
 Bogen rechnet die Wirkstoffmenge selbst aus.
@@ -29,7 +30,7 @@ die Architektur in [docs/ARCHITEKTUR.md](docs/ARCHITEKTUR.md).
 ```
 npm install          # esbuild und playwright, nur zum Bauen und Testen
 npm start            # http://localhost:8080
-npm test             # 120 Prüfungen in einem echten Browser
+npm test             # 135 Prüfungen in einem echten Browser
 npm run build        # dist/peptid-wochenbogen.html — eine Datei für Claude
 ```
 
