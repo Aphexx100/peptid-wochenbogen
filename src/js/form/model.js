@@ -11,6 +11,7 @@ import {
   KERN, GLOWZIEL, MASSE, MORGEN, PT, PT_SIGNS, PIGMENT, NEG, WATCH, CONF_CHECKS, MONTH
 } from '../schema.js';
 import { sVal, setS, segVal, setSeg, checked } from '../ui/controls.js';
+import { wochenfragenOffen } from '../ui/weekly.js';
 import {
   recalcScores, readExpo, ableiten, fuelleExpo, setLegacyDose, getLegacyDose,
   readConfTage, ableitenConf, fuelleConfTage, setLegacyConf, getLegacyConf,
@@ -54,11 +55,13 @@ export function readForm(){
   e.kraft=[0,1,2,3].map(function(i){
     return {name:state.cfg.uebungen[i]||"", kg:$("kw"+i).value, reps:$("kr"+i).value, rir:$("ke"+i).value};
   });
-  /* WHO-5 und IIEF-5 werden taeglich erfasst: der heutige Antwortsatz wird
-     zu den bereits gespeicherten Tagen dieser Woche gelegt, e.who/e.iief
-     tragen das Mittel je Frage. Ein leerer Bogen loescht keinen Tag. */
-  e.whoTage=mergeHeute("who"); e.iiefTage=mergeHeute("iief");
-  e.who=tagesMittel(e.whoTage); e.iief=tagesMittel(e.iiefTage);
+  /* WHO-5 wird taeglich erfasst: der heutige Antwortsatz wird zu den bereits
+     gespeicherten Tagen dieser Woche gelegt, e.who traegt das Mittel je
+     Frage. Ein leerer Bogen loescht keinen Tag. Der IIEF-5 ist eine
+     Wochenfrage mit einem Antwortsatz fuer die letzten sieben Tage. */
+  e.whoTage=mergeHeute("who");
+  e.who=tagesMittel(e.whoTage);
+  for(var j=0;j<5;j++) e.iief.push(segVal("iief"+j));
   e.morgen={naechte:segVal("mNaechte")};
   MORGEN.forEach(function(x){ e.morgen[x.k]=sVal(x.k); });
   if(e.dose.pt>0){
@@ -92,7 +95,26 @@ export function readForm(){
      bleiben im gespeicherten Objekt und in CSV und Datenblock lesbar. */
   var alt=state.weeks[state.weekKey];
   if(alt&&alt.text&&(alt.text.anders||alt.text.ohnehin)) e.text=alt.text;
+  if(!wochenfragenOffen()) behalteWochenfragen(e, alt);
   return e;
+}
+
+/* Solange die Wochenfragen geschlossen sind, stehen ihre Regler auf den
+   Vorgaben (meist 5) — gespeichert saehe das aus wie eine Antwort. Das
+   taegliche Speichern uebernimmt deshalb fuer alles Woechentliche den
+   zuletzt gespeicherten Stand dieser Woche, oder laesst es ganz weg. */
+var WOCHEN_FELDER=["exp","kern","glow","masse","kraft","iief","iiefTage","morgen","pt",
+                   "pigment","neg","watch","watchNote","month"];
+var WOCHEN_CONF=["gew","bauch","stress","sonst","flags"];
+function behalteWochenfragen(e, alt){
+  alt=alt||{};
+  WOCHEN_FELDER.forEach(function(k){
+    if(alt[k]===undefined) delete e[k]; else e[k]=JSON.parse(JSON.stringify(alt[k]));
+  });
+  WOCHEN_CONF.forEach(function(k){
+    if(alt.conf&&alt.conf[k]!==undefined) e.conf[k]=JSON.parse(JSON.stringify(alt.conf[k]));
+    else delete e.conf[k];
+  });
 }
 /* Ein einzelner Antwortsatz aus der Zeit vor der Tagesumstellung wird dem
    Erfassungstag der Woche zugeschlagen — irgendein Tag muss er sein, und der
@@ -121,23 +143,30 @@ export function fillForm(e){
     var kf=(e.kraft&&e.kraft[i])||{};
     $("kw"+i).value=kf.kg||""; $("kr"+i).value=kf.reps||""; $("ke"+i).value=kf.rir||"";
   });
-  /* Die Segmente zeigen den heutigen Tag: den gespeicherten Satz von heute,
-     sonst leer — jeder Tag wird frisch beantwortet. Wochen aus der Zeit vor
-     der Tagesumstellung bringen ihren einen Satz als heutigen Stand mit. */
+  /* WHO-5: die Segmente zeigen den heutigen Tag — den gespeicherten Satz von
+     heute, sonst leer. Wochen aus der Zeit vor der Tagesumstellung bringen
+     ihren einen Satz als Stand des Erfassungstags mit. */
   var wt=e.whoTage||(Array.isArray(e.who)&&e.who.length===5&&e.who.every(function(v){return v!==null&&v!==undefined;})
     ?ganzerTagAls(e.week,e.who):{});
-  var it=e.iiefTage||(Array.isArray(e.iief)&&e.iief.length===5&&e.iief.every(function(v){return v!==null&&v!==undefined;})
-    ?ganzerTagAls(e.week,e.iief):{});
-  setTagesSaetze(wt,it);
-  zeigeHeute("who",wt); zeigeHeute("iief",it);
+  setTagesSaetze(wt);
+  zeigeHeute("who",wt);
+  /* IIEF-5: ein Satz fuer die Woche. Aus den Tagen, in denen er taeglich lief,
+     steht hier ein Mittel je Frage — gerundet ist das die beste Vorbelegung,
+     die sich aus den echten Antworten ergibt. */
+  for(var j=0;j<5;j++){
+    var v=e.iief&&e.iief[j];
+    setSeg("iief"+j, (v===null||v===undefined)?null:Math.round(v));
+  }
   setSeg("mNaechte", e.morgen?e.morgen.naechte:null);
   MORGEN.forEach(function(x){ setS(x.k, e.morgen&&e.morgen[x.k]); });
   PT.forEach(function(x){ setS(x.k, e.pt&&e.pt[x.k]); });
-  if(e.pt){ $("ptDosis").value=e.pt.dosis||""; $("ptEintritt").value=e.pt.eintritt||"";
-    $("ptDauer").value=e.pt.dauer||""; $("ptBlind").value=e.pt.blind||"";
-    $("ptAusloesung").value=e.pt.ausloesung||""; $("ptSignsNote").value=e.pt.signsNote||""; }
-  if(e.pigment){ $("uvStd").value=e.pigment.uv||""; $("uvQuelle").value=e.pigment.quelle||"";
-    $("naevi").value=e.pigment.naevi||""; }
+  /* Fehlende Bloecke leeren die Felder, statt den Stand der zuvor
+     angezeigten Woche stehen zu lassen. */
+  var pt=e.pt||{}, pg=e.pigment||{}, cf=e.conf||{};
+  $("ptDosis").value=pt.dosis||""; $("ptEintritt").value=pt.eintritt||"";
+  $("ptDauer").value=pt.dauer||""; $("ptBlind").value=pt.blind||"";
+  $("ptAusloesung").value=pt.ausloesung||""; $("ptSignsNote").value=pt.signsNote||"";
+  $("uvStd").value=pg.uv||""; $("uvQuelle").value=pg.quelle||""; $("naevi").value=pg.naevi||"";
   PIGMENT.forEach(function(x){ setS(x.k, e.pigment&&e.pigment[x.k], 0); });
   NEG.forEach(function(x){ setS(x.k, e.neg&&e.neg[x.k]); });
   document.querySelectorAll("[data-c]").forEach(function(i){
@@ -150,7 +179,7 @@ export function fillForm(e){
   $("watchNote").value=e.watchNote||"";
   setLegacyConf(e.conf&&!e.conf.tage?e.conf:null);
   fuelleConfTage(e.conf||null);
-  if(e.conf){ $("cGew").value=e.conf.gew||""; $("cBauch").value=e.conf.bauch||"";
-    setS("cStress",e.conf.stress); $("cSonst").value=e.conf.sonst||""; }
+  $("cGew").value=cf.gew||""; $("cBauch").value=cf.bauch||"";
+  setS("cStress",cf.stress); $("cSonst").value=cf.sonst||"";
   recalcScores();
 }

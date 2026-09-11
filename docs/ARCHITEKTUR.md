@@ -67,15 +67,18 @@ state.cfg      // Protokollstart, Erfassungstag, Erwartungsfenster, Übungsnamen
 ## Zwei Takte
 
 Der Wochenschlüssel ist der **nächste** Erfassungstag: die laufende Woche sammelt ihre
-Tage bis dorthin. Täglich erfasst werden Exposition, Confounder, WHO-5 und IIEF-5; alles
-Übrige beurteilt eine ganze Woche und bleibt bis zum Erfassungstag verborgen
-(`ui/weekly.js`, Klasse `weekly` in `index.html`).
+Tage bis dorthin. Täglich erfasst werden Exposition, Confounder und WHO-5; alles Übrige
+beurteilt eine ganze Woche und bleibt bis zum Erfassungstag verborgen (`ui/weekly.js`,
+Klasse `weekly` in `index.html`). Solange die Wochenfragen geschlossen sind, übernimmt
+das tägliche Speichern für sie den zuletzt gespeicherten Stand der Woche
+(`behalteWochenfragen()` in `form/model.js`) — ihre Regler stehen dann auf Vorgabewerten,
+die sonst wie Antworten aussähen.
 
 Der Schnitt hat einen Grund: Was nur der Tag weiß — eine Injektion, drei Stunden Schlaf,
 zwei Bier — ist am Samstag nicht mehr rekonstruierbar, sondern geraten. Was die Woche
 beurteilt — Hautbild, Gelenke, Kernbereiche — wird schlechter, wenn man es am Mittwoch
 beantwortet und Woche dazu sagt. Die Tagesraster speichern deshalb ihre Rohwerte
-(`dose.tage`, `dose.notizen`, `conf.tage`, `whoTage`, `iiefTage`) **und** die daraus abgeleiteten
+(`dose.tage`, `dose.notizen`, `conf.tage`, `whoTage`) **und** die daraus abgeleiteten
 Wochenwerte in der gewohnten Form — so rechnen Auswertung, CSV und Datenblock
 unverändert weiter, ohne dass die Tagesauflösung verloren geht.
 

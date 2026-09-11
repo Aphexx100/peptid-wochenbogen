@@ -1,7 +1,7 @@
 /* Freischaltung der Wochenfragen.
 
-   Taeglich erfasst werden Exposition, Confounder, WHO-5 und IIEF-5. Alles
-   andere — Kernbereiche, GLOW-Ziele, Koerpermasse, Pigmentierung,
+   Taeglich erfasst werden Exposition, Confounder und WHO-5. Alles andere —
+   Kernbereiche, GLOW-Ziele, Sexualfunktion, Koerpermasse, Pigmentierung,
    Negativkontrollen, Beobachtungsliste, PT-141 — beurteilt eine ganze Woche
    und bleibt deshalb bis zum Erfassungstag verborgen. Das ist kein
    Schoenheitsgriff: wer Wochenfragen mitten in der Woche beantwortet,
@@ -10,14 +10,14 @@
    Karten tragen dafuer die Klasse `weekly`. Der Erfassungstag steht im Setup
    unter Rahmen; er bestimmt zugleich den Wochenschluessel. Ein verpasster
    Erfassungstag darf die Woche nicht unausfuellbar machen, deshalb gibt es
-   den Knopf "trotzdem ausfüllen" — bewusst als Ausnahme sichtbar, statt
-   still im Hintergrund. */
+   den Knopf "Wochenfragen nachtragen" — klein, aber sichtbar, und fuer
+   genau eine Woche gueltig. */
 
 import { state } from '../state.js';
 import { $ } from '../util/dom.js';
 import { istAbschlussTag, iso } from '../util/date.js';
 
-const WTAG_LANG = ['Sonntag', 'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag'];
+const WTAG = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 
 /* Von Hand geoeffnet — gilt nur fuer genau die Woche, fuer die geklickt
    wurde. Beim Wochenwechsel und beim Aendern des Erfassungstags verfaellt
@@ -27,14 +27,6 @@ let manuellFuer = null;
 const manuell = () => manuellFuer !== null && manuellFuer === state.weekKey;
 
 export const wochenfragenOffen = () => manuell() || istAbschlussTag();
-
-/** Tage bis zum naechsten Erfassungstag; 0 heisst heute. */
-function tageBis() {
-  const heute = new Date();
-  heute.setHours(12, 0, 0, 0);
-  const ziel = new Date(`${state.weekKey}T12:00:00`);
-  return Math.round((ziel - heute) / 86400000);
-}
 
 export function renderWeeklyGate() {
   const offen = wochenfragenOffen();
@@ -48,37 +40,24 @@ export function renderWeeklyGate() {
       : !(offen && el.dataset.faellig === '1');
   });
 
-  const note = $('weeklyNote');
-  note.hidden = false;
-  const tage = tageBis();
-  const wtag = WTAG_LANG[new Date(`${state.weekKey}T12:00:00`).getDay()];
-
-  if (offen) {
-    note.className = 'card gate open';
-    note.innerHTML =
-      `<h2><span class="step">✓</span> Wochenabschluss — ${wtag}, ${state.weekKey}</h2>` +
-      '<p class="hint" style="margin-bottom:0">Die Wochenfragen sind freigeschaltet: Kernbereiche, GLOW-Ziele, ' +
-      'Körpermaße, Pigmentierung, Negativkontrollen und die Beobachtungsliste. Beantworte sie für die ' +
-      '<strong>ganze zurückliegende Woche</strong>, nicht für heute — und sieh vorher nicht in die Auswertung, ' +
-      'sonst bewertest du die Differenz zur Vorwoche statt den Zustand.' +
-      (manuell() && !istAbschlussTag()
-        ? ' <em>Von Hand geöffnet — der eigentliche Erfassungstag ist ein anderer.</em>'
-        : '') +
-      '</p>';
+  /* Am Erfassungstag braucht es keinen Knopf — die Fragen sind ohnehin
+     offen, und die Statuszeile sagt "Wochenabschluss heute". */
+  const bar = $('gateBar');
+  if (istAbschlussTag()) {
+    bar.hidden = true;
+    bar.innerHTML = '';
     return;
   }
-
-  note.className = 'card gate';
-  note.innerHTML =
-    '<h2><span class="step">·</span> Wochenfragen noch geschlossen</h2>' +
-    `<p class="hint">Heute zählen nur die Tagesfelder: Exposition, Confounder, Wohlbefinden und Sexualfunktion. ` +
-    `Die Wochenfragen öffnen am <strong>${wtag}, ${state.weekKey}</strong> — ` +
-    `${tage === 1 ? 'also morgen' : `noch ${tage} Tage`}.</p>` +
-    '<div class="btnrow"><button class="btn ghost" id="gateOpen">Trotzdem ausfüllen</button></div>' +
-    '<p class="hint" style="margin:.6rem 0 0"><em>Nur für den Fall, dass du den Erfassungstag verpasst hast. ' +
-    'Sonst gilt: ein fester Tag pro Woche ist der halbe Wert dieses Bogens.</em></p>';
+  bar.hidden = false;
+  const d = new Date(`${state.weekKey}T12:00:00`);
+  const regulaer = `${WTAG[d.getDay()]} ${state.weekKey.slice(8, 10)}.${state.weekKey.slice(5, 7)}.`;
+  bar.innerHTML = manuell()
+    ? '<span class="gatehint">Wochenfragen von Hand geöffnet</span>' +
+      '<button class="btn ghost small" id="gateOpen" type="button">Wochenfragen ausblenden</button>'
+    : `<span class="gatehint">regulär am ${regulaer}</span>` +
+      '<button class="btn ghost small" id="gateOpen" type="button">Wochenfragen nachtragen</button>';
   $('gateOpen').addEventListener('click', () => {
-    manuellFuer = state.weekKey;
+    manuellFuer = manuell() ? null : state.weekKey;
     renderWeeklyGate();
   });
 }

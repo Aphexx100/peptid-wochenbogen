@@ -30,6 +30,7 @@
   <button role="tab" id="tab-aus" aria-controls="p-aus" aria-selected="false">Auswertung</button>
   <button role="tab" id="tab-claude" aria-controls="p-claude" aria-selected="false">Analyse</button>
   <button role="tab" id="tab-setup" aria-controls="p-setup" aria-selected="false">Setup</button>
+  <button role="tab" id="tab-info" aria-controls="p-info" aria-selected="false">Info</button>
 </div>
 
 <div class="offline" id="offline" hidden>
@@ -39,18 +40,7 @@
 <!-- ==================== BOGEN ==================== -->
 <section class="panel" id="p-bogen" role="tabpanel" aria-labelledby="tab-bogen">
 
-  <div class="card">
-    <h2><span class="step">00</span> Was dieser Bogen leisten kann</h2>
-    <div class="note">
-      Der GLOW-Stack ist in sich nicht auflösbar — drei Substanzen, eine Spritze, ein Zeitverlauf. Was dieser Bogen trotzdem hergibt: <b>einen sauberen Zeitverlauf</b> mit gleichbleibenden Fragen, <b>einen echten Innersubjekt-Vergleich für PT-141</b> (weil es nicht täglich läuft), <b>eine Erwartungskontrolle</b> und <b>eine Ereignis-Zeitleiste</b>, falls etwas auftritt.
-      <br><br>
-      Der Bogen läuft in zwei Takten. <b>Täglich</b> trägst du ein, was gesetzt wurde, wie du geschlafen und trainiert hast, und beantwortest die beiden Fragebögen für den Tag — das dauert eine Minute und ist der Teil, der aus dem Gedächtnis nicht rekonstruierbar wäre. <b>Am Erfassungstag</b> schaltet sich der Rest frei: alles, was eine ganze Woche beurteilt. Vorher bleibt es verborgen, denn eine halbe Woche als Woche zu bewerten ist schlimmer als eine Lücke.
-      <br><br>
-      Zwei Regeln, die den Unterschied machen: <b>den Wochenabschluss immer am selben Tag zur selben Zeit</b> ausfüllen, und <b>nie vorher die alten Einträge ansehen</b>. Sonst bewertest du deine Erinnerung an letzte Woche statt diese Woche.
-    </div>
-  </div>
-
-  <div class="card" id="weeklyNote" hidden></div>
+  <div class="gatebar" id="gateBar" hidden></div>
 
   <div class="card weekly">
     <h2><span class="step">01</span> Erwartung — zuerst, vor allem anderen</h2>
@@ -110,12 +100,11 @@
     <p class="daylist" id="whoTage"></p>
   </div>
 
-  <div class="card">
+  <div class="card weekly">
     <h2><span class="step">05</span> Sexualfunktion</h2>
-    <p class="hint">IIEF-5, deutscher Standardwortlaut, Zeitraum auf einen Tag verkürzt. Gleiche Einschränkung wie oben, gleicher Nutzen: die Frage bleibt über Monate identisch. Auch hier ist der Wochenwert das Mittel der erfassten Tage — <em>an Tagen ohne sexuelle Aktivität die Null-Antworten benutzen, nicht auslassen.</em></p>
+    <p class="hint">IIEF-5, deutscher Standardwortlaut. <em>In den letzten sieben Tagen …</em></p>
     <div id="s-iief"></div>
-    <div class="score">Heute <b id="iiefScore">—</b> von 25 · Woche Ø <b id="iiefWeek">—</b></div>
-    <p class="daylist" id="iiefTage"></p>
+    <div class="score">IIEF-5 <b id="iiefScore">—</b> von 25</div>
   </div>
 
   <div class="card weekly">
@@ -237,7 +226,7 @@
 
   <div class="card">
     <h2><span class="step">✓</span> Speichern</h2>
-    <p class="hint">Speichert die laufende Woche — Tageseinträge sofort, die Wochenfragen am Erfassungstag. Der Knopf darf täglich gedrückt werden, er überschreibt einfach den Stand der Woche.</p>
+    <p class="hint">Speichert die laufende Woche. Der Knopf darf täglich gedrückt werden, er überschreibt den Stand der Woche — die Wochenfragen aber nur, solange sie offen sind.</p>
     <div class="btnrow"><button class="btn" id="saveBtn">Woche speichern</button></div>
     <p class="saveinfo" id="saveInfo"></p>
   </div>
@@ -489,10 +478,32 @@
     <p class="saveinfo" id="anInfo"></p>
   </div>
 
+</section>
+
+<!-- ==================== INFO ==================== -->
+<section class="panel" id="p-info" role="tabpanel" aria-labelledby="tab-info" hidden>
+  <div class="card">
+    <h2>Was dieser Bogen leisten kann</h2>
+    <div class="note">
+      Der GLOW-Stack ist in sich nicht auflösbar — drei Substanzen, eine Spritze, ein Zeitverlauf. Was dieser Bogen trotzdem hergibt: <b>einen sauberen Zeitverlauf</b> mit gleichbleibenden Fragen, <b>einen echten Innersubjekt-Vergleich für PT-141</b> (weil es nicht täglich läuft), <b>eine Erwartungskontrolle</b> und <b>eine Ereignis-Zeitleiste</b>, falls etwas auftritt.
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Zwei Takte: täglich und wöchentlich</h2>
+    <div class="note">
+      <b>Täglich</b> trägst du ein, was gesetzt wurde — Menge, sonstige Medikamente, Abweichungen, Einstichstellen —, dazu Schlaf, Training, Protein und Alkohol vom Vortag und den WHO-5 für heute. Das dauert eine Minute und ist der Teil, der aus dem Gedächtnis nicht rekonstruierbar wäre.
+      <br><br>
+      <b>Am Erfassungstag</b> schalten sich die Wochenfragen frei: alles, was eine ganze Woche beurteilt — Erwartung, Kernbereiche, GLOW-Ziele, Sexualfunktion, Morgenerektionen, Pigmentierung, Negativkontrollen, Beobachtungsliste, Körpermaße. Vorher bleiben sie verborgen, denn eine halbe Woche als Woche zu bewerten ist schlimmer als eine Lücke. Beantworte sie für die <b>ganze zurückliegende Woche</b>, nicht für heute.
+      <br><br>
+      <b>Wochenfragen nachtragen</b> oben im Bogen öffnet sie außer der Reihe — gedacht für den Fall, dass du den Erfassungstag verpasst hast. Solange sie geschlossen sind, lässt das tägliche Speichern sie unberührt.
+    </div>
+  </div>
+
   <div class="card">
     <h2>Wie du den Bogen ausfüllst, damit er etwas wert ist</h2>
     <div class="note">
-      <b>Gleicher Tag, gleiche Uhrzeit, gleicher Zustand.</b> Nicht nach dem Training, nicht nach zwei Gläsern Wein, nicht am Morgen nach einer schlechten Nacht — es sei denn, das ist jedes Mal so.
+      <b>Gleicher Tag, gleiche Uhrzeit, gleicher Zustand.</b> Den Wochenabschluss nicht nach dem Training, nicht nach zwei Gläsern Wein, nicht am Morgen nach einer schlechten Nacht — es sei denn, das ist jedes Mal so.
       <br><br>
       <b>Nicht zurückblättern.</b> Erst speichern, dann die Auswertung ansehen. Wer die Vorwoche kennt, bewertet die Differenz statt den Zustand.
       <br><br>
@@ -500,6 +511,11 @@
       <br><br>
       <b>Vier Wochen sind das Minimum, zwölf sind die Antwort.</b> Alles darunter ist Rauschen — bei Hautbild und Haaren gilt das doppelt.
     </div>
+  </div>
+
+  <div class="card">
+    <h2>Was das hier nicht ist</h2>
+    <p class="hint">Keine medizinische Anwendung und kein Ersatz für Blutbild, Hautkrebsvorsorge oder das Gespräch mit dem behandelnden Arzt. Der Bogen dokumentiert, er beurteilt nicht. Auch die Analysefunktion gibt keine Dosierungsempfehlungen — das steht so in ihren Regeln.</p>
   </div>
 </section>
 

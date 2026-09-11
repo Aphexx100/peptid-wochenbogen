@@ -7,14 +7,16 @@ Sprachmodell einordnen lassen.
 Der Bogen läuft in zwei Takten. **Täglich** erfasst er die Exposition (GLOW-Stack,
 Kisspeptin, PT-141, Tirzepatid, dazu je Tag sonstige Medikamente, Abweichungen und
 Auffälligkeiten an der Einstichstelle), die Confounder (Schlaf, Training, Protein, Alkohol —
-jeweils für den Vortag) sowie WHO-5 und IIEF-5. Wer im Rekonstitutionsrechner sein
+jeweils für den Vortag) sowie den WHO-5. Wer im Rekonstitutionsrechner sein
 aktuelles Vial hinterlegt, trägt die Dosis als aufgezogenes **Volumen in ml** ein und der
 Bogen rechnet die Wirkstoffmenge selbst aus.
 
 **Am Erfassungstag** kommt der Rest dazu: sechs Kernbereiche, die drei erwarteten
-GLOW-Wirkungen, Morgenerektionen, Körpermaße und Kraftwerte, Pigmentierung,
-Negativkontrollen und die Beobachtungsliste. Bis dahin bleiben diese Fragen verborgen —
-wer sie mitten in der Woche beantwortet, bewertet einen Ausschnitt und nennt ihn Woche.
+GLOW-Wirkungen, Sexualfunktion (IIEF-5) und Morgenerektionen, Körpermaße und Kraftwerte,
+Pigmentierung, Negativkontrollen und die Beobachtungsliste. Bis dahin bleiben diese Fragen
+verborgen — wer sie mitten in der Woche beantwortet, bewertet einen Ausschnitt und nennt
+ihn Woche. Ein kleiner Knopf **Wochenfragen nachtragen** öffnet sie außer der Reihe, falls
+der Erfassungstag verpasst wurde. Die allgemeinen Erklärungen stehen im Reiter **Info**.
 Aus allem entstehen Verlaufsgrafiken, eine Wochentabelle und ein CSV-Export.
 
 ## Aufbau in einem Absatz
@@ -30,7 +32,7 @@ die Architektur in [docs/ARCHITEKTUR.md](docs/ARCHITEKTUR.md).
 ```
 npm install          # esbuild und playwright, nur zum Bauen und Testen
 npm start            # http://localhost:8080
-npm test             # 135 Prüfungen in einem echten Browser
+npm test             # 149 Prüfungen in einem echten Browser
 npm run build        # dist/peptid-wochenbogen.html — eine Datei für Claude
 ```
 

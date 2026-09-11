@@ -49,11 +49,15 @@ Wer stattdessen `hidden` setzt, verliert: Karte und Wochentor überschreiben sic
 gegenseitig, je nachdem, wer zuletzt gerendert hat.
 
 Soll die Frage darüber hinaus **je Tag einen eigenen Wert** tragen, braucht sie ein
-Raster wie `EXPO` oder `CONF_TAGE` — siehe unten — oder, bei Fragebögen, das Muster von
-WHO-5 und IIEF-5 in `src/js/form/build.js`: die Oberfläche zeigt immer den heutigen Tag,
-gespeichert wird ein Antwortsatz je Datum, und der Wochenwert entsteht als Mittel. Der
-Vorteil dieses Musters ist, dass `e.who`/`e.iief` ihre alte Form behalten und Auswertung,
-CSV und Datenblock unverändert weiterrechnen.
+Raster wie `EXPO` oder `CONF_TAGE` — siehe unten — oder, bei Fragebögen, das Muster des
+WHO-5 in `src/js/form/build.js`: die Oberfläche zeigt immer den heutigen Tag, gespeichert
+wird ein Antwortsatz je Datum, und der Wochenwert entsteht als Mittel. Der Vorteil dieses
+Musters ist, dass `e.who` seine alte Form behält und Auswertung, CSV und Datenblock
+unverändert weiterrechnen.
+
+Umgekehrt, eine Frage **wöchentlich** machen: Karte bekommt `weekly`, und ihr Schlüssel
+kommt in `WOCHEN_FELDER` in `src/js/form/model.js` — sonst schreibt das tägliche Speichern
+ihre Vorgabewerte mit.
 
 ## Eine Notizspalte im Tagesraster ergänzen
 
@@ -173,7 +177,7 @@ grep -n '#[0-9a-fA-F]\{3,6\}' src/css/app.css   # muss leer bleiben
 ## Nach jeder Änderung
 
 ```bash
-npm run check     # baut die Einzeldatei und fährt beide Fassungen durch 135 Prüfungen
+npm run check     # baut die Einzeldatei und fährt beide Fassungen durch 149 Prüfungen
 ```
 
 Der Rauchtest startet einen echten Browser, füllt den Bogen aus, speichert, lädt neu und

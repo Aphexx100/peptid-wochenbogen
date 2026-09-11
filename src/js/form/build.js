@@ -519,14 +519,15 @@ export function buildKraft() {
   });
 }
 
-/* ---- WHO-5 und IIEF-5: taeglich erfasst, woechentlich gemittelt ----
+/* ---- WHO-5: taeglich erfasst, woechentlich gemittelt ----
    Die Segmente zeigen immer den heutigen Tag. Gespeichert wird je Tag ein
-   Antwortsatz (whoTage/iiefTage, Schluessel ist das Datum); der Wochenwert
-   in e.who/e.iief ist das Mittel je Frage ueber die erfassten Tage — damit
-   rechnen Auswertung, CSV und Datenblock unveraendert weiter. */
+   Antwortsatz (whoTage, Schluessel ist das Datum); der Wochenwert in e.who
+   ist das Mittel je Frage ueber die erfassten Tage — damit rechnen
+   Auswertung, CSV und Datenblock unveraendert weiter. Der IIEF-5 ist eine
+   Wochenfrage (letzte sieben Tage) und hat nur einen Antwortsatz. */
 
-/** Heutige Antworten als Array oder null, wenn ein Item fehlt. */
-export function heutigeAntworten(praefix) {
+/** Gewaehlter Antwortsatz eines Fragebogens; null, wenn ein Item fehlt. */
+export function antwortSatz(praefix) {
   const out = [];
   for (let i = 0; i < 5; i++) {
     const v = segVal(`${praefix}${i}`);
@@ -537,16 +538,15 @@ export function heutigeAntworten(praefix) {
 }
 
 /* Die je Tag gespeicherten Antwortsaetze der laufenden Woche. */
-let tagesSaetze = { who: {}, iief: {} };
-export function setTagesSaetze(who, iief) {
-  tagesSaetze = { who: who || {}, iief: iief || {} };
+let tagesSaetze = { who: {} };
+export function setTagesSaetze(who) {
+  tagesSaetze = { who: who || {} };
 }
-export function getTagesSaetze() { return tagesSaetze; }
 
 /** Antwortsaetze mit dem heutigen Stand zusammenfuehren. */
 export function mergeHeute(praefix) {
   const map = { ...(tagesSaetze[praefix] || {}) };
-  const heute = heutigeAntworten(praefix);
+  const heute = antwortSatz(praefix);
   if (heute) map[iso(new Date())] = heute;
   return map;
 }
@@ -560,7 +560,7 @@ export function tagesMittel(map) {
 }
 
 function renderTagesInfo(praefix, scoreId, weekId, listId, faktor, max) {
-  const heute = heutigeAntworten(praefix);
+  const heute = antwortSatz(praefix);
   $(scoreId).textContent = heute ? String(heute.reduce((a, b) => a + b, 0) * faktor) : '—';
 
   const map = mergeHeute(praefix);
@@ -577,7 +577,8 @@ function renderTagesInfo(praefix, scoreId, weekId, listId, faktor, max) {
 /** WHO-5 und IIEF-5 laufen live mit, sobald alle Items gesetzt sind. */
 export function recalcScores() {
   renderTagesInfo('who', 'whoScore', 'whoWeek', 'whoTage', 4, 100);
-  renderTagesInfo('iief', 'iiefScore', 'iiefWeek', 'iiefTage', 1, 25);
+  const iief = antwortSatz('iief');
+  $('iiefScore').textContent = iief ? String(iief.reduce((a, b) => a + b, 0)) : '—';
 }
 
 /* ---- Kupferlast ----

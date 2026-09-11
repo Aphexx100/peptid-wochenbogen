@@ -91,8 +91,9 @@ export function dataBlock(limitWeeks){
   var head="ERFASSTE WOCHEN ("+ks.length+"), älteste zuerst. Skalen 0-10 sofern nicht anders angegeben.\n"+
            "WHO-5 geht bis 100, IIEF-5 bis 25, Morgenerektionen und Tage mit Verlangen bis 7.\n"+
            "Bei den Gelenk-Items bedeutet ein HÖHERER Wert weniger Beschwerden.\n"+
-           "Exposition und Confounder werden täglich erfasst, WHO-5 und IIEF-5 ebenfalls — deren "+
-           "Wochenwert ist das Mittel der erfassten Tage, die Zahl der Tage steht dabei. Training und "+
+           "Exposition und Confounder werden täglich erfasst, WHO-5 ebenfalls — sein Wochenwert ist "+
+           "das Mittel der erfassten Tage, die Zahl der Tage steht dabei (steht sie auch beim IIEF-5, "+
+           "stammt die Woche aus einer Phase, in der er täglich lief). Training und "+
            "Alkohol sind Wochensummen (Alkohol in Flaschen à 0,5 l), Schlaf und Protein Tagesmittel. "+
            "Alle übrigen Angaben beurteilen die Woche als Ganzes.\n"+erw+"\n";
   var body=ks.map(weekLine).join("\n\n");

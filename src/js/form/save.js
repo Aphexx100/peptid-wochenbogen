@@ -7,7 +7,7 @@ import { state } from '../state.js';
 import { $ } from '../util/dom.js';
 import { currentWeekKey, weekNumber } from '../util/date.js';
 import { saveWeek as ablageWeek, saveConfig as ablageConfig } from '../storage/index.js';
-import { readForm } from './model.js';
+import { readForm, fillForm } from './model.js';
 import {
   buildKraft, buildExpo, buildConfTage, renderCu, readVials, refreshExpoUnits
 } from './build.js';
@@ -40,9 +40,14 @@ async function persistCfg(infoId) {
 export async function saveCfgZeit() {
   state.cfg.start = $('cfgStart').value;
   state.cfg.day = Number($('cfgDay').value);
+  const vorher = state.weekKey;
   state.weekKey = currentWeekKey();
   buildExpo();
   buildConfTage();
+  /* Anderer Erfassungstag heisst andere Woche mit anderen Kalendertagen.
+     Die Tabellen zeigen dann deren gespeicherten Stand — sonst rutschten die
+     eingetragenen Werte zeilenweise auf fremde Daten. */
+  if (state.weekKey !== vorher) fillForm(state.weeks[state.weekKey] || {});
   $('stamp').textContent = `Woche bis ${state.weekKey}`;
   renderStatus();
   await persistCfg('cfgInfo');
