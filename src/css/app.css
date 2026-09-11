@@ -147,10 +147,12 @@ tbody tr:last-child td{border-bottom:none}
 .expo td{vertical-align:top}
 .expo input[type="text"]{min-width:8.5rem;min-height:2.3rem;padding:.35rem .5rem;font-size:.85rem}
 .expo th.notiz{white-space:nowrap}
+/* Zahlenspalten schrumpfen auf ihre Feldbreite, den Rest bekommt die Notiz. */
+#s-expo th:not(.notiz),#s-expo td:not(.notiz){width:1%}
 .expo .erste{border-left:1px solid var(--border-soft);padding-left:.6rem}
 /* Beim seitlichen Scrollen auf dem Telefon bleibt der Tag stehen. */
 .expo td.tag,.expo thead th:first-child{position:sticky;left:0;z-index:1;background:var(--surface)}
-.expo input[type="number"]{min-width:3.9rem;min-height:2.3rem;padding:.35rem .45rem;font-size:.88rem}
+.expo input[type="number"]{min-width:4.4rem;min-height:2.3rem;padding:.35rem .45rem;font-size:.88rem}
 .expo .xcalc{display:block;font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:.68rem;
   color:var(--muted);min-height:.95rem;padding:.15rem .1rem 0;font-variant-numeric:tabular-nums}
 .vkonz{display:block;font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:.74rem;

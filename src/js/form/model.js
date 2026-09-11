@@ -8,7 +8,7 @@ import { state } from '../state.js';
 import { $ } from '../util/dom.js';
 import { weekNumber, iso } from '../util/date.js';
 import {
-  KERN, GLOWZIEL, MASSE, MORGEN, PT, PT_SIGNS, PIGMENT, NEG, WATCH, CONF_CHECKS, MONTH
+  KERN, GLOWZIEL, MASSE, MORGEN, PT, PT_SIGNS, PIGMENT, NEG, WATCH, CONF_CHECKS, MONTH, EXPO_TEXT_ALT
 } from '../schema.js';
 import { sVal, setS, segVal, setSeg, checked } from '../ui/controls.js';
 import { wochenfragenOffen } from '../ui/weekly.js';
@@ -47,8 +47,19 @@ export function readForm(){
      Die Wochenfelder bleiben als abgeleiteter Text mit Tagesangabe
      erhalten, damit CSV und Datenblock sie unveraendert lesen. */
   var nz=readNotizen(), nw=ableitenNotizen(nz.tage);
-  e.dose.sonstMed=nw.sonstMed; e.dose.abw=nw.abw; e.dose.stellen=nw.stellen;
+  e.dose.stellen=nw.stellen;
   if(!nz.leer) e.dose.notizen=nz.tage;
+  /* Entfallene Notizspalten (sonstige Medikamente, Abweichungen): was schon
+     erfasst ist, bleibt mit Tagesreihe und Wochentext stehen. */
+  var altD=(state.weeks[state.weekKey]||{}).dose||{};
+  EXPO_TEXT_ALT.forEach(function(k){
+    if(altD[k]) e.dose[k]=altD[k];
+    var reihe=altD.notizen&&altD.notizen[k];
+    if(reihe&&reihe.some(function(v){return v;})){
+      e.dose.notizen=e.dose.notizen||{start:altD.notizen.start};
+      if(e.dose.notizen.start===altD.notizen.start) e.dose.notizen[k]=reihe.slice();
+    }
+  });
   /* Taegliche Zufuhr: Kreatin als Wochensumme am Dose-Objekt, Protein und
      Alkohol weiter unter conf (siehe unten), wo sie immer schon standen. */
   var zf=readZufuhr(), zw=ableitenZufuhr(zf.tage);

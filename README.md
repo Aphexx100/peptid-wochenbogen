@@ -6,8 +6,7 @@ Sprachmodell einordnen lassen.
 
 Der Bogen läuft in zwei Takten. **Täglich** erfasst er die Exposition (GLOW-Stack,
 Kisspeptin, PT-141, Tirzepatid aus dem Pen), die Zufuhr (Kreatin, Protein, Alkohol), je Tag
-drei Notizen (sonstige Medikamente, Abweichungen, Einstichstellen), Schlaf und Training
-vom Vortag sowie den WHO-5. Wer im Rekonstitutionsrechner sein aktuelles Vial hinterlegt,
+eine Notiz zu den Einstichstellen, Schlaf und Training vom Vortag sowie den WHO-5. Wer im Rekonstitutionsrechner sein aktuelles Vial hinterlegt,
 trägt die Dosis als aufgezogenes **Volumen in ml** ein und der Bogen rechnet die
 Wirkstoffmenge selbst aus.
 
@@ -32,7 +31,7 @@ die Architektur in [docs/ARCHITEKTUR.md](docs/ARCHITEKTUR.md).
 ```
 npm install          # esbuild und playwright, nur zum Bauen und Testen
 npm start            # http://localhost:8080
-npm test             # 159 Prüfungen in einem echten Browser
+npm test             # 161 Prüfungen in einem echten Browser
 npm run build        # dist/peptid-wochenbogen.html — eine Datei für Claude
 ```
 

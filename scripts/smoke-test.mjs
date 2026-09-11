@@ -64,7 +64,8 @@ async function laufe(browser, url, label, mitModulTest) {
   const expoZellen = await seite.locator('#s-expo input[type="number"]').count();
   pruefe('Tagesraster: 7 Tage × 4 Substanzen + 3 Zufuhrspalten', expoZellen === 49, `${expoZellen} Zellen`);
   const notizZellen = await seite.locator('#s-expo input[type="text"]').count();
-  pruefe('Tagesraster: 7 Tage × 3 Notizspalten', notizZellen === 21, `${notizZellen} Zellen`);
+  pruefe('Tagesraster: nur noch die Notizspalte Einstichstellen', notizZellen === 7
+    && (await seite.locator('#nsonstMed0, #nabw0').count()) === 0, `${notizZellen} Zellen`);
   pruefe('Alte Wochenfelder für Notizen entfernt', (await seite.locator('#nSonstMed, #abw, #stellen').count()) === 0);
   const confZellen = await seite.locator('#s-confTage input').count();
   pruefe('Confounder-Tagesraster: nur noch Training und Schlaf', confZellen === 14, `${confZellen} Zellen`);
@@ -182,10 +183,8 @@ async function laufe(browser, url, label, mitModulTest) {
 
   /* Tagesnotizen: je Tag ein eigener Text, der mit Tagesangabe in die
      Wochenfelder und von dort in CSV und Datenblock wandert. */
-  await seite.fill('#nsonstMed0', 'Kreatin 5 g');
-  await seite.fill('#nsonstMed3', 'Kreatin 5 g, Vit. D');
-  await seite.fill('#nabw4', 'GLOW ausgelassen');
   await seite.fill('#nstellen2', 'leichte Rötung links');
+  await seite.fill('#nstellen4', 'kleiner Knoten');
   const breite = await seite.evaluate(() => {
     const w = document.querySelector('.card.wide').getBoundingClientRect().width;
     const n = document.querySelector('#p-bogen > .card:not(.wide)').getBoundingClientRect().width;
@@ -207,9 +206,9 @@ async function laufe(browser, url, label, mitModulTest) {
   pruefe('Tageseintrag überlebt das Neuladen', (await seite.inputValue('#xglow0')) === '2.8');
   pruefe('IIEF-5 überlebt das Neuladen', (await seite.locator('#iiefScore').innerText()) === '20');
   pruefe('Schlaf-Tageswert überlebt das Neuladen', (await seite.inputValue('#tschlaf0')) === '7');
-  pruefe('Tagesnotiz überlebt das Neuladen', (await seite.inputValue('#nsonstMed3')) === 'Kreatin 5 g, Vit. D');
-  pruefe('Notiz bleibt an ihrem Tag', (await seite.inputValue('#nabw4')) === 'GLOW ausgelassen'
-    && (await seite.inputValue('#nabw3')) === '');
+  pruefe('Tagesnotiz überlebt das Neuladen', (await seite.inputValue('#nstellen2')) === 'leichte Rötung links');
+  pruefe('Notiz bleibt an ihrem Tag', (await seite.inputValue('#nstellen4')) === 'kleiner Knoten'
+    && (await seite.inputValue('#nstellen3')) === '');
 
   /* Die PT-Karte hat zwei Bedingungen — Anwendung UND Wochenabschluss.
      Das Tor darf ihre eigene nicht überstimmen und umgekehrt. Geprüft in
@@ -217,14 +216,14 @@ async function laufe(browser, url, label, mitModulTest) {
      Woche unberührt bleibt; beim Zurückwechseln lädt sie wieder. */
   await setzeTag((heuteWt + 5) % 7);
   pruefe('Anderer Erfassungstag lädt die andere Woche, statt Werte zu verschieben',
-    (await seite.inputValue('#xglow0')) === '' && (await seite.inputValue('#nabw4')) === '');
+    (await seite.inputValue('#xglow0')) === '' && (await seite.inputValue('#nstellen4')) === '');
   await seite.fill('#xpt2', '1.75');
   pruefe('PT-Karte bleibt außerhalb des Erfassungstags zu', await seite.locator('#ptCard').isHidden());
   await seite.click('#gateOpen');
   pruefe('PT-Karte kommt mit den Wochenfragen zurück', await seite.locator('#ptCard').isVisible());
   await setzeTag(heuteWt);
   pruefe('Zurück beim Erfassungstag ist die gespeicherte Woche wieder da',
-    (await seite.inputValue('#xglow0')) === '2.8' && (await seite.inputValue('#nabw4')) === 'GLOW ausgelassen');
+    (await seite.inputValue('#xglow0')) === '2.8' && (await seite.inputValue('#nstellen4')) === 'kleiner Knoten');
 
   /* Vials: Rechner-Preset als aktuelles GLOW-Vial übernehmen — die Spalte
      läuft danach in ml, der bestehende mg-Eintrag wird umgerechnet und die
@@ -271,8 +270,7 @@ async function laufe(browser, url, label, mitModulTest) {
   pruefe('Datenblock trägt die Confounder-Tage', /CONFOUNDER-TAGE .*Schlaf 7h/.test(ctx));
   pruefe('Datenblock nennt die Messtage beim WHO-5', /WHO-5 80 \(Ø aus 1 Tagen\), IIEF-5 20(?! \()/.test(ctx));
   pruefe('Datenblock trägt Tagesnotizen mit Tagesangabe',
-    /sonst: \w\w \d\d\.\d\d\.: Kreatin 5 g; \w\w \d\d\.\d\d\.: Kreatin 5 g, Vit\. D/.test(ctx)
-    && /Einstichstellen: \w\w \d\d\.\d\d\.: leichte Rötung links/.test(ctx));
+    /Einstichstellen: \w\w \d\d\.\d\d\.: leichte Rötung links; \w\w \d\d\.\d\d\.: kleiner Knoten/.test(ctx));
   pruefe('Analyse-Knöpfe ohne Quelle deaktiviert', await seite.locator('#askWeek').isDisabled());
 
   /* Setup: Ablagefelder */
@@ -293,7 +291,7 @@ async function laufe(browser, url, label, mitModulTest) {
     pruefe('CSV benutzt Semikolon', zeilen[0].split(';').length > 80, `${zeilen[0].split(';').length} Spalten`);
     pruefe('CSV enthält den gespeicherten Wert', /90[.,]5/.test(zeilen[1]));
     pruefe('CSV führt das Tagesprotokoll', zeilen[0].includes('Tagesprotokoll') && /GLOW 2,8mg/.test(zeilen[1]));
-    pruefe('CSV führt Notizen mit Tagesangabe', /GLOW ausgelassen/.test(zeilen[1]) && /\w\w \d\d\.\d\d\.: Kreatin/.test(zeilen[1]));
+    pruefe('CSV führt Notizen mit Tagesangabe', /\w\w \d\d\.\d\d\.: kleiner Knoten/.test(zeilen[1]));
     pruefe('CSV führt die Confounder-Tage',
       zeilen[0].includes('Confounder-Tagesprotokoll') && /Schlaf 7h/.test(zeilen[1]));
   } else {
@@ -323,15 +321,32 @@ async function laufe(browser, url, label, mitModulTest) {
     await seite.waitForTimeout(500);
     await seite.click('#tab-bogen');
     pruefe('Alter Wochentext landet in der Zeile des Erfassungstags',
-      (await seite.inputValue('#nsonstMed6')) === 'Altbestand Magnesium'
-      && (await seite.inputValue('#nstellen6')) === 'Altbestand Knoten');
+      (await seite.inputValue('#nstellen6')) === 'Altbestand Knoten');
     await seite.click('#saveBtn');
     await seite.waitForTimeout(500);
     const nachher = await seite.evaluate((k) =>
       JSON.parse(localStorage.getItem('pwb.weeks.v1'))[k].dose, key);
     pruefe('Alter Wochentext übersteht das erneute Speichern',
-      /Altbestand Magnesium/.test(nachher.sonstMed) && /Altbestand Knoten/.test(nachher.stellen)
-      && Array.isArray(nachher.notizen && nachher.notizen.sonstMed), JSON.stringify(nachher.notizen));
+      /Altbestand Knoten/.test(nachher.stellen) && Array.isArray(nachher.notizen && nachher.notizen.stellen),
+      JSON.stringify(nachher.notizen));
+    pruefe('Text einer entfallenen Spalte bleibt gespeichert', nachher.sonstMed === 'Altbestand Magnesium');
+
+    /* Entfallene Spalte mit Tagesreihe: bleibt beim Speichern samt Reihe stehen. */
+    await seite.evaluate((k) => {
+      const weeks = JSON.parse(localStorage.getItem('pwb.weeks.v1'));
+      const d = weeks[k].dose;
+      d.notizen.abw = ['', 'GLOW ausgelassen', '', '', '', '', ''];
+      d.abw = 'Mo: GLOW ausgelassen';
+      localStorage.setItem('pwb.weeks.v1', JSON.stringify(weeks));
+    }, key);
+    await seite.reload({ waitUntil: 'networkidle' });
+    await seite.waitForTimeout(500);
+    await seite.click('#saveBtn');
+    await seite.waitForTimeout(500);
+    const abwNachher = await seite.evaluate((k) => JSON.parse(localStorage.getItem('pwb.weeks.v1'))[k].dose, key);
+    pruefe('Tagesreihe einer entfallenen Spalte bleibt gespeichert',
+      abwNachher.abw === 'Mo: GLOW ausgelassen' && abwNachher.notizen.abw[1] === 'GLOW ausgelassen',
+      JSON.stringify(abwNachher.notizen));
 
     /* Protein und Alkohol aus der Zeit, als sie in 02b mit Vortagsbezug
        standen: Zeile i meinte Tag i-1, landet also eine Zeile höher. Der

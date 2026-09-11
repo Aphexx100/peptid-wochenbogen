@@ -22,14 +22,16 @@ export const ZUFUHR = [
   {k:"alk",     n:"Alkohol", u:"Fl.", step:0.5}
 ];
 /* Freitextspalten des Tagesrasters in Abschnitt 02 — je Tag eine Notiz.
-   Getrennt von EXPO, weil dort gerechnet wird und hier nur notiert. Die
-   Wochenfelder dose.sonstMed/abw/stellen entstehen daraus als Liste mit
-   Tagesangabe ("Mo 07.09.: Kreatin; Mi 09.09.: …"). */
+   Getrennt von EXPO, weil dort gerechnet wird und hier nur notiert. Das
+   Wochenfeld dose.<k> entsteht daraus als Liste mit Tagesangabe
+   ("Mo 07.09.: Rötung; Mi 09.09.: …"). Die Spalten sonstMed (sonstige
+   Medikamente) und abw (Abweichungen) sind 2026-09 entfallen; ihre schon
+   erfassten Werte traegt model.js beim Speichern unveraendert weiter. */
 export const EXPO_TEXT = [
-  {k:"sonstMed", n:"Sonstige Medikamente, Supplemente", kurz:"Sonst. Med./Suppl.", ph:"Kreatin, Vit. D …"},
-  {k:"abw",      n:"Abweichungen, Auslassungen, neue Charge", kurz:"Abweichungen", ph:"ausgelassen, neue Charge …"},
   {k:"stellen",  n:"Einstichstellen — Auffälligkeiten", kurz:"Einstichstellen", ph:"Rötung, Knoten …"}
 ];
+/** Entfallene Notizspalten — nur noch gelesen und weitergetragen. */
+export const EXPO_TEXT_ALT = ["sonstMed", "abw"];
 /* Taegliche Confounder in Abschnitt 02b. Jeder Wert bezieht sich auf den
    VORTAG der Zeile: Schlaf der letzten Nacht, Training von gestern. Protein
    und Alkohol standen bis 2026-09 ebenfalls hier und sind in ZUFUHR

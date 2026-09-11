@@ -311,8 +311,8 @@ export function fuelleZufuhr(dose, conf) {
 }
 
 /* ---- Tagesnotizen (Freitextspalten des Rasters) ----
-   Gespeichert als dose.notizen = {start, sonstMed[7], abw[7], stellen[7]}.
-   Die Wochenfelder dose.sonstMed/abw/stellen werden daraus abgeleitet —
+   Gespeichert als dose.notizen = {start, stellen[7]}.
+   Das Wochenfeld dose.stellen wird daraus abgeleitet —
    als Liste mit Tagesangabe, damit CSV und Datenblock sie ohne Umbau
    weiterlesen und die Zuordnung zum Tag erhalten bleibt. */
 
