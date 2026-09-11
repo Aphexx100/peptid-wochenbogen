@@ -67,7 +67,7 @@ Eine Zeile in `EXPO_TEXT` in `src/js/schema.js` (`k`, `n`, `kurz` für den Spalt
 sie in CSV und Datenblock auftaucht, dort `dose.<k>` ergänzen.
 
 Die Karte des Rasters trägt die Klasse `wide` und darf als einzige über die Lesebreite
-von 46rem hinaus bis 72rem wachsen. Weitere breite Karten bekommen dieselbe Klasse.
+von 46rem hinaus bis 80rem wachsen. Weitere breite Karten bekommen dieselbe Klasse.
 
 ## Eine Substanz im Tagesraster ergänzen
 
@@ -177,7 +177,7 @@ grep -n '#[0-9a-fA-F]\{3,6\}' src/css/app.css   # muss leer bleiben
 ## Nach jeder Änderung
 
 ```bash
-npm run check     # baut die Einzeldatei und fährt beide Fassungen durch 149 Prüfungen
+npm run check     # baut die Einzeldatei und fährt beide Fassungen durch 159 Prüfungen
 ```
 
 Der Rauchtest startet einen echten Browser, füllt den Bogen aus, speichert, lädt neu und

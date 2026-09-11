@@ -5,10 +5,10 @@
 body{margin:0;background:var(--ground);color:var(--ink);
   font-family:Archivo,"Segoe UI",Helvetica,Arial,sans-serif;font-size:16px;line-height:1.5;-webkit-font-smoothing:antialiased}
 /* Lesebreite 46rem fuer alles; nur Karten mit `.wide` (das Tagesraster der
-   Exposition mit seinen Notizspalten) duerfen bis zur vollen Breite
+   Exposition mit Zufuhr- und Notizspalten) duerfen bis zur vollen Breite
    ausgreifen. So bleiben Fliesstext und Regler lesbar, die Tabelle nicht
    eingequetscht. */
-.app{max-width:74rem;margin:0 auto;padding:0 1rem 4rem}
+.app{max-width:82rem;margin:0 auto;padding:0 1rem 4rem}
 .app > header,.app > .tabs,.app > .offline,.panel > *:not(.wide){max-width:46rem;margin-left:auto;margin-right:auto}
 .card.wide > .hint{max-width:52rem}
 .mono{font-family:"IBM Plex Mono",ui-monospace,monospace;font-variant-numeric:tabular-nums}
@@ -137,20 +137,20 @@ tbody tr:last-child td{border-bottom:none}
 .cond[hidden]{display:none!important}
 
 /* Tagesraster der Exposition */
-.expo th{padding:.35rem .4rem}
-.expo td{padding:.25rem .4rem;border-bottom:none}
+.expo th{padding:.35rem .3rem}
+.expo td{padding:.25rem .3rem;border-bottom:none}
 .expo td.tag{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:.76rem;
   color:var(--muted);white-space:nowrap;padding-right:.7rem}
 .expo tr[data-heute="1"] td.tag{color:var(--accent);font-weight:600}
 /* Tage, die noch nicht dran sind — eintragbar, aber sichtbar nicht fällig. */
 .expo tr[data-zukunft="1"]{opacity:.45}
 .expo td{vertical-align:top}
-.expo input[type="text"]{min-width:10.5rem;min-height:2.3rem;padding:.35rem .5rem;font-size:.85rem}
+.expo input[type="text"]{min-width:8.5rem;min-height:2.3rem;padding:.35rem .5rem;font-size:.85rem}
 .expo th.notiz{white-space:nowrap}
-.expo .erste{border-left:1px solid var(--border-soft);padding-left:.8rem}
+.expo .erste{border-left:1px solid var(--border-soft);padding-left:.6rem}
 /* Beim seitlichen Scrollen auf dem Telefon bleibt der Tag stehen. */
 .expo td.tag,.expo thead th:first-child{position:sticky;left:0;z-index:1;background:var(--surface)}
-.expo input[type="number"]{min-width:4.6rem;min-height:2.3rem;padding:.35rem .5rem;font-size:.88rem}
+.expo input[type="number"]{min-width:3.9rem;min-height:2.3rem;padding:.35rem .45rem;font-size:.88rem}
 .expo .xcalc{display:block;font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:.68rem;
   color:var(--muted);min-height:.95rem;padding:.15rem .1rem 0;font-variant-numeric:tabular-nums}
 .vkonz{display:block;font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:.74rem;
@@ -160,6 +160,12 @@ tbody tr:last-child td{border-bottom:none}
 .gatebar{display:flex;justify-content:flex-end;align-items:center;gap:.7rem;margin-bottom:.8rem}
 .gatebar[hidden]{display:none!important}
 .gatehint{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:.7rem;color:var(--muted)}
+.gatehint.ok{color:var(--good)} .gatehint.bad{color:var(--alert)}
+/* Vial-Tabelle: eine Zeile je Wirkstoff, schmaler als das Tagesraster. */
+.expo.vials{width:auto}
+.expo.vials td.tag{font-family:Archivo,sans-serif;font-size:.85rem;color:var(--ink-2);padding-top:.55rem}
+.expo.vials input[type="number"]{width:6.5rem}
+.expo.vials .vkonz{padding:.6rem 0 0 .2rem;white-space:nowrap}
 .btn.small{width:auto;min-height:2.2rem;padding:.4rem .85rem;font-size:.8rem}
 .weekly[hidden]{display:none!important}
 .daylist{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:.72rem;

@@ -78,7 +78,7 @@ Der Schnitt hat einen Grund: Was nur der Tag weiß — eine Injektion, drei Stun
 zwei Bier — ist am Samstag nicht mehr rekonstruierbar, sondern geraten. Was die Woche
 beurteilt — Hautbild, Gelenke, Kernbereiche — wird schlechter, wenn man es am Mittwoch
 beantwortet und Woche dazu sagt. Die Tagesraster speichern deshalb ihre Rohwerte
-(`dose.tage`, `dose.notizen`, `conf.tage`, `whoTage`) **und** die daraus abgeleiteten
+(`dose.tage`, `dose.zufuhr`, `dose.notizen`, `conf.tage`, `whoTage`) **und** die daraus abgeleiteten
 Wochenwerte in der gewohnten Form — so rechnen Auswertung, CSV und Datenblock
 unverändert weiter, ohne dass die Tagesauflösung verloren geht.
 

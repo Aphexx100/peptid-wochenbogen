@@ -50,15 +50,15 @@
 
   <div class="card">
     <h2><span class="step">01b</span> Aktuelle Vials</h2>
-    <p class="hint">Womit gerade gespritzt wird: Vial-Inhalt und Wasservolumen je Substanz. Daraus entsteht die Konzentration, mit der die ml-Einträge in Abschnitt 02 in Wirkstoffmengen umgerechnet werden. Der bequemste Weg führt über den <strong>Rekonstitutionsrechner unter Setup</strong> — dort ausrechnen und mit einem Klick als aktuelles Vial übernehmen. Ohne hinterlegtes Vial wird die Substanz in Abschnitt 02 weiter direkt in mg bzw. µg erfasst.</p>
-    <div id="s-vials"></div>
-    <div class="btnrow"><button class="btn ghost" id="vialSave">Vials speichern</button></div>
-    <p class="saveinfo" id="vialInfo"></p>
+    <p class="hint">Mit hinterlegtem Vial läuft die Spalte in 02 in ml. Am schnellsten über den Rekonstitutionsrechner unter Setup.</p>
+    <div class="tablewrap"><table class="expo vials" id="s-vials"></table></div>
+    <div class="gatebar" style="margin:.7rem 0 0"><span class="gatehint" id="vialInfo"></span>
+      <button class="btn ghost small" id="vialSave" type="button">Vials speichern</button></div>
   </div>
 
   <div class="card wide">
     <h2><span class="step">02</span> Exposition — Tag für Tag</h2>
-    <p class="hint">Was tatsächlich gesetzt wurde, nicht was geplant war — <strong>je Tag die gesetzte Menge</strong>, leer gelassen heißt: an dem Tag nichts. Bei mehreren Injektionen desselben Wirkstoffs an einem Tag die Tagesgesamtmenge eintragen. Ist oben ein Vial hinterlegt, trägst du das <strong>aufgezogene Volumen in ml</strong> ein (10 I.E. auf der U-100-Spritze = 0,1 ml) und die Wirkstoffmenge wird daneben ausgerechnet; ohne Vial gilt die Einheit im Spaltenkopf. Rechts daneben je Tag drei Notizfelder: <strong>sonstige Medikamente und Supplemente</strong>, <strong>Abweichungen</strong> (ausgelassen, verschoben, neue Charge, neues Vial) und <strong>Auffälligkeiten an der Einstichstelle</strong>. Am besten trägst du jeden Tag direkt nach der Injektion ein — die restlichen Abschnitte bleiben Wochenfragen und kommen am Erfassungstag dran.</p>
+    <p class="hint">Was tatsächlich gesetzt wurde, nicht was geplant war — <strong>je Tag die gesetzte Menge</strong>, leer gelassen heißt: an dem Tag nichts. Bei mehreren Injektionen desselben Wirkstoffs an einem Tag die Tagesgesamtmenge eintragen. Ist oben ein Vial hinterlegt, trägst du das <strong>aufgezogene Volumen in ml</strong> ein (10 I.E. auf der U-100-Spritze = 0,1 ml) und die Wirkstoffmenge wird daneben ausgerechnet; ohne Vial gilt die Einheit im Spaltenkopf. Tirzepatid kommt aus dem Pen und läuft immer in mg. Daneben die tägliche <strong>Zufuhr</strong>: Kreatin und Protein in Gramm, Alkohol in 0,5-l-Flaschen — jeweils in der Zeile des Tages, an dem du sie aufgenommen hast, morgens also in die Zeile von gestern. Rechts je Tag drei Notizfelder: <strong>sonstige Medikamente und Supplemente</strong>, <strong>Abweichungen</strong> (ausgelassen, verschoben, neue Charge, neues Vial) und <strong>Auffälligkeiten an der Einstichstelle</strong>. Am besten trägst du jeden Tag direkt nach der Injektion ein — die restlichen Abschnitte bleiben Wochenfragen und kommen am Erfassungstag dran.</p>
 
     <div class="tablewrap"><table class="expo" id="s-expo"></table></div>
     <p class="hint" style="margin:.7rem 0 1rem">Kisspeptin wird im Graumarkt üblicherweise in <strong>Mikrogramm</strong> dosiert (50–200 µg), PT-141, GLOW und Tirzepatid in <strong>Milligramm</strong>. Beim GLOW ist die Gesamtmenge des Gemischs gemeint; wie viel davon GHK-Cu ist, legst du einmalig im Setup fest.</p>
@@ -69,7 +69,7 @@
 
   <div class="card">
     <h2><span class="step">02b</span> Confounder — Tag für Tag</h2>
-    <p class="hint">Jede Zeile fragt nach dem <strong>Vortag</strong>: Schlaf der letzten Nacht, dazu Training, Protein und Alkohol von gestern. Alkohol zählt in <strong>0,5-l-Bierflaschen</strong> — ein großes Bier ist eine Flasche, ein Glas Wein näherungsweise auch eine. Am besten morgens ausfüllen, direkt nach dem Aufstehen.</p>
+    <p class="hint">Jede Zeile fragt nach dem <strong>Vortag</strong>: Schlaf der letzten Nacht, Training von gestern. Am besten morgens ausfüllen, direkt nach dem Aufstehen.</p>
     <div class="tablewrap"><table class="expo" id="s-confTage"></table></div>
     <div class="note" id="confSum" style="margin-top:1rem"></div>
   </div>
@@ -411,11 +411,10 @@
 
     <label class="fl" style="margin-top:1.3rem">Als aktuelles Vial in den Bogen übernehmen</label>
     <p class="hint" style="margin:.1rem 0 .6rem">Schreibt Vial-Inhalt und Wasservolumen von oben in die Karte <strong>Aktuelle Vials</strong> des Bogens und speichert sie — die Tageseinträge der Substanz laufen dann in ml und werden über diese Konzentration umgerechnet.</p>
-    <div class="btnrow" style="grid-template-columns:repeat(4,1fr);gap:.3rem;margin:0">
+    <div class="btnrow" style="grid-template-columns:repeat(3,1fr);gap:.3rem;margin:0">
       <button class="btn ghost" data-vialziel="glow" style="font-size:.82rem;padding:.5rem .3rem">GLOW</button>
       <button class="btn ghost" data-vialziel="kiss" style="font-size:.82rem;padding:.5rem .3rem">Kisspeptin</button>
       <button class="btn ghost" data-vialziel="pt" style="font-size:.82rem;padding:.5rem .3rem">PT-141</button>
-      <button class="btn ghost" data-vialziel="tirz" style="font-size:.82rem;padding:.5rem .3rem">Tirzepatid</button>
     </div>
     <p class="saveinfo" id="rcUebInfo"></p>
   </div>

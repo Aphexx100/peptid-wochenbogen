@@ -28,6 +28,7 @@ function weekLine(k){
            ", PT-141 "+s(e.dose.pt)+" Anw. à "+s(e.dose.dPt)+" mg"+
            ", Tirzepatid "+s(e.dose.tirz)+" mg/Woche"+
            (cuW>0?(", elementares Kupfer "+cuW.toFixed(2)+" mg/Woche"):"")+
+           (Number(e.dose.kreatin)>0?(", Kreatin "+e.dose.kreatin+" g/Woche an "+e.dose.kreatinTage+" Tagen"):"")+
            (e.dose.sonstMed?(", sonst: "+e.dose.sonstMed):"")+
            (e.dose.abw?(" [Abweichungen: "+e.dose.abw+"]"):"")+
            (e.dose.stellen?(" [Einstichstellen: "+e.dose.stellen+"]"):""));
@@ -95,6 +96,8 @@ export function dataBlock(limitWeeks){
            "das Mittel der erfassten Tage, die Zahl der Tage steht dabei (steht sie auch beim IIEF-5, "+
            "stammt die Woche aus einer Phase, in der er täglich lief). Training und "+
            "Alkohol sind Wochensummen (Alkohol in Flaschen à 0,5 l), Schlaf und Protein Tagesmittel. "+
+           "In TAGE stehen Injektionen und Zufuhr (Kreatin, Protein, Alkohol) am Tag selbst; "+
+           "CONFOUNDER-TAGE (Training, Schlaf) beziehen sich jeweils auf den Vortag. "+
            "Alle übrigen Angaben beurteilen die Woche als Ganzes.\n"+erw+"\n";
   var body=ks.map(weekLine).join("\n\n");
   if(body.length>42000) body=body.slice(body.length-42000);

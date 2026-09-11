@@ -3,24 +3,27 @@
    und Auswertung gemeinsam benutzt. Jede nimmt einen Eintrag und gibt eine
    Zahl oder null zurueck, wenn die Daten dafuer nicht reichen. */
 
-import { EXPO, CONF_TAGE, KERN, NEG } from '../schema.js';
+import { EXPO, ZUFUHR, CONF_TAGE, KERN, NEG } from '../schema.js';
 import { mean } from '../util/format.js';
 
 const WTAG = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 
-/** Kompaktes Tagesprotokoll der Exposition, etwa
-    "Mo GLOW 2,8mg + PT-141 1,75mg; Mi GLOW 2,8mg".
+/** Kompaktes Tagesprotokoll von Exposition und Zufuhr, etwa
+    "Mo GLOW 2,8mg + Kreatin 5g + Protein 170g; Mi GLOW 2,8mg + Alkohol 2Fl.".
     Leerer String, wenn die Woche keine Tagesdaten traegt. */
 export function tageKompakt(e) {
-  const t = e.dose && e.dose.tage;
-  if (!t || !t.start) return '';
+  const t = (e.dose && e.dose.tage) || {};
+  const z = (e.dose && e.dose.zufuhr) || {};
+  const start = t.start || z.start;
+  if (!start) return '';
+  const eintrag = (quelle, i) => (x) => `${x.n} ${String(quelle[x.k][i]).replace('.', ',')}${x.u}`;
   const teile = [];
   for (let i = 0; i < 7; i++) {
     const subs = EXPO
-      .filter((x) => t[x.k] && Number(t[x.k][i]) > 0)
-      .map((x) => `${x.n} ${String(t[x.k][i]).replace('.', ',')}${x.u}`);
+      .filter((x) => t[x.k] && Number(t[x.k][i]) > 0).map(eintrag(t, i))
+      .concat(ZUFUHR.filter((x) => z[x.k] && Number(z[x.k][i]) > 0).map(eintrag(z, i)));
     if (subs.length) {
-      const d = new Date(`${t.start}T12:00:00`);
+      const d = new Date(`${start}T12:00:00`);
       d.setDate(d.getDate() + i);
       teile.push(`${WTAG[d.getDay()]} ${subs.join(' + ')}`);
     }
@@ -29,7 +32,7 @@ export function tageKompakt(e) {
 }
 
 /** Kompaktes Tagesprotokoll der Confounder, etwa
-    "Mo Schlaf 7h, Training 1,5h; Di Schlaf 6h, Alkohol 2Fl".
+    "Mo Training 1,5h, Schlaf 7h; Di Schlaf 6h".
     Jeder Wert bezieht sich auf den Vortag der genannten Zeile. */
 export function confTageKompakt(e) {
   const t = e.conf && e.conf.tage;
@@ -48,10 +51,10 @@ export function confTageKompakt(e) {
   return teile.join('; ');
 }
 
-/* WHO-5 und IIEF-5 werden taeglich erfasst; e.who/e.iief tragen das Mittel
-   je Frage ueber die erfassten Tage und sind deshalb keine ganzen Zahlen
-   mehr. Gerundet wird erst der Summenwert — so bleibt die Skala dieselbe
-   wie bei woechentlicher Erfassung und alte Wochen rechnen unveraendert. */
+/* Der WHO-5 wird taeglich erfasst (der IIEF-5 lief eine Zeit lang ebenso);
+   e.who traegt dann das Mittel je Frage ueber die erfassten Tage und ist
+   keine ganze Zahl. Gerundet wird erst der Summenwert — so bleibt die Skala
+   dieselbe wie bei woechentlicher Erfassung. */
 const summe = (arr, faktor) => {
   if (!arr || arr.length !== 5 || arr.some((v) => v === null || v === undefined)) return null;
   return Math.round(arr.reduce((a, b) => a + b, 0) * faktor);

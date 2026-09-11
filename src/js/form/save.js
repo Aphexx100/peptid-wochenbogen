@@ -16,7 +16,8 @@ import { renderStatus } from '../ui/status.js';
 function melde(id, r) {
   const info = $(id);
   info.textContent = r.text;
-  info.className = `saveinfo ${r.ok ? 'ok' : 'bad'}`;
+  info.classList.remove('ok', 'bad');
+  info.classList.add(r.ok ? 'ok' : 'bad');
 }
 
 export async function saveWeekAction() {

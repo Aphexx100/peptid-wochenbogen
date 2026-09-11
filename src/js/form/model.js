@@ -15,6 +15,7 @@ import { wochenfragenOffen } from '../ui/weekly.js';
 import {
   recalcScores, readExpo, ableiten, fuelleExpo, setLegacyDose, getLegacyDose,
   readConfTage, ableitenConf, fuelleConfTage, setLegacyConf, getLegacyConf,
+  readZufuhr, ableitenZufuhr, fuelleZufuhr,
   mergeHeute, tagesMittel, setTagesSaetze, readNotizen, ableitenNotizen, fuelleNotizen
 } from './build.js';
 
@@ -48,6 +49,11 @@ export function readForm(){
   var nz=readNotizen(), nw=ableitenNotizen(nz.tage);
   e.dose.sonstMed=nw.sonstMed; e.dose.abw=nw.abw; e.dose.stellen=nw.stellen;
   if(!nz.leer) e.dose.notizen=nz.tage;
+  /* Taegliche Zufuhr: Kreatin als Wochensumme am Dose-Objekt, Protein und
+     Alkohol weiter unter conf (siehe unten), wo sie immer schon standen. */
+  var zf=readZufuhr(), zw=ableitenZufuhr(zf.tage);
+  if(!zf.leer) e.dose.zufuhr=zf.tage;
+  e.dose.kreatin=zw.kreatin; e.dose.kreatinTage=zw.kreatinTage;
   KERN.forEach(function(x){ e.kern[x.k]=sVal(x.k); });
   e.glow={ort:$("gGelenkOrt").value.trim()};
   GLOWZIEL.forEach(function(x){ e.glow[x.k]=sVal(x.k); });
@@ -83,12 +89,21 @@ export function readForm(){
      Wochenwerte stehen, solange kein Tag eingetragen ist. */
   var c=readConfTage(), legacyC=getLegacyConf();
   var cw=(c.leer&&legacyC)
-    ? {train:legacyC.train||"", schlaf:legacyC.schlaf||"", protein:legacyC.protein||"", alk:legacyC.alk||""}
+    ? {train:legacyC.train||"", schlaf:legacyC.schlaf||""}
     : ableitenConf(c.tage);
-  e.conf={train:cw.train, schlaf:cw.schlaf, alk:cw.alk, protein:cw.protein,
+  if(zf.leer&&legacyC){ zw.protein=legacyC.protein||""; zw.alk=legacyC.alk||""; }
+  e.conf={train:cw.train, schlaf:cw.schlaf, alk:zw.alk, protein:zw.protein,
           gew:$("cGew").value, bauch:$("cBauch").value,
           stress:sVal("cStress"), sonst:$("cSonst").value.trim(), flags:[]};
   if(!c.leer) e.conf.tage=c.tage;
+  /* Protein und Alkohol mit Vortagsbezug aus der Zeit vor der Zufuhrspalte:
+     der Wert der ersten Zeile gehoert zum letzten Tag der Vorwoche und passt
+     in kein Feld dieser Woche. Die alten Reihen bleiben deshalb einmal
+     unveraendert erhalten. */
+  var altW=state.weeks[state.weekKey], altT=altW&&altW.conf&&altW.conf.tage;
+  if(altW&&altW.conf&&altW.conf.vortagAlt) e.conf.vortagAlt=altW.conf.vortagAlt;
+  else if(altT&&(altT.protein||altT.alk)&&!(altW.dose&&altW.dose.zufuhr))
+    e.conf.vortagAlt={start:altT.start, protein:altT.protein||[], alk:altT.alk||[]};
   CONF_CHECKS.forEach(function(c2){ if(checked(c2.k)) e.conf.flags.push(c2.k); });
   e.month=[]; MONTH.forEach(function(m){ if(checked(m.k)) e.month.push(m.k); });
   /* Die beiden Freitextfragen sind entfallen; bereits erfasste Antworten
@@ -135,6 +150,7 @@ export function fillForm(e){
   setLegacyDose(e.dose&&!e.dose.tage?e.dose:null);
   fuelleExpo(e.dose||null);
   fuelleNotizen(e.dose||null);
+  fuelleZufuhr(e.dose||null, e.conf||null);
   KERN.forEach(function(x){ setS(x.k, e.kern&&e.kern[x.k]); });
   GLOWZIEL.forEach(function(x){ setS(x.k, e.glow&&e.glow[x.k]); });
   $("gGelenkOrt").value=(e.glow&&e.glow.ort)||"";

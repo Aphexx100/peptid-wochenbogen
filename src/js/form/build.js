@@ -7,7 +7,7 @@ import { $ } from '../util/dom.js';
 import { fmt } from '../util/format.js';
 import { CU_ANTEIL, CU_RDA_MG_TAG } from '../constants.js';
 import {
-  EXPO, EXPO_TEXT, CONF_TAGE, KERN, GLOWZIEL, WHO, WHO_LEG, IIEF, MORGEN, PT, PT_SIGNS, PIGMENT, NEG,
+  EXPO, EXPO_TEXT, ZUFUHR, CONF_TAGE, KERN, GLOWZIEL, WHO, WHO_LEG, IIEF, MORGEN, PT, PT_SIGNS, PIGMENT, NEG,
   WATCH, CONF_CHECKS, MONTH
 } from '../schema.js';
 import { slider, segment, checkList, segVal, setSegHandler } from '../ui/controls.js';
@@ -27,6 +27,9 @@ const WTAG = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 const IDX = [0, 1, 2, 3, 4, 5, 6];
 const zellId = (k, i) => `x${k}${i}`;
 const zellIdN = (k, i) => `n${k}${i}`;
+const zellIdZ = (k, i) => `z${k}${i}`;
+/** Substanzen, fuer die ein Vial hinterlegt werden kann (ohne Fertigpens). */
+const VIAL_EXPO = EXPO.filter((x) => x.vial !== false);
 const tagLabel = (d) => `${WTAG[new Date(`${d}T12:00:00`).getDay()]} ${d.slice(8, 10)}.${d.slice(5, 7)}.`;
 
 /* Wochensummen einer vor der Umstellung erfassten Woche — gesetzt von
@@ -44,6 +47,7 @@ export function getLegacyDose() { return legacyDose; }
 
 /** Konzentration in mg/ml aus den gespeicherten Vials; 0 = kein Vial. */
 export function vialKonz(k) {
+  if (!VIAL_EXPO.some((x) => x.k === k)) return 0;
   const v = state.cfg.vials && state.cfg.vials[k];
   if (!v || !(Number(v.mg) > 0) || !(Number(v.ml) > 0)) return 0;
   return Number(v.mg) / Number(v.ml);
@@ -122,7 +126,7 @@ function renderExpoSummary() {
       `Kisspeptin ${legacyDose.kiss || 0} Inj. à ${komma(legacyDose.dKiss) || '—'} µg, ` +
       `PT-141 ${legacyDose.pt || 0} Anw. à ${komma(legacyDose.dPt) || '—'} mg, ` +
       `Tirzepatid ${komma(legacyDose.tirz) || '—'} mg. ` +
-      'Sobald du einen Tag einträgst, ersetzt das Tagesraster diese Werte.';
+      `Sobald du einen Tag einträgst, ersetzt das Tagesraster diese Werte.<br>${zufuhrText()}`;
     return;
   }
   const a = ableiten(tage);
@@ -131,7 +135,14 @@ function renderExpoSummary() {
     const n = a[`n_${x.k}`];
     return `${x.n}: ${n ? `${n} Injektionstag${n > 1 ? 'e' : ''} à ${komma(a[`d_${x.k}`])} ${x.u}` : '—'}`;
   });
-  el.innerHTML = `<b>Diese Woche:</b> ${teil.join(' · ')}`;
+  el.innerHTML = `<b>Diese Woche:</b> ${teil.join(' · ')}<br>${zufuhrText()}`;
+}
+
+function zufuhrText() {
+  const z = ableitenZufuhr(readZufuhr().tage);
+  return `<b>Zufuhr:</b> Kreatin ${z.kreatin ? `${komma(z.kreatin)} g an ${z.kreatinTage} Tag${z.kreatinTage > 1 ? 'en' : ''}` : '—'} · ` +
+    `Protein Ø ${z.protein ? `${komma(z.protein)} g/Tag` : '—'} · ` +
+    `Alkohol ${z.alk ? `${komma(z.alk)} Flaschen (à 0,5 l)` : '—'}`;
 }
 
 /** Menge huebsch anzeigen: bis zwei Nachkommastellen, ohne Nullenrest. */
@@ -175,6 +186,13 @@ export function buildExpo() {
       return el ? el.value : '';
     });
   });
+  const altZ = {};
+  ZUFUHR.forEach((x) => {
+    altZ[x.k] = IDX.map((i) => {
+      const el = document.getElementById(zellIdZ(x.k, i));
+      return el ? el.value : '';
+    });
+  });
   const altN = {};
   EXPO_TEXT.forEach((x) => {
     altN[x.k] = IDX.map((i) => {
@@ -190,6 +208,8 @@ export function buildExpo() {
      aus "µg" wuerde sonst optisch "MG", und das ist der Faktor tausend. */
   let html = '<thead><tr><th>Tag</th>' + EXPO.map((x) =>
     `<th id="xh${x.k}">${x.n} <span style="text-transform:none;letter-spacing:0">(${einheit(x)})</span></th>`).join('') +
+    ZUFUHR.map((x, j) =>
+      `<th class="${j ? '' : 'erste'}">${x.n} <span style="text-transform:none;letter-spacing:0">(${x.u})</span></th>`).join('') +
     EXPO_TEXT.map((x, j) => `<th class="notiz${j ? '' : ' erste'}" title="${x.n}">${x.kurz}</th>`).join('') +
     '</tr></thead><tbody>';
   tage.forEach((d, i) => {
@@ -201,6 +221,9 @@ export function buildExpo() {
         `step="${modus[x.k] > 0 ? 0.01 : x.step}" inputmode="decimal" ` +
         `aria-label="${x.n} (${einheit(x)}) am ${wd} ${d}">` +
         `<span class="xcalc" id="c${x.k}${i}"></span></td>`).join('') +
+      ZUFUHR.map((x, j) =>
+        `<td class="${j ? '' : 'erste'}"><input type="number" id="${zellIdZ(x.k, i)}" min="0" ` +
+        `step="${x.step}" inputmode="decimal" aria-label="${x.n} (${x.u}) am ${wd} ${d}"></td>`).join('') +
       EXPO_TEXT.map((x, j) =>
         `<td class="notiz${j ? '' : ' erste'}"><input type="text" id="${zellIdN(x.k, i)}"` +
         `${d === heute ? ` placeholder="${x.ph}"` : ''} ` +
@@ -213,8 +236,76 @@ export function buildExpo() {
     if (alt[x.k][i]) el.value = alt[x.k][i];
     el.addEventListener('input', expoChanged);
   }));
+  ZUFUHR.forEach((x) => IDX.forEach((i) => {
+    const el = document.getElementById(zellIdZ(x.k, i));
+    if (altZ[x.k][i]) el.value = altZ[x.k][i];
+    el.addEventListener('input', expoChanged);
+  }));
   EXPO_TEXT.forEach((x) => IDX.forEach((i) => {
     if (altN[x.k][i]) document.getElementById(zellIdN(x.k, i)).value = altN[x.k][i];
+  }));
+  expoChanged();
+}
+
+/* ---- Taegliche Zufuhr (Kreatin, Protein, Alkohol) ----
+   Gespeichert als dose.zufuhr = {start, kreatin[7], protein[7], alk[7]} und
+   unabhaengig von den Injektionen, damit auch eine Woche ohne Injektion ihre
+   Zufuhr behaelt. Die Wochenwerte fuer Protein (Tagesmittel) und Alkohol
+   (Summe) landen weiter in conf.protein/conf.alk, wo Auswertung, CSV und
+   Datenblock sie seit jeher lesen. */
+
+export function readZufuhr() {
+  const tage = { start: weekDays(state.weekKey)[0] };
+  let leer = true;
+  ZUFUHR.forEach((x) => {
+    tage[x.k] = IDX.map((i) => {
+      const v = document.getElementById(zellIdZ(x.k, i)).value.trim();
+      if (v !== '') leer = false;
+      return v;
+    });
+  });
+  return { tage, leer };
+}
+
+export function ableitenZufuhr(tage) {
+  const wert = (k) => (tage[k] || []).filter((v) => v !== '' && v !== undefined).map(Number);
+  const summe = (a) => (a.length ? String(+a.reduce((x, y) => x + y, 0).toFixed(1)) : '');
+  const kreatin = wert('kreatin').filter((v) => v > 0);
+  const protein = wert('protein');
+  return {
+    kreatin: summe(kreatin),
+    kreatinTage: kreatin.length,
+    protein: protein.length ? String(Math.round(protein.reduce((x, y) => x + y, 0) / protein.length)) : '',
+    alk: summe(wert('alk'))
+  };
+}
+
+/** Zufuhrspalten fuellen. Wochen aus der Zeit, als Protein und Alkohol in
+    02b standen, tragen sie dort mit Vortagsbezug: der Wert in Zeile i gilt
+    fuer Tag i-1. Er wird deshalb eine Zeile hoeher eingetragen. Der Wert
+    der ersten Zeile gehoert zum letzten Tag der Vorwoche und bleibt dort
+    unberuehrt im gespeicherten Objekt (conf.vortagAlt), statt verloren zu gehen. */
+export function fuelleZufuhr(dose, conf) {
+  const dates = weekDays(state.weekKey);
+  const map = {};
+  const z = dose && dose.zufuhr;
+  const alt = conf && conf.tage;
+  if (z && z.start) {
+    ZUFUHR.forEach((x) => (z[x.k] || []).forEach((v, i) => {
+      const d = new Date(`${z.start}T12:00:00`);
+      d.setDate(d.getDate() + i);
+      map[`${x.k}|${iso(d)}`] = v;
+    }));
+  } else if (alt && alt.start && (alt.protein || alt.alk)) {
+    ['protein', 'alk'].forEach((k) => (alt[k] || []).forEach((v, i) => {
+      if (v === '' || v === undefined) return;
+      const d = new Date(`${alt.start}T12:00:00`);
+      d.setDate(d.getDate() + i - 1);
+      map[`${k}|${iso(d)}`] = v;
+    }));
+  }
+  ZUFUHR.forEach((x) => dates.forEach((d, i) => {
+    document.getElementById(zellIdZ(x.k, i)).value = map[`${x.k}|${d}`] || '';
   }));
   expoChanged();
 }
@@ -312,20 +403,20 @@ export function refreshExpoUnits() {
 function vialKonzText(x) {
   const mg = Number($(`vMg${x.k}`).value);
   const ml = Number($(`vMl${x.k}`).value);
-  if (!(mg > 0 && ml > 0)) return 'kein Vial hinterlegt — Eingabe direkt in ' + x.u;
+  if (!(mg > 0 && ml > 0)) return `— Eingabe direkt in ${x.u}`;
   const konz = mg / ml;
   const inU = x.u === 'µg' ? `${fmt(konz * 1000, 0)} µg/ml` : `${fmt(konz, 2)} mg/ml`;
-  return `${inU} — 0,1 ml (10 I.E.) entsprechen ${mengeText(mlZuMenge(0.1, x, konz), x.u)}`;
+  return `${inU} · 10 I.E. = ${mengeText(mlZuMenge(0.1, x, konz), x.u)}`;
 }
 
 function renderVialKonz() {
-  EXPO.forEach((x) => { $(`vKonz${x.k}`).textContent = vialKonzText(x); });
+  VIAL_EXPO.forEach((x) => { $(`vKonz${x.k}`).textContent = vialKonzText(x); });
 }
 
 /** Felder der Vial-Karte in cfg.vials uebernehmen (ohne zu speichern). */
 export function readVials() {
   const out = {};
-  EXPO.forEach((x) => {
+  VIAL_EXPO.forEach((x) => {
     const mg = Number($(`vMg${x.k}`).value);
     const ml = Number($(`vMl${x.k}`).value);
     if (mg > 0 && ml > 0) out[x.k] = { mg, ml };
@@ -336,23 +427,19 @@ export function readVials() {
 /** Vial-Karte aufbauen und aus cfg.vials fuellen. */
 export function buildVials() {
   const host = $('s-vials');
-  host.innerHTML = '';
-  EXPO.forEach((x) => {
-    const v = (state.cfg.vials && state.cfg.vials[x.k]) || {};
-    const d = document.createElement('div');
-    d.className = 'grid3';
-    d.style.marginBottom = '.7rem';
-    d.innerHTML =
-      `<div class="field" style="grid-column:1/-1;margin:0 0 .3rem">` +
-      `<label class="fl" style="margin:0">${x.n}</label></div>` +
-      `<div class="field"><label class="fl" for="vMg${x.k}">Vial-Inhalt (mg)</label>` +
-      `<input type="number" id="vMg${x.k}" min="0" step="0.5" inputmode="decimal" value="${v.mg || ''}"></div>` +
-      `<div class="field"><label class="fl" for="vMl${x.k}">Bac Water (ml)</label>` +
-      `<input type="number" id="vMl${x.k}" min="0" step="0.1" inputmode="decimal" value="${v.ml || ''}"></div>` +
-      `<div class="field" style="align-self:end"><span class="vkonz" id="vKonz${x.k}"></span></div>`;
-    host.appendChild(d);
-  });
-  EXPO.forEach((x) => ['vMg', 'vMl'].forEach((p) => {
+  host.innerHTML =
+    '<thead><tr><th>Wirkstoff</th><th>Vial <span style="text-transform:none;letter-spacing:0">(mg)</span></th>' +
+    '<th>Wasser <span style="text-transform:none;letter-spacing:0">(ml)</span></th><th>Konzentration</th></tr></thead><tbody>' +
+    VIAL_EXPO.map((x) => {
+      const v = (state.cfg.vials && state.cfg.vials[x.k]) || {};
+      return `<tr><td class="tag">${x.n}</td>` +
+        `<td><input type="number" id="vMg${x.k}" min="0" step="0.5" inputmode="decimal" value="${v.mg || ''}" ` +
+        `aria-label="${x.n}: Vial-Inhalt in mg"></td>` +
+        `<td><input type="number" id="vMl${x.k}" min="0" step="0.1" inputmode="decimal" value="${v.ml || ''}" ` +
+        `aria-label="${x.n}: Bac Water in ml"></td>` +
+        `<td><span class="vkonz" id="vKonz${x.k}"></span></td></tr>`;
+    }).join('') + '</tbody>';
+  VIAL_EXPO.forEach((x) => ['vMg', 'vMl'].forEach((p) => {
     $(`${p}${x.k}`).addEventListener('input', renderVialKonz);
   }));
   renderVialKonz();
@@ -422,9 +509,7 @@ export function ableitenConf(tage) {
     (a.length ? String(+(a.reduce((x, y) => x + y, 0) / a.length).toFixed(d)) : '');
   return {
     train: summe(wert('train')),
-    schlaf: schnitt(wert('schlaf'), 1),
-    protein: schnitt(wert('protein'), 0),
-    alk: summe(wert('alk'))
+    schlaf: schnitt(wert('schlaf'), 1)
   };
 }
 
@@ -433,17 +518,14 @@ function renderConfSummary() {
   const { tage, leer } = readConfTage();
   if (leer && legacyConf) {
     el.innerHTML = '<b>Vor der Umstellung als Wochenwerte erfasst:</b> ' +
-      `Training ${komma(legacyConf.train) || '—'} h, Schlaf Ø ${komma(legacyConf.schlaf) || '—'} h, ` +
-      `Protein Ø ${komma(legacyConf.protein) || '—'} g, Alkohol ${komma(legacyConf.alk) || '—'} Einheiten. ` +
+      `Training ${komma(legacyConf.train) || '—'} h, Schlaf Ø ${komma(legacyConf.schlaf) || '—'} h. ` +
       'Sobald du einen Tag einträgst, ersetzen die Tageswerte diese Zahlen.';
     return;
   }
   const a = ableitenConf(tage);
   el.innerHTML = '<b>Diese Woche:</b> ' +
     `Training ${a.train ? `${komma(a.train)} h` : '—'} · ` +
-    `Schlaf Ø ${a.schlaf ? `${komma(a.schlaf)} h` : '—'} · ` +
-    `Protein Ø ${a.protein ? `${komma(a.protein)} g` : '—'} · ` +
-    `Alkohol ${a.alk ? `${komma(a.alk)} Flaschen (à 0,5 l)` : '—'}`;
+    `Schlaf Ø ${a.schlaf ? `${komma(a.schlaf)} h` : '—'}`;
 }
 
 export function buildConfTage() {

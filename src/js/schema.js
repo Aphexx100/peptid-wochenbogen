@@ -3,12 +3,23 @@
    Formular, CSV, Datenblock und Sparklines lesen alle aus denselben Arrays.
    Siehe docs/ERWEITERN.md. */
 /* Substanzen des Tagesrasters in Abschnitt 02. `k` ist zugleich der Schluessel
-   in dose.tage; `step` steuert die Schrittweite des Zahlenfeldes. */
+   in dose.tage; `step` steuert die Schrittweite des Zahlenfeldes. `vial:false`
+   heisst: kommt aus einem Fertigpen, wird nicht rekonstituiert und deshalb
+   immer direkt in der Wirkstoffeinheit erfasst, nie in ml. */
 export const EXPO = [
   {k:"glow", n:"GLOW",       u:"mg", step:0.1,  ph:"2,8"},
   {k:"kiss", n:"Kisspeptin", u:"µg", step:5,    ph:"100"},
   {k:"pt",   n:"PT-141",     u:"mg", step:0.25, ph:"1,75"},
-  {k:"tirz", n:"Tirzepatid", u:"mg", step:0.5,  ph:"2,5"}
+  {k:"tirz", n:"Tirzepatid", u:"mg", step:0.5,  ph:"2,5", vial:false}
+];
+/* Taegliche Zufuhr, ebenfalls im Raster von Abschnitt 02. Anders als die
+   Confounder in 02b gilt hier die Zeile fuer den Tag selbst: Protein und
+   Alkohol von gestern gehoeren in die Zeile von gestern. Alkohol zaehlt in
+   0,5-l-Flaschen. Gespeichert unter dose.zufuhr. */
+export const ZUFUHR = [
+  {k:"kreatin", n:"Kreatin", u:"g",   step:1},
+  {k:"protein", n:"Protein", u:"g",   step:5},
+  {k:"alk",     n:"Alkohol", u:"Fl.", step:0.5}
 ];
 /* Freitextspalten des Tagesrasters in Abschnitt 02 — je Tag eine Notiz.
    Getrennt von EXPO, weil dort gerechnet wird und hier nur notiert. Die
@@ -20,13 +31,12 @@ export const EXPO_TEXT = [
   {k:"stellen",  n:"Einstichstellen — Auffälligkeiten", kurz:"Einstichstellen", ph:"Rötung, Knoten …"}
 ];
 /* Taegliche Confounder in Abschnitt 02b. Jeder Wert bezieht sich auf den
-   VORTAG der Zeile: Schlaf der letzten Nacht, Training, Protein und Alkohol
-   von gestern. Alkohol zaehlt in 0,5-l-Bierflaschen. */
+   VORTAG der Zeile: Schlaf der letzten Nacht, Training von gestern. Protein
+   und Alkohol standen bis 2026-09 ebenfalls hier und sind in ZUFUHR
+   gewandert; alte Wochen werden beim Laden um einen Tag verschoben. */
 export const CONF_TAGE = [
   {k:"train",   n:"Training",  u:"h",   step:0.5},
-  {k:"schlaf",  n:"Schlaf",    u:"h",   step:0.5},
-  {k:"protein", n:"Protein",   u:"g",   step:5},
-  {k:"alk",     n:"Alkohol",   u:"Fl.", step:0.5}
+  {k:"schlaf",  n:"Schlaf",    u:"h",   step:0.5}
 ];
 export const KERN = [
   {k:"energie",  n:"Energie und Belastbarkeit",                 lo:"leer",           hi:"voll"},

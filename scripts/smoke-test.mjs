@@ -62,12 +62,14 @@ async function laufe(browser, url, label, mitModulTest) {
   pruefe('Segmentfragen aufgebaut', segmente >= 60, `${segmente} gefunden`);
   pruefe('Kraftfelder aufgebaut', (await seite.locator('#kw0').count()) === 1);
   const expoZellen = await seite.locator('#s-expo input[type="number"]').count();
-  pruefe('Tagesraster: 7 Tage × 4 Substanzen', expoZellen === 28, `${expoZellen} Zellen`);
+  pruefe('Tagesraster: 7 Tage × 4 Substanzen + 3 Zufuhrspalten', expoZellen === 49, `${expoZellen} Zellen`);
   const notizZellen = await seite.locator('#s-expo input[type="text"]').count();
   pruefe('Tagesraster: 7 Tage × 3 Notizspalten', notizZellen === 21, `${notizZellen} Zellen`);
   pruefe('Alte Wochenfelder für Notizen entfernt', (await seite.locator('#nSonstMed, #abw, #stellen').count()) === 0);
   const confZellen = await seite.locator('#s-confTage input').count();
-  pruefe('Confounder-Tagesraster: 7 Tage × 4 Werte', confZellen === 28, `${confZellen} Zellen`);
+  pruefe('Confounder-Tagesraster: nur noch Training und Schlaf', confZellen === 14, `${confZellen} Zellen`);
+  pruefe('Tirzepatid (Pen) nicht bei den Vials',
+    (await seite.locator('#vMgtirz').count()) === 0 && (await seite.locator('[data-vialziel="tirz"]').count()) === 0);
 
   /* Freischaltung der Wochenfragen. Erst ein Erfassungstag, der nicht heute
      ist — dann muss alles Wöchentliche verborgen sein und die Ausnahme
@@ -147,17 +149,25 @@ async function laufe(browser, url, label, mitModulTest) {
   pruefe('WHO-5 weist den Wochenschnitt aus',
     /80 von 100/.test(await seite.locator('#whoWeek').innerText()));
 
-  /* Tägliche Confounder: Training und Alkohol summieren, Schlaf und Protein
-     mitteln. Alkohol zählt in 0,5-l-Flaschen. */
+  /* Tägliche Confounder (Vortag): Training summiert, Schlaf gemittelt. */
   for (let i = 0; i < 7; i++) await seite.fill(`#tschlaf${i}`, '7');
   await seite.fill('#ttrain0', '1.5');
   await seite.fill('#ttrain3', '1.5');
-  await seite.fill('#talk5', '2');
-  await seite.fill('#tprotein0', '180');
   const cs = await seite.locator('#confSum').innerText();
   pruefe('Confounder-Raster summiert Training', /Training 3 h/.test(cs), cs.slice(0, 110));
   pruefe('Confounder-Raster mittelt den Schlaf', /Schlaf Ø 7 h/.test(cs), cs.slice(0, 110));
-  pruefe('Alkohol zählt in 0,5-l-Flaschen', /Alkohol 2 Flaschen \(à 0,5 l\)/.test(cs), cs.slice(0, 110));
+
+  /* Tägliche Zufuhr in der Exposition: Kreatin summiert, Protein gemittelt,
+     Alkohol summiert in 0,5-l-Flaschen. */
+  await seite.fill('#zkreatin0', '5');
+  await seite.fill('#zkreatin1', '5');
+  await seite.fill('#zprotein0', '180');
+  await seite.fill('#zprotein1', '160');
+  await seite.fill('#zalk5', '2');
+  const zs = await seite.locator('#expoSum').innerText();
+  pruefe('Kreatin als Wochensumme mit Tagen', /Kreatin 10 g an 2 Tagen/.test(zs), zs);
+  pruefe('Protein als Tagesmittel', /Protein Ø 170 g\/Tag/.test(zs), zs);
+  pruefe('Alkohol zählt in 0,5-l-Flaschen', /Alkohol 2 Flaschen \(à 0,5 l\)/.test(zs), zs);
 
   /* Tagesraster: sieben GLOW-Tage eintragen, Zusammenfassung und
      Kupferhinweis rechnen mit; ein PT-141-Tag blendet die PT-Karte ein. */
@@ -219,7 +229,8 @@ async function laufe(browser, url, label, mitModulTest) {
   /* Vials: Rechner-Preset als aktuelles GLOW-Vial übernehmen — die Spalte
      läuft danach in ml, der bestehende mg-Eintrag wird umgerechnet und die
      Wirkstoffmenge je Zelle ausgewiesen. */
-  pruefe('Vial-Karte aufgebaut', (await seite.locator('#s-vials input').count()) === 8);
+  pruefe('Vial-Karte kompakt: drei Wirkstoffe je eine Zeile',
+    (await seite.locator('#s-vials tbody tr').count()) === 3 && (await seite.locator('#s-vials input').count()) === 6);
   await seite.click('#tab-setup');
   await seite.click('[data-preset="glow"]');
   await seite.click('[data-vialziel="glow"]');
@@ -255,6 +266,8 @@ async function laufe(browser, url, label, mitModulTest) {
   pruefe('Datenblock nennt Tirzepatid als Confounder', ctx.includes('Tirzepatid'));
   pruefe('Datenblock nennt das Erwartungsfenster', ctx.includes('ERWARTUNGSFENSTER'));
   pruefe('Datenblock trägt das Tagesprotokoll', /TAGE: .*GLOW 2,8mg/.test(ctx));
+  pruefe('Datenblock trägt die Zufuhr', /TAGE: .*Kreatin 5g \+ Protein 180g/.test(ctx)
+    && /Kreatin 10 g\/Woche an 2 Tagen/.test(ctx) && /Protein 170g/.test(ctx) && /Alkohol 2,/.test(ctx));
   pruefe('Datenblock trägt die Confounder-Tage', /CONFOUNDER-TAGE .*Schlaf 7h/.test(ctx));
   pruefe('Datenblock nennt die Messtage beim WHO-5', /WHO-5 80 \(Ø aus 1 Tagen\), IIEF-5 20(?! \()/.test(ctx));
   pruefe('Datenblock trägt Tagesnotizen mit Tagesangabe',
@@ -319,6 +332,30 @@ async function laufe(browser, url, label, mitModulTest) {
     pruefe('Alter Wochentext übersteht das erneute Speichern',
       /Altbestand Magnesium/.test(nachher.sonstMed) && /Altbestand Knoten/.test(nachher.stellen)
       && Array.isArray(nachher.notizen && nachher.notizen.sonstMed), JSON.stringify(nachher.notizen));
+
+    /* Protein und Alkohol aus der Zeit, als sie in 02b mit Vortagsbezug
+       standen: Zeile i meinte Tag i-1, landet also eine Zeile höher. Der
+       Wert der ersten Zeile gehört zur Vorwoche und bleibt als Altbestand. */
+    await seite.evaluate((k) => {
+      const weeks = JSON.parse(localStorage.getItem('pwb.weeks.v1'));
+      const e = weeks[k];
+      delete e.dose.zufuhr;
+      e.conf.tage.protein = ['140', '150', '', '', '', '', ''];
+      e.conf.tage.alk = ['', '', '', '1', '', '', ''];
+      localStorage.setItem('pwb.weeks.v1', JSON.stringify(weeks));
+    }, key);
+    await seite.reload({ waitUntil: 'networkidle' });
+    await seite.waitForTimeout(500);
+    pruefe('Alte Vortagswerte rücken auf ihren Tag',
+      (await seite.inputValue('#zprotein0')) === '150' && (await seite.inputValue('#zalk2')) === '1'
+      && (await seite.inputValue('#zalk3')) === '');
+    await seite.click('#saveBtn');
+    await seite.waitForTimeout(500);
+    const umgezogen = await seite.evaluate((k) => JSON.parse(localStorage.getItem('pwb.weeks.v1'))[k], key);
+    pruefe('Umzug gespeichert, Vorwochenwert als Altbestand erhalten',
+      umgezogen.dose.zufuhr && umgezogen.dose.zufuhr.protein[0] === '150'
+      && umgezogen.conf.vortagAlt && umgezogen.conf.vortagAlt.protein[0] === '140'
+      && !('protein' in umgezogen.conf.tage), JSON.stringify(umgezogen.conf));
   }
 
   /* Tägliches Speichern bei geschlossenen Wochenfragen: deren Regler stehen
