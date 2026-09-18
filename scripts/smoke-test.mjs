@@ -186,7 +186,9 @@ async function laufe(browser, url, label, mitModulTest) {
   pruefe('Wochengrafik zeichnet die GLOW-Linie mit sieben Punkten', wgGlow === 1 && wgPunkte === 7, `${wgLinien} Linien, ${wgPunkte} Punkte`);
   pruefe('Wochengrafik hat Legende und Beschriftung', (await seite.locator('#wochenGraphLegende > span').count()) === 4
     && /GLOW 2,8/.test(await seite.locator('#wochenGraph').innerText()));
-  await seite.hover('#wochenGraph rect.wg-hit >> nth=0');
+  pruefe('Wochengrafik zeichnet Bezier-Kurven',
+    /C/.test(await seite.locator('#wochenGraph path[data-serie="glow"]').getAttribute('d')));
+  await seite.hover('#wochenGraph rect.wg-hit', { position: { x: 4, y: 40 } });
   pruefe('Wochengrafik zeigt Tooltip mit allen Wirkstoffen', (await seite.locator('.wg-tip .wg-tip-zeile').count()) === 4
     && /2,8 mg/.test(await seite.locator('.wg-tip').innerText()));
   pruefe('PT-Karte ohne PT-141-Tag verborgen', await seite.locator('#ptCard').isHidden());
@@ -384,6 +386,44 @@ async function laufe(browser, url, label, mitModulTest) {
       && umgezogen.conf.vortagAlt && umgezogen.conf.vortagAlt.protein[0] === '140'
       && !('protein' in umgezogen.conf.tage), JSON.stringify(umgezogen.conf));
   }
+
+  /* Wochengrafik über mehrere Wochen: eine frühere Woche mit GLOW 1 mg
+     täglich einschieben, dann blättern, eigenen Zeitraum und Gesamt prüfen. */
+  const vorwoche = await seite.evaluate(() => {
+    const plus = (d, n) => { const t = new Date(`${d}T12:00:00`); t.setDate(t.getDate() + n);
+      return `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, '0')}-${String(t.getDate()).padStart(2, '0')}`; };
+    const heute = plus(new Date().toISOString().slice(0, 10), 0);
+    const weeks = JSON.parse(localStorage.getItem('pwb.weeks.v1') || '{}');
+    const aktuell = Object.keys(weeks).filter((k) => k <= plus(heute, 6)).sort().pop();
+    const k = plus(aktuell, -7);
+    weeks[k] = { week: k, dose: { glow: 7, tage: { start: plus(k, -6), glow: Array(7).fill('1'), kiss: [], pt: [], tirz: [] } } };
+    localStorage.setItem('pwb.weeks.v1', JSON.stringify(weeks));
+    return k;
+  });
+  await seite.reload({ waitUntil: 'networkidle' });
+  await seite.waitForTimeout(500);
+  await seite.click('#tab-bogen');
+  pruefe('Wochengrafik: Vorwärts gesperrt in der laufenden Woche', await seite.locator('#wgVor').isDisabled());
+  await seite.click('#wgZurueck');
+  pruefe('Wochengrafik blättert in die Vorwoche',
+    (await seite.locator('#wgBereich').innerText()).includes(`${vorwoche.slice(8, 10)}.${vorwoche.slice(5, 7)}.`)
+    && (await seite.locator('#wochenGraph path[data-serie="glow"]').count()) === 1
+    && /GLOW 1/.test(await seite.locator('#wochenGraph').innerText()), await seite.locator('#wgBereich').innerText());
+  pruefe('Wochengrafik: vor die erste erfasste Woche geht es nicht', await seite.locator('#wgZurueck').isDisabled());
+  await seite.click('#wgVor');
+  await seite.click('[data-wgmodus="gesamt"]');
+  const gesamt = await seite.locator('#wgBereich').innerText();
+  pruefe('Wochengrafik Gesamt spannt alle erfassten Tage',
+    /1[34] Tage/.test(gesamt) && (await seite.locator('#wochenGraph circle.wg-punkt').count()) >= 13, gesamt);
+  await seite.click('[data-wgmodus="zeitraum"]');
+  pruefe('Wochengrafik Zeitraum zeigt Datumsfelder', await seite.locator('#wgVon').isVisible());
+  await seite.fill('#wgVon', vorwoche);
+  await seite.dispatchEvent('#wgVon', 'change');
+  await seite.fill('#wgBis', vorwoche);
+  await seite.dispatchEvent('#wgBis', 'change');
+  pruefe('Wochengrafik Zeitraum auf einen Tag', /· 1 Tag$/.test(await seite.locator('#wgBereich').innerText())
+    && (await seite.locator('#wochenGraph circle.wg-punkt').count()) === 1);
+  await seite.click('[data-wgmodus="woche"]');
 
   /* Tägliches Speichern bei geschlossenen Wochenfragen: deren Regler stehen
      auf den Vorgaben — gespeichert sähe das aus wie eine Antwort. */

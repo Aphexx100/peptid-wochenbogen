@@ -224,6 +224,18 @@ tbody tr:last-child td{border-bottom:none}
 .wg-kreuz{stroke:var(--muted);stroke-width:1}
 .wg-hit{fill:transparent;cursor:crosshair;outline:none}
 .wg-hit:focus-visible{fill:var(--accent-soft);fill-opacity:.35}
+.wg-steuer{display:flex;flex-wrap:wrap;align-items:center;gap:.5rem .8rem;margin-top:.7rem}
+.wg-modus{display:inline-flex;border:1px solid var(--border);border-radius:5px;overflow:hidden}
+.wg-modus button{font-family:Archivo,sans-serif;font-size:.78rem;font-weight:600;padding:.35rem .7rem;min-height:2.1rem;
+  border:0;border-right:1px solid var(--border);background:var(--surface-2);color:var(--muted);cursor:pointer}
+.wg-modus button:last-child{border-right:0}
+.wg-modus button[aria-pressed="true"]{background:var(--accent);color:var(--on-accent)}
+.wg-nav{display:inline-flex;gap:.3rem}
+.wg-nav[hidden],.wg-range[hidden]{display:none}
+.wg-nav .btn.small{min-height:2.1rem;padding:.2rem .75rem;font-size:1rem;line-height:1}
+.wg-nav .btn:disabled{opacity:.35;cursor:default}
+.wg-range{display:inline-flex;align-items:center;gap:.35rem;color:var(--muted)}
+.wg-range input[type="date"]{width:auto;min-height:2.1rem;padding:.25rem .45rem;font-size:.82rem}
 .wg-legende{display:flex;flex-wrap:wrap;gap:.35rem 1rem;margin-top:.55rem;font-size:.78rem;color:var(--ink-2)}
 .wg-legende > span{display:inline-flex;align-items:center;gap:.4rem}
 .wg-key{display:inline-block;width:14px;height:2px;border-radius:1px;flex:none}

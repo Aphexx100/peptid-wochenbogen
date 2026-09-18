@@ -43,11 +43,26 @@
   <div class="gatebar" id="gateBar" hidden></div>
 
   <div class="card">
-    <h2><span class="step">◷</span> Diese Woche in mg</h2>
+    <h2><span class="step">◷</span> Tagesmengen in mg</h2>
+    <div class="wg-steuer">
+      <div class="wg-modus" role="group" aria-label="Zeitraum der Grafik">
+        <button type="button" data-wgmodus="woche" aria-pressed="true">Woche</button>
+        <button type="button" data-wgmodus="zeitraum" aria-pressed="false">Zeitraum</button>
+        <button type="button" data-wgmodus="gesamt" aria-pressed="false">Gesamt</button>
+      </div>
+      <div class="wg-nav" id="wgNav">
+        <button type="button" class="btn ghost small" id="wgZurueck" aria-label="Eine Woche zurück">‹</button>
+        <button type="button" class="btn ghost small" id="wgVor" aria-label="Eine Woche vor">›</button>
+      </div>
+      <div class="wg-range" id="wgRange" hidden>
+        <input type="date" id="wgVon" aria-label="Zeitraum von"><span>–</span><input type="date" id="wgBis" aria-label="Zeitraum bis">
+      </div>
+      <span class="gatehint" id="wgBereich"></span>
+    </div>
     <div class="wg-legende" id="wochenGraphLegende"></div>
     <div class="wg" id="wochenGraph"></div>
     <p class="empty" id="wochenGraphLeer" hidden></p>
-    <p class="hint" style="margin:.4rem 0 0">Tagesmenge je Wirkstoff, mit dem Vortag verbunden. Kisspeptin in mg umgerechnet (100 µg = 0,1 mg), GLOW als Gesamtmenge des Gemischs. Heute zählt erst mit Eintrag.</p>
+    <p class="hint" style="margin:.4rem 0 0">Tagesmenge je Wirkstoff als Kurve. Kisspeptin in mg umgerechnet (100 µg = 0,1 mg), GLOW als Gesamtmenge des Gemischs. Lücken: Tage ohne erfasste Woche; heute zählt erst mit Eintrag.</p>
   </div>
 
   <div class="card weekly">

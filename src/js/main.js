@@ -12,6 +12,7 @@ import { $ } from './util/dom.js';
 import { currentWeekKey } from './util/date.js';
 import { buildForm, buildKraft, buildExpo, buildVials, buildConfTage } from './form/build.js';
 import { initWeeklyGate } from './ui/weekly.js';
+import { wochenGraphNeu } from './ui/wochengraph.js';
 import { fillForm } from './form/model.js';
 import {
   saveWeekAction, saveCfgZeit, saveCfgGlow, saveCfgUebungen, saveVials, fillSetup
@@ -110,12 +111,14 @@ async function start() {
   if (state.weeks[state.weekKey]) fillForm(state.weeks[state.weekKey]);
   renderStatus();
   renderStoreState();
+  wochenGraphNeu();
 
   /* Live-Aktualisierung, wenn die Ablage sie anbietet. */
   subscribeWeeks((w) => {
     state.weeks = w;
     if (state.weeks[state.weekKey]) fillForm(state.weeks[state.weekKey]);
     renderStatus();
+    wochenGraphNeu();
     if (!$('p-aus').hidden) renderAus();
   });
 }
