@@ -51,11 +51,15 @@ export function renderWeeklyGate() {
   bar.hidden = false;
   const d = new Date(`${state.weekKey}T12:00:00`);
   const regulaer = `${WTAG[d.getDay()]} ${state.weekKey.slice(8, 10)}.${state.weekKey.slice(5, 7)}.`;
+  const vergangen = state.weekKey < iso(new Date());
   bar.innerHTML = manuell()
     ? '<span class="gatehint">Wochenfragen von Hand geöffnet</span>' +
       '<button class="btn ghost small" id="gateOpen" type="button">Wochenfragen ausblenden</button>'
-    : `<span class="gatehint">regulär am ${regulaer}</span>` +
-      '<button class="btn ghost small" id="gateOpen" type="button">Wochenfragen nachtragen</button>';
+    : vergangen
+      ? '<span class="gatehint">frühere Woche</span>' +
+        '<button class="btn ghost small" id="gateOpen" type="button">Wochenfragen bearbeiten</button>'
+      : `<span class="gatehint">regulär am ${regulaer}</span>` +
+        '<button class="btn ghost small" id="gateOpen" type="button">Wochenfragen nachtragen</button>';
   $('gateOpen').addEventListener('click', () => {
     manuellFuer = manuell() ? null : state.weekKey;
     renderWeeklyGate();

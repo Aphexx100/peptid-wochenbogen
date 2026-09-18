@@ -40,6 +40,13 @@
 <!-- ==================== BOGEN ==================== -->
 <section class="panel" id="p-bogen" role="tabpanel" aria-labelledby="tab-bogen">
 
+  <div class="wochenwahl" id="wochenWahl">
+    <button type="button" class="btn ghost small" id="wwZurueck" aria-label="Frühere Woche bearbeiten">‹</button>
+    <span class="ww-text" id="wwText"></span>
+    <button type="button" class="btn ghost small" id="wwVor" aria-label="Spätere Woche bearbeiten">›</button>
+    <button type="button" class="btn ghost small" id="wwHeute" hidden>Zur laufenden Woche</button>
+  </div>
+
   <div class="gatebar" id="gateBar" hidden></div>
 
   <div class="card">
@@ -117,9 +124,11 @@
   <div class="card">
     <h2><span class="step">04</span> Wohlbefinden</h2>
     <p class="hint">WHO-5-Index, Wortlaut der offiziellen deutschen Fassung, Zeitraum auf einen Tag verkürzt. Durch die Verkürzung ist es formal nicht mehr das validierte Instrument — als gleichbleibendes Maß über Monate bleibt es trotzdem das beste verfügbare. Der Wochenwert entsteht als Mittel der erfassten Tage.</p>
-    <p class="hint" style="margin-bottom:.8rem"><em>Heute …</em></p>
+    <div class="tagwahl" id="whoTagwahl" role="group" aria-label="Tag für den WHO-5 wählen"></div>
+    <p class="hint" style="margin-bottom:.8rem"><em id="whoTagText">Heute …</em></p>
     <div id="s-who"></div>
-    <div class="score">Heute <b id="whoScore">—</b> von 100 · Woche Ø <b id="whoWeek">—</b></div>
+    <div class="score"><span id="whoTagName">Heute</span> <b id="whoScore">—</b> von 100 · Woche Ø <b id="whoWeek">—</b></div>
+    <div class="gatebar" style="justify-content:flex-start;margin:.5rem 0 0"><button type="button" class="btn ghost small" id="whoLoeschen" hidden>Eintrag dieses Tags löschen</button></div>
     <p class="daylist" id="whoTage"></p>
   </div>
 
@@ -528,6 +537,8 @@
       <b>Gleicher Tag, gleiche Uhrzeit, gleicher Zustand.</b> Den Wochenabschluss nicht nach dem Training, nicht nach zwei Gläsern Wein, nicht am Morgen nach einer schlechten Nacht — es sei denn, das ist jedes Mal so.
       <br><br>
       <b>Nicht zurückblättern.</b> Erst speichern, dann die Auswertung ansehen. Wer die Vorwoche kennt, bewertet die Differenz statt den Zustand.
+      <br><br>
+      <b>Fehler korrigieren.</b> Die Leiste ganz oben im Bogen blättert mit ‹ in frühere Wochen; solange sie gelb ist, bearbeitest du eine vergangene Woche. Änderungen werden beim Zurückwechseln automatisch gespeichert. Beim WHO-5 wählst du den Tag über die Tagesleiste über den Fragen; ein versehentlicher Eintrag lässt sich dort löschen.
       <br><br>
       <b>Lücken ehrlich lassen.</b> Eine ausgelassene Woche ist unschön, eine nachgetragene Woche ist Erfindung. Lieber eine Lücke im Verlauf als eine erfundene Zahl darin.
       <br><br>

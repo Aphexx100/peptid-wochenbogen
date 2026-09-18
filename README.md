@@ -11,6 +11,8 @@ trägt die Dosis als aufgezogenes **Volumen in ml** ein und der Bogen rechnet di
 Wirkstoffmenge selbst aus.
 Oben im Bogen zeigt eine Grafik die Tagesmengen je Wirkstoff in mg — als Woche mit
 Blättern in frühere Wochen, als eigener Zeitraum oder als gesamter Verlauf.
+Zum Korrigieren lässt sich der ganze Bogen auf eine frühere Woche umstellen; beim
+WHO-5 wählt eine Tagesleiste den Tag.
 
 **Am Erfassungstag** kommt der Rest dazu: sechs Kernbereiche, die drei erwarteten
 GLOW-Wirkungen, Sexualfunktion (IIEF-5) und Morgenerektionen, Körpermaße und Kraftwerte,
@@ -33,7 +35,7 @@ die Architektur in [docs/ARCHITEKTUR.md](docs/ARCHITEKTUR.md).
 ```
 npm install          # esbuild und playwright, nur zum Bauen und Testen
 npm start            # http://localhost:8080
-npm test             # 183 Prüfungen in einem echten Browser
+npm test             # 203 Prüfungen in einem echten Browser
 npm run build        # dist/peptid-wochenbogen.html — eine Datei für Claude
 ```
 

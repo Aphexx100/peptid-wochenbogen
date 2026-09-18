@@ -26,6 +26,13 @@ export function weekNumber(key) {
   return Math.floor(d / 7) + 1;
 }
 
+/** Datum um n Tage verschieben (YYYY-MM-DD). */
+export function plusTage(d, n) {
+  const t = new Date(`${d}T12:00:00`);
+  t.setDate(t.getDate() + n);
+  return iso(t);
+}
+
 export const daysBetween = (a, b) => Math.floor((Date.parse(b) - Date.parse(a)) / 86400000);
 
 /** Die sieben Kalendertage einer Woche, aeltester zuerst — der letzte ist der

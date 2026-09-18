@@ -9,13 +9,13 @@
 
 import { state } from './state.js';
 import { $ } from './util/dom.js';
-import { currentWeekKey } from './util/date.js';
+import { currentWeekKey, plusTage } from './util/date.js';
 import { buildForm, buildKraft, buildExpo, buildVials, buildConfTage } from './form/build.js';
 import { initWeeklyGate } from './ui/weekly.js';
 import { wochenGraphNeu } from './ui/wochengraph.js';
 import { fillForm } from './form/model.js';
 import {
-  saveWeekAction, saveCfgZeit, saveCfgGlow, saveCfgUebungen, saveVials, fillSetup
+  saveWeekAction, saveCfgZeit, saveCfgGlow, saveCfgUebungen, saveVials, fillSetup, wechsleWoche
 } from './form/save.js';
 import { renderStatus } from './ui/status.js';
 import { initTabs } from './ui/tabs.js';
@@ -62,6 +62,12 @@ function wireEvents() {
   $('cfgSave2').addEventListener('click', saveCfgGlow);
   $('cfgSave3').addEventListener('click', saveCfgUebungen);
   $('expBtn').addEventListener('click', exportCsv);
+  $('wwZurueck').addEventListener('click', () => wechsleWoche(plusTage(state.weekKey, -7)));
+  $('wwVor').addEventListener('click', () => {
+    const ziel = plusTage(state.weekKey, 7);
+    wechsleWoche(ziel > currentWeekKey() ? currentWeekKey() : ziel);
+  });
+  $('wwHeute').addEventListener('click', () => wechsleWoche(currentWeekKey()));
 }
 
 /** Geladene Einstellungen in den Zustand uebernehmen, ohne Vorgaben zu verlieren. */

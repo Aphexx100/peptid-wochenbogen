@@ -6,7 +6,7 @@
 
 import { state } from '../state.js';
 import { $ } from '../util/dom.js';
-import { weekNumber, iso } from '../util/date.js';
+import { weekNumber } from '../util/date.js';
 import {
   KERN, GLOWZIEL, MASSE, MORGEN, PT, PT_SIGNS, PIGMENT, NEG, WATCH, CONF_CHECKS, MONTH, EXPO_TEXT_ALT
 } from '../schema.js';
@@ -16,7 +16,7 @@ import {
   recalcScores, readExpo, ableiten, fuelleExpo, setLegacyDose, getLegacyDose,
   readConfTage, ableitenConf, fuelleConfTage, setLegacyConf, getLegacyConf,
   readZufuhr, ableitenZufuhr, fuelleZufuhr,
-  mergeHeute, tagesMittel, setTagesSaetze, readNotizen, ableitenNotizen, fuelleNotizen
+  mergeHeute, tagesMittel, setTagesSaetze, startWhoTag, readNotizen, ableitenNotizen, fuelleNotizen
 } from './build.js';
 
 export function readForm(){
@@ -72,8 +72,8 @@ export function readForm(){
   e.kraft=[0,1,2,3].map(function(i){
     return {name:state.cfg.uebungen[i]||"", kg:$("kw"+i).value, reps:$("kr"+i).value, rir:$("ke"+i).value};
   });
-  /* WHO-5 wird taeglich erfasst: der heutige Antwortsatz wird zu den bereits
-     gespeicherten Tagen dieser Woche gelegt, e.who traegt das Mittel je
+  /* WHO-5 wird taeglich erfasst: der Antwortsatz des gewaehlten Tags wird zu
+     den bereits gespeicherten Tagen dieser Woche gelegt, e.who traegt das Mittel je
      Frage. Ein leerer Bogen loescht keinen Tag. Der IIEF-5 ist eine
      Wochenfrage mit einem Antwortsatz fuer die letzten sieben Tage. */
   e.whoTage=mergeHeute("who");
@@ -147,11 +147,6 @@ function behalteWochenfragen(e, alt){
    Abschlusstag ist der ehrlichste Kandidat. */
 function ganzerTagAls(woche,satz){ var m={}; m[woche]=satz.slice(); return m; }
 
-/* Antwortsatz von heute in die Segmente schreiben, sonst alle leeren. */
-function zeigeHeute(praefix,map){
-  var heute=iso(new Date()), satz=map[heute];
-  for(var i=0;i<5;i++) setSeg(praefix+i, satz?satz[i]:null);
-}
 
 export function fillForm(e){
   if(!e) return;
@@ -176,7 +171,7 @@ export function fillForm(e){
   var wt=e.whoTage||(Array.isArray(e.who)&&e.who.length===5&&e.who.every(function(v){return v!==null&&v!==undefined;})
     ?ganzerTagAls(e.week,e.who):{});
   setTagesSaetze(wt);
-  zeigeHeute("who",wt);
+  startWhoTag();
   /* IIEF-5: ein Satz fuer die Woche. Aus den Tagen, in denen er taeglich lief,
      steht hier ein Mittel je Frage — gerundet ist das die beste Vorbelegung,
      die sich aus den echten Antworten ergibt. */

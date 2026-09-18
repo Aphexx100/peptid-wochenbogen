@@ -152,6 +152,23 @@ async function laufe(browser, url, label, mitModulTest) {
   pruefe('WHO-5 weist den Wochenschnitt aus',
     /80 von 100/.test(await seite.locator('#whoWeek').innerText()));
 
+  /* WHO-5-Tageswahl: gestern nachtragen, zurück zu heute, gestern wieder löschen. */
+  pruefe('WHO-5-Tagesleiste mit heute vorgewählt',
+    (await seite.locator('#whoTag6').getAttribute('aria-pressed')) === 'true'
+    && (await seite.locator('#whoTag6').innerText()) === 'Heute');
+  await seite.click('#whoTag5');
+  pruefe('Anderer Tag zeigt leere Fragen', (await seite.locator('#whoScore').innerText()) === '—');
+  for (let i = 0; i < 5; i++) await seite.click(`[data-seg="who${i}"][data-val="2"]`);
+  pruefe('Gestern eingetragen', (await seite.locator('#whoScore').innerText()) === '40'
+    && /Erfasst an 2 von 7 Tagen/.test(await seite.locator('#whoTage').innerText())
+    && /60 von 100/.test(await seite.locator('#whoWeek').innerText()));
+  await seite.click('#whoTag6');
+  pruefe('Zurück bei heute stehen die heutigen Antworten', (await seite.locator('#whoScore').innerText()) === '80');
+  await seite.click('#whoTag5');
+  await seite.click('#whoLoeschen');
+  pruefe('Tag lässt sich wieder löschen', /Erfasst an 1 von 7 Tagen/.test(await seite.locator('#whoTage').innerText()));
+  await seite.click('#whoTag6');
+
   /* Tägliche Confounder (Vortag): Training summiert, Schlaf gemittelt. */
   for (let i = 0; i < 7; i++) await seite.fill(`#tschlaf${i}`, '7');
   await seite.fill('#ttrain0', '1.5');
@@ -424,6 +441,25 @@ async function laufe(browser, url, label, mitModulTest) {
   pruefe('Wochengrafik Zeitraum auf einen Tag', /· 1 Tag$/.test(await seite.locator('#wgBereich').innerText())
     && (await seite.locator('#wochenGraph circle.wg-punkt').count()) === 1);
   await seite.click('[data-wgmodus="woche"]');
+
+  /* Frühere Woche korrigieren: zurückblättern, Wert ändern, vorblättern —
+     die Korrektur landet in der früheren Woche, ohne Speichern-Klick. */
+  pruefe('Wochenwahl: laufende Woche, vor gesperrt',
+    (await seite.locator('#wwVor').isDisabled()) && (await seite.locator('#wwHeute').isHidden()));
+  await seite.click('#wwZurueck');
+  await seite.waitForTimeout(300);
+  pruefe('Bogen zeigt die frühere Woche',
+    (await seite.locator('#wochenWahl').getAttribute('data-korrektur')) === '1'
+    && /Korrektur einer früheren Woche/.test(await seite.locator('#statusrow').innerText())
+    && (await seite.inputValue('#xtirz0')) === '');
+  pruefe('Grafik springt mit in die frühere Woche',
+    (await seite.locator('#wgBereich').innerText()).includes(`${vorwoche.slice(8, 10)}.${vorwoche.slice(5, 7)}.`));
+  await seite.fill('#xtirz0', '5');
+  await seite.click('#wwVor');
+  await seite.waitForTimeout(500);
+  const korrigiert = await seite.evaluate((k) => JSON.parse(localStorage.getItem('pwb.weeks.v1'))[k].dose.tage.tirz[0], vorwoche);
+  pruefe('Korrektur beim Wechsel gespeichert', korrigiert === '5', String(korrigiert));
+  pruefe('Zurück in der laufenden Woche', (await seite.locator('#wochenWahl').getAttribute('data-korrektur')) === '0');
 
   /* Tägliches Speichern bei geschlossenen Wochenfragen: deren Regler stehen
      auf den Vorgaben — gespeichert sähe das aus wie eine Antwort. */

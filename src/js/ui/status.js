@@ -2,8 +2,26 @@
 
 import { state } from '../state.js';
 import { $ } from '../util/dom.js';
-import { weekNumber, istAbschlussTag } from '../util/date.js';
+import { weekNumber, istAbschlussTag, currentWeekKey, weekDays, plusTage } from '../util/date.js';
 import { renderWeeklyGate } from './weekly.js';
+
+const kurz = (d) => `${d.slice(8, 10)}.${d.slice(5, 7)}.`;
+
+/** Leiste zum Wochenwechsel: welche Woche der Bogen gerade bearbeitet. */
+function renderWochenwahl() {
+  const aktuell = currentWeekKey();
+  const keys = Object.keys(state.weeks).sort();
+  let frueh = keys[0] || aktuell;
+  if (state.cfg.start && state.cfg.start < frueh) frueh = state.cfg.start;
+  const tage = weekDays(state.weekKey);
+  const laufend = state.weekKey === aktuell;
+  $('wwText').textContent = `${kurz(tage[0])}–${kurz(tage[6])}${tage[6].slice(0, 4)}` +
+    (laufend ? ' · laufende Woche' : ' · frühere Woche, Korrektur');
+  $('wochenWahl').dataset.korrektur = laufend ? '0' : '1';
+  $('wwVor').disabled = state.weekKey >= aktuell;
+  $('wwZurueck').disabled = plusTage(state.weekKey, -7) < frueh;
+  $('wwHeute').hidden = laufend;
+}
 
 export function renderStatus() {
   const row = $('statusrow');
@@ -18,10 +36,10 @@ export function renderStatus() {
   const nr = weekNumber(state.weekKey);
   if (nr) chip(`Woche ${nr}`, 'acc');
   chip(`${Object.keys(state.weeks).length} erfasst`);
-  chip(state.weeks[state.weekKey] ? 'diese Woche gespeichert' : 'offen',
+  chip(state.weeks[state.weekKey] ? 'Woche gespeichert' : 'offen',
        state.weeks[state.weekKey] ? 'good' : 'warn');
-  chip(istAbschlussTag() ? 'Wochenabschluss heute' : 'Tageserfassung',
-       istAbschlussTag() ? 'acc' : '');
+  if (state.weekKey !== currentWeekKey()) chip('Korrektur einer früheren Woche', 'warn');
+  else chip(istAbschlussTag() ? 'Wochenabschluss heute' : 'Tageserfassung', istAbschlussTag() ? 'acc' : '');
 
   /* Die Monatsmessung faellt jede vierte Woche an; sichtbar wird sie aber
      erst mit den uebrigen Wochenfragen. */
@@ -29,4 +47,5 @@ export function renderStatus() {
   $('monthCard').dataset.faellig = mn ? '1' : '0';
   if (mn) chip('Monatsmessung fällig', 'warn');
   renderWeeklyGate();
+  renderWochenwahl();
 }

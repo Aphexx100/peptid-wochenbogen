@@ -10,7 +10,7 @@ import {
   EXPO, EXPO_TEXT, ZUFUHR, CONF_TAGE, KERN, GLOWZIEL, WHO, WHO_LEG, IIEF, MORGEN, PT, PT_SIGNS, PIGMENT, NEG,
   WATCH, CONF_CHECKS, MONTH
 } from '../schema.js';
-import { slider, segment, checkList, segVal, setSegHandler } from '../ui/controls.js';
+import { slider, segment, checkList, segVal, setSeg, setSegHandler } from '../ui/controls.js';
 import { cuWeek } from '../analysis/metrics.js';
 import { keys } from '../state.js';
 import { iso, weekDays } from '../util/date.js';
@@ -604,7 +604,8 @@ export function buildKraft() {
 }
 
 /* ---- WHO-5: taeglich erfasst, woechentlich gemittelt ----
-   Die Segmente zeigen immer den heutigen Tag. Gespeichert wird je Tag ein
+   Die Segmente zeigen den gewaehlten Tag der Woche — vorgewaehlt heute,
+   zum Korrigieren jeder vergangene Tag. Gespeichert wird je Tag ein
    Antwortsatz (whoTage, Schluessel ist das Datum); der Wochenwert in e.who
    ist das Mittel je Frage ueber die erfassten Tage — damit rechnen
    Auswertung, CSV und Datenblock unveraendert weiter. Der IIEF-5 ist eine
@@ -621,18 +622,72 @@ export function antwortSatz(praefix) {
   return out;
 }
 
-/* Die je Tag gespeicherten Antwortsaetze der laufenden Woche. */
+/* Die je Tag gespeicherten Antwortsaetze der angezeigten Woche und der Tag,
+   den die Segmente gerade zeigen. */
 let tagesSaetze = { who: {} };
+let whoTag = '';
 export function setTagesSaetze(who) {
   tagesSaetze = { who: who || {} };
 }
 
-/** Antwortsaetze mit dem heutigen Stand zusammenfuehren. */
+/** Antwortsaetze mit dem Stand der Segmente (gewaehlter Tag) zusammenfuehren. */
 export function mergeHeute(praefix) {
   const map = { ...(tagesSaetze[praefix] || {}) };
-  const heute = antwortSatz(praefix);
-  if (heute) map[iso(new Date())] = heute;
+  const satz = antwortSatz(praefix);
+  if (satz && whoTag) map[whoTag] = satz;
   return map;
+}
+
+const tagName = (d) => `${WTAG[new Date(`${d}T12:00:00`).getDay()]} ${d.slice(8, 10)}.${d.slice(5, 7)}.`;
+
+/* Tagesleiste ueber den WHO-5-Fragen: sieben Tage der angezeigten Woche,
+   kuenftige gesperrt, erfasste mit Punkt markiert. */
+function renderWhoTagwahl() {
+  const host = $('whoTagwahl');
+  const heute = iso(new Date());
+  host.textContent = '';
+  weekDays(state.weekKey).forEach((d, i) => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.id = `whoTag${i}`;
+    b.textContent = d === heute ? 'Heute' : tagName(d).slice(0, 6);
+    b.disabled = d > heute;
+    b.setAttribute('aria-pressed', d === whoTag ? 'true' : 'false');
+    if (tagesSaetze.who[d] || (d === whoTag && antwortSatz('who'))) b.dataset.erfasst = '1';
+    b.addEventListener('click', () => waehleWhoTag(d));
+    host.appendChild(b);
+  });
+  $('whoTagText').textContent = whoTag === heute ? 'Heute …' : `Am ${tagName(whoTag)} …`;
+  $('whoTagName').textContent = whoTag === heute ? 'Heute' : tagName(whoTag);
+  $('whoLoeschen').hidden = !(tagesSaetze.who[whoTag] || antwortSatz('who'));
+}
+
+/** Anderen Tag waehlen. Die Antworten des bisherigen Tags bleiben erhalten. */
+export function waehleWhoTag(d) {
+  const satz = antwortSatz('who');
+  if (satz && whoTag) tagesSaetze.who[whoTag] = satz;
+  whoTag = d;
+  const neu = tagesSaetze.who[d];
+  for (let i = 0; i < 5; i++) setSeg(`who${i}`, neu ? neu[i] : null);
+  recalcScores();
+}
+
+/** Nach dem Laden einer Woche: heute, sonst der letzte erfasste Tag, sonst
+    der letzte vergangene Tag der Woche. */
+export function startWhoTag() {
+  const heute = iso(new Date());
+  const tage = weekDays(state.weekKey).filter((d) => d <= heute);
+  const erfasst = Object.keys(tagesSaetze.who).sort();
+  whoTag = tage.includes(heute) ? heute : (erfasst.pop() || tage[tage.length - 1] || weekDays(state.weekKey)[6]);
+  const satz = tagesSaetze.who[whoTag];
+  for (let i = 0; i < 5; i++) setSeg(`who${i}`, satz ? satz[i] : null);
+}
+
+/** Den gewaehlten Tag aus dem WHO-5 entfernen — fuer versehentliche Eintraege. */
+function loescheWhoTag() {
+  delete tagesSaetze.who[whoTag];
+  for (let i = 0; i < 5; i++) setSeg(`who${i}`, null);
+  recalcScores();
 }
 
 /** Mittel je Frage ueber alle erfassten Tage; leeres Array ohne Tage. */
@@ -644,6 +699,7 @@ export function tagesMittel(map) {
 }
 
 function renderTagesInfo(praefix, scoreId, weekId, listId, faktor, max) {
+  if (praefix === 'who') renderWhoTagwahl();
   const heute = antwortSatz(praefix);
   $(scoreId).textContent = heute ? String(heute.reduce((a, b) => a + b, 0) * faktor) : '—';
 
@@ -655,7 +711,7 @@ function renderTagesInfo(praefix, scoreId, weekId, listId, faktor, max) {
     : '—';
   $(listId).textContent = tage.length
     ? `Erfasst an ${tage.length} von 7 Tagen: ${tage.map((d) => `${WTAG[new Date(`${d}T12:00:00`).getDay()]} ${d.slice(8, 10)}.${d.slice(5, 7)}.`).join(', ')}`
-    : 'Für heute noch nicht erfasst — alle fünf Fragen beantworten, dann zählt der Tag.';
+    : 'Noch kein Tag erfasst — alle fünf Fragen beantworten, dann zählt der Tag.';
 }
 
 /** WHO-5 und IIEF-5 laufen live mit, sobald alle Items gesetzt sind. */
@@ -692,6 +748,7 @@ export function renderCu() {
 /** Einmalig beim Start: alle Regler, Segmente und Listen erzeugen. */
 export function buildForm() {
   setSegHandler(recalcScores);
+  $('whoLoeschen').addEventListener('click', loescheWhoTag);
   buildVials();
   buildExpo();
   buildConfTage();
@@ -729,5 +786,6 @@ export function buildForm() {
   checkList($('s-month'), MONTH);
   slider($('s-conf'), 'cStress', 'Stressbelastung dieser Woche', 'sehr niedrig', 'sehr hoch', 5);
 
+  startWhoTag();
   renderCu();
 }

@@ -9,9 +9,11 @@ import { currentWeekKey, weekNumber } from '../util/date.js';
 import { saveWeek as ablageWeek, saveConfig as ablageConfig } from '../storage/index.js';
 import { readForm, fillForm } from './model.js';
 import {
-  buildKraft, buildExpo, buildConfTage, renderCu, readVials, refreshExpoUnits
+  buildKraft, buildExpo, buildConfTage, renderCu, readVials, refreshExpoUnits,
+  readExpo, readZufuhr, readNotizen, readConfTage, mergeHeute
 } from './build.js';
 import { renderStatus } from '../ui/status.js';
+import { wochenGraphZeige } from '../ui/wochengraph.js';
 
 function melde(id, r) {
   const info = $(id);
@@ -33,6 +35,32 @@ export async function saveWeekAction() {
   });
 }
 
+/* ---- Wochenwechsel zum Korrigieren ----
+   Der Bogen zeigt sonst immer die laufende Woche. Zum Korrigieren laesst er
+   sich auf fruehere Wochen umstellen; Speichern schreibt dann in genau diese
+   Woche. Vor dem Wechsel wird gespeichert, falls sich etwas geaendert hat —
+   sonst gingen Korrekturen beim Blaettern verloren. */
+
+const vergleich = (e) => JSON.stringify({ ...e, saved: null });
+
+function hatEingaben() {
+  return !readExpo().leer || !readZufuhr().leer || !readNotizen().leer || !readConfTage().leer
+    || Object.keys(mergeHeute('who')).length > 0;
+}
+
+export async function wechsleWoche(ziel) {
+  if (!ziel || ziel === state.weekKey) return;
+  const alt = state.weeks[state.weekKey];
+  if (alt ? vergleich(readForm()) !== vergleich(alt) : hatEingaben()) await saveWeekAction();
+  state.weekKey = ziel;
+  buildExpo();
+  buildConfTage();
+  fillForm(state.weeks[ziel] || {});
+  $('stamp').textContent = `Woche bis ${state.weekKey}`;
+  renderStatus();
+  wochenGraphZeige(state.weekKey);
+}
+
 async function persistCfg(infoId) {
   melde(infoId, await ablageConfig(state.cfg));
 }
@@ -48,7 +76,10 @@ export async function saveCfgZeit() {
   /* Anderer Erfassungstag heisst andere Woche mit anderen Kalendertagen.
      Die Tabellen zeigen dann deren gespeicherten Stand — sonst rutschten die
      eingetragenen Werte zeilenweise auf fremde Daten. */
-  if (state.weekKey !== vorher) fillForm(state.weeks[state.weekKey] || {});
+  if (state.weekKey !== vorher) {
+    fillForm(state.weeks[state.weekKey] || {});
+    wochenGraphZeige(state.weekKey);
+  }
   $('stamp').textContent = `Woche bis ${state.weekKey}`;
   renderStatus();
   await persistCfg('cfgInfo');

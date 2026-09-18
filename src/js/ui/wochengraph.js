@@ -24,7 +24,7 @@
 import { state } from '../state.js';
 import { $ } from '../util/dom.js';
 import { EXPO } from '../schema.js';
-import { iso, weekDays } from '../util/date.js';
+import { iso, weekDays, currentWeekKey, daysBetween, plusTage } from '../util/date.js';
 
 const WTAG = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 const NS = 'http://www.w3.org/2000/svg';
@@ -42,12 +42,6 @@ const zuMg = (x, v) => (x.u === 'µg' ? v / 1000 : v);
 const zahl = (v) => (+v.toFixed(v < 1 ? 3 : 2)).toLocaleString('de-DE');
 const wtag = (d) => WTAG[new Date(`${d}T12:00:00`).getDay()];
 const tagMonat = (d) => `${d.slice(8, 10)}.${d.slice(5, 7)}.`;
-
-function plusTage(d, n) {
-  const t = new Date(`${d}T12:00:00`);
-  t.setDate(t.getDate() + n);
-  return iso(t);
-}
 
 function el(name, attrs, eltern) {
   const e = document.createElementNS(NS, name);
@@ -86,7 +80,7 @@ function tageswerte() {
 function zeitraum(daten) {
   const heute = iso(new Date());
   if (ansicht.modus === 'woche') {
-    return weekDays(plusTage(state.weekKey, -7 * ansicht.zurueck));
+    return weekDays(plusTage(currentWeekKey(), -7 * ansicht.zurueck));
   }
   let von;
   let bis;
@@ -167,7 +161,7 @@ function steuerung(daten, tage) {
   $('wgNav').hidden = ansicht.modus !== 'woche';
   $('wgRange').hidden = ansicht.modus !== 'zeitraum';
   const fruehestes = [...daten.keys()].sort()[0];
-  const endeVorwoche = plusTage(state.weekKey, -7 * (ansicht.zurueck + 1));
+  const endeVorwoche = plusTage(currentWeekKey(), -7 * (ansicht.zurueck + 1));
   $('wgVor').disabled = ansicht.zurueck === 0;
   $('wgZurueck').disabled = !fruehestes || endeVorwoche < fruehestes;
   const bereich = $('wgBereich');
@@ -195,6 +189,12 @@ export function renderWochenGraph(tage, legacy) {
     beobachter.observe(host);
   }
   zeichne();
+}
+
+/** Wochenansicht auf die Woche stellen, die der Bogen gerade bearbeitet. */
+export function wochenGraphZeige(key) {
+  if (ansicht.modus === 'woche') ansicht.zurueck = Math.max(0, Math.round(daysBetween(key, currentWeekKey()) / 7));
+  if (letzte) zeichne();
 }
 
 /** Neu zeichnen, wenn sich die gespeicherten Wochen geaendert haben. */
