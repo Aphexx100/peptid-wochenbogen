@@ -15,6 +15,7 @@ import { cuWeek } from '../analysis/metrics.js';
 import { keys } from '../state.js';
 import { iso, weekDays } from '../util/date.js';
 import { renderWeeklyGate } from '../ui/weekly.js';
+import { renderWochenGraph } from '../ui/wochengraph.js';
 
 /* ---- Tagesraster der Exposition ----
    Sieben Zeilen (aeltester Tag zuerst, letzter ist der Erfassungstag), eine
@@ -166,6 +167,7 @@ function expoChanged() {
   renderExpoSummary();
   renderCu();
   const { tage, leer } = readExpo();
+  renderWochenGraph(tage, leer && !!legacyDose);
   const nPt = leer && legacyDose
     ? Number(legacyDose.pt) || 0
     : tage.pt.filter((v) => Number(v) > 0).length;

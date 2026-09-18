@@ -23,7 +23,7 @@ src/js/
   state.js              der gemeinsame Laufzeitzustand
   settings.js           gerätegebundene Zugangsdaten, nur localStorage
   util/                 dom, format, date — klein und ohne Abhängigkeiten
-  ui/                   controls, tabs, status, setup, analyse, weekly
+  ui/                   controls, tabs, status, setup, analyse, weekly, wochengraph
   form/                 build (Aufbau), model (lesen/füllen), save (Aktionen)
   analysis/             metrics (reine Rechnung), sparkline, report
   storage/              index (Fassade), local, github, claude-db

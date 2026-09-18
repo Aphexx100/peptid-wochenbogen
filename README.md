@@ -31,7 +31,7 @@ die Architektur in [docs/ARCHITEKTUR.md](docs/ARCHITEKTUR.md).
 ```
 npm install          # esbuild und playwright, nur zum Bauen und Testen
 npm start            # http://localhost:8080
-npm test             # 161 Prüfungen in einem echten Browser
+npm test             # 169 Prüfungen in einem echten Browser
 npm run build        # dist/peptid-wochenbogen.html — eine Datei für Claude
 ```
 

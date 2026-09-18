@@ -63,6 +63,8 @@ async function laufe(browser, url, label, mitModulTest) {
   pruefe('Kraftfelder aufgebaut', (await seite.locator('#kw0').count()) === 1);
   const expoZellen = await seite.locator('#s-expo input[type="number"]').count();
   pruefe('Tagesraster: 7 Tage × 4 Substanzen + 3 Zufuhrspalten', expoZellen === 49, `${expoZellen} Zellen`);
+  pruefe('Wochengrafik leer mit Hinweis', (await seite.locator('#wochenGraph svg').count()) === 0
+    && /Noch keine Injektion/.test(await seite.locator('#wochenGraphLeer').innerText()));
   const notizZellen = await seite.locator('#s-expo input[type="text"]').count();
   pruefe('Tagesraster: nur noch die Notizspalte Einstichstellen', notizZellen === 7
     && (await seite.locator('#nsonstMed0, #nabw0').count()) === 0, `${notizZellen} Zellen`);
@@ -88,7 +90,7 @@ async function laufe(browser, url, label, mitModulTest) {
   await setzeTag(andererWt);
   pruefe('Wochenfragen außerhalb des Erfassungstags verborgen', await seite.locator('#s-kern').isHidden());
   const offeneKarten = await seite.locator('.card:visible h2').allInnerTexts();
-  pruefe('Nur die Tageskarten offen', offeneKarten.length === 5, offeneKarten.join(' | '));
+  pruefe('Nur die Tageskarten offen (samt Wochengrafik)', offeneKarten.length === 6, offeneKarten.join(' | '));
   pruefe('Tagesfelder bleiben sichtbar', await seite.locator('#s-expo').isVisible());
   pruefe('WHO-5 täglich offen, IIEF-5 ist Wochenfrage',
     (await seite.locator('#s-who').isVisible()) && (await seite.locator('#s-iief').isHidden()));
@@ -177,6 +179,16 @@ async function laufe(browser, url, label, mitModulTest) {
   pruefe('Tagesraster leitet die Wochensumme ab', /GLOW: 7 Injektionstage à 2,8 mg/.test(sum), sum.slice(0, 90));
   const cu = await seite.locator('#cuNote').innerText();
   pruefe('Kupferlast wird beziffert', /2,21 mg elementares Kupfer/.test(cu), cu.slice(0, 90));
+  /* Wochengrafik: GLOW-Linie über die vergangenen Tage, Punkte an Injektionstagen. */
+  const wgLinien = await seite.locator('#wochenGraph path.wg-linie').count();
+  const wgGlow = await seite.locator('#wochenGraph path[data-serie="glow"]').count();
+  const wgPunkte = await seite.locator('#wochenGraph circle.wg-punkt').count();
+  pruefe('Wochengrafik zeichnet die GLOW-Linie mit sieben Punkten', wgGlow === 1 && wgPunkte === 7, `${wgLinien} Linien, ${wgPunkte} Punkte`);
+  pruefe('Wochengrafik hat Legende und Beschriftung', (await seite.locator('#wochenGraphLegende > span').count()) === 4
+    && /GLOW 2,8/.test(await seite.locator('#wochenGraph').innerText()));
+  await seite.hover('#wochenGraph rect.wg-hit >> nth=0');
+  pruefe('Wochengrafik zeigt Tooltip mit allen Wirkstoffen', (await seite.locator('.wg-tip .wg-tip-zeile').count()) === 4
+    && /2,8 mg/.test(await seite.locator('.wg-tip').innerText()));
   pruefe('PT-Karte ohne PT-141-Tag verborgen', await seite.locator('#ptCard').isHidden());
   await seite.fill('#xpt2', '1.75');
   pruefe('PT-Karte erscheint bei PT-141-Tag', await seite.locator('#ptCard').isVisible());
