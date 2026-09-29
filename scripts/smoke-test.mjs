@@ -320,6 +320,7 @@ async function laufe(browser, url, label, mitModulTest) {
     /Zugangsdaten aus diesem Browser verschwunden/.test(await seite.locator('#offline').innerText()));
   pruefe('Anthropic-Schlüsselfeld vorhanden', (await seite.locator('#anKey').count()) === 1);
   /* Schlüsselfeld: leer heißt leer, und der eingefügte Wert wird nachgewiesen. */
+  pruefe('Seitenstand sichtbar', /Seitenstand .*neu laden/.test(await seite.locator('#seitenstand').innerText()));
   pruefe('Leeres Schlüsselfeld sagt, dass es leer ist',
     /leer — der graue Text/.test(await seite.locator('#ghTokenInfo').innerText()));
   await seite.fill('#ghToken', 'github_pat_11ABCDEFG0123456789');

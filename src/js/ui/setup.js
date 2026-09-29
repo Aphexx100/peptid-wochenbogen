@@ -50,8 +50,20 @@ function geheimfeld(feldId, schalterId, infoId, erwartet) {
   zeigeInfo();
 }
 
+/* Welcher Stand der Seite gerade laeuft. GitHub Pages laesst Dateien bis zu
+   zehn Minuten im Browser-Cache stehen; nach einer Aenderung sieht man sonst
+   die alte Seite und sucht den Fehler an der falschen Stelle. */
+function zeigeSeitenstand() {
+  const el = $('seitenstand');
+  if (!el) return;
+  const d = new Date(document.lastModified);
+  const stand = isNaN(d) ? document.lastModified : d.toLocaleString('de-DE');
+  el.textContent = `Seitenstand ${stand} · bei alter Ansicht mit Strg+Umschalt+R neu laden`;
+}
+
 export function initSetupUi() {
   const s = settings();
+  zeigeSeitenstand();
 
   $('stBackend').value = s.backend;
   $('ghOwner').value = s.gh.owner;
