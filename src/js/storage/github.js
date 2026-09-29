@@ -53,6 +53,12 @@ async function api(pfad, opts = {}) {
     }
   });
   if (res.status === 404) return null;
+  /* 401 heisst fast immer: der Schluessel ist abgelaufen, zurueckgezogen oder
+     beim Einfuegen verstuemmelt. Die Rohmeldung "Bad credentials" hilft dabei
+     niemandem weiter. */
+  if (res.status === 401) {
+    throw new Error('Zugriffsschlüssel ungültig, abgelaufen oder zurückgezogen (GitHub 401). Neuen Schlüssel erzeugen und unter Setup eintragen.');
+  }
   if (!res.ok) {
     let detail = '';
     try {
@@ -171,7 +177,13 @@ export const githubStore = {
 /** Zugangsdaten pruefen, ohne etwas zu schreiben. Gibt eine Meldung zurueck. */
 export async function testeGithub() {
   const g = settings().gh;
-  if (!ghKomplett(g)) return { ok: false, text: 'Benutzer, Repository und Zugriffsschlüssel ausfüllen.' };
+  if (!ghKomplett(g)) {
+    /* Die grauen Platzhalter in den Feldern sehen aus wie Werte — deshalb
+       benennen, was wirklich fehlt. */
+    const fehlt = [['owner', 'GitHub-Benutzer'], ['repo', 'Daten-Repository'], ['token', 'Zugriffsschlüssel']]
+      .filter(([k]) => !g[k]).map(([, n]) => n);
+    return { ok: false, text: `Noch leer: ${fehlt.join(', ')}. Grauer Text im Feld ist nur ein Platzhalter, kein Wert.` };
+  }
   try {
     const r = await api(`/repos/${g.owner}/${g.repo}`);
     if (!r) return { ok: false, text: 'Repository nicht gefunden. Name oder Rechte prüfen.' };

@@ -308,6 +308,16 @@ async function laufe(browser, url, label, mitModulTest) {
   await seite.click('#tab-setup');
   await seite.waitForTimeout(100);
   pruefe('Ablage-Einstellungen vorhanden', (await seite.locator('#ghToken').count()) === 1);
+  /* Ohne Zugangsdaten muss die Prüfung sagen, welches Feld leer ist —
+     die grauen Platzhalter sehen sonst aus wie Werte. */
+  await seite.click('#ghTest');
+  await seite.waitForTimeout(200);
+  const stInfo = await seite.locator('#stInfo').innerText();
+  pruefe('Verbindungsprüfung benennt die leeren Felder',
+    /Noch leer: GitHub-Benutzer, Daten-Repository, Zugriffsschlüssel/.test(stInfo)
+    && /Platzhalter/.test(stInfo), stInfo);
+  pruefe('Offline-Hinweis erklärt verlorene Zugangsdaten',
+    /Zugangsdaten aus diesem Browser verschwunden/.test(await seite.locator('#offline').innerText()));
   pruefe('Anthropic-Schlüsselfeld vorhanden', (await seite.locator('#anKey').count()) === 1);
 
   /* CSV — in der Einzeldatei sind die Module nicht mehr einzeln erreichbar,
