@@ -82,7 +82,7 @@
 
   <div class="card">
     <h2><span class="step">01b</span> Aktuelle Vials</h2>
-    <p class="hint">Mit hinterlegtem Vial läuft die Spalte in 02 in ml. Am schnellsten über den Rekonstitutionsrechner unter Setup.</p>
+    <p class="hint">Mit hinterlegtem Vial läuft die Spalte in 02 in Einheiten (I.E.). Am schnellsten über den Rekonstitutionsrechner unter Setup.</p>
     <div class="tablewrap"><table class="expo vials" id="s-vials"></table></div>
     <div class="gatebar" style="margin:.7rem 0 0"><span class="gatehint" id="vialInfo"></span>
       <button class="btn ghost small" id="vialSave" type="button">Vials speichern</button></div>
@@ -90,7 +90,7 @@
 
   <div class="card wide">
     <h2><span class="step">02</span> Exposition — Tag für Tag</h2>
-    <p class="hint">Was tatsächlich gesetzt wurde, nicht was geplant war — <strong>je Tag die gesetzte Menge</strong>, leer gelassen heißt: an dem Tag nichts. Bei mehreren Injektionen desselben Wirkstoffs an einem Tag die Tagesgesamtmenge eintragen. Ist oben ein Vial hinterlegt, trägst du das <strong>aufgezogene Volumen in ml</strong> ein (10 I.E. auf der U-100-Spritze = 0,1 ml) und die Wirkstoffmenge wird daneben ausgerechnet; ohne Vial gilt die Einheit im Spaltenkopf. Tirzepatid kommt aus dem Pen und läuft immer in mg. Daneben die tägliche <strong>Zufuhr</strong>: Kreatin und Protein in Gramm, Alkohol in 0,5-l-Flaschen — jeweils in der Zeile des Tages, an dem du sie aufgenommen hast, morgens also in die Zeile von gestern. Rechts je Tag ein Notizfeld für <strong>Auffälligkeiten an der Einstichstelle</strong>. Am besten trägst du jeden Tag direkt nach der Injektion ein — die restlichen Abschnitte bleiben Wochenfragen und kommen am Erfassungstag dran.</p>
+    <p class="hint">Was tatsächlich gesetzt wurde, nicht was geplant war — <strong>je Tag die gesetzte Menge</strong>, leer gelassen heißt: an dem Tag nichts. Bei mehreren Injektionen desselben Wirkstoffs an einem Tag die Tagesgesamtmenge eintragen. Ist oben ein Vial hinterlegt, trägst du die <strong>aufgezogenen Einheiten (I.E.)</strong> ein, so wie du sie an der Spritze abliest — die Wirkstoffmenge steht darunter; ohne Vial gilt die Einheit im Spaltenkopf. Tirzepatid kommt aus dem Pen und läuft immer in mg. Daneben die tägliche <strong>Zufuhr</strong>: Kreatin und Protein in Gramm, Alkohol in 0,5-l-Flaschen — jeweils in der Zeile des Tages, an dem du sie aufgenommen hast, morgens also in die Zeile von gestern. Rechts je Tag ein Notizfeld für <strong>Auffälligkeiten an der Einstichstelle</strong>. Am besten trägst du jeden Tag direkt nach der Injektion ein — die restlichen Abschnitte bleiben Wochenfragen und kommen am Erfassungstag dran.</p>
 
     <div class="tablewrap"><table class="expo" id="s-expo"></table></div>
     <p class="hint" style="margin:.7rem 0 1rem">Kisspeptin wird im Graumarkt üblicherweise in <strong>Mikrogramm</strong> dosiert (50–200 µg), PT-141, GLOW und Tirzepatid in <strong>Milligramm</strong>. Beim GLOW ist die Gesamtmenge des Gemischs gemeint; wie viel davon GHK-Cu ist, legst du einmalig im Setup fest.</p>
@@ -444,7 +444,7 @@
     <p class="hint" style="margin-top:.9rem">Gilt für <strong>U-100</strong>-Spritzen, also 100 I.E. je Milliliter. Prüf das einmal auf der Verpackung — bei einer U-40-Spritze wären alle Einheitenangaben um den Faktor 2,5 falsch.</p>
 
     <label class="fl" style="margin-top:1.3rem">Als aktuelles Vial in den Bogen übernehmen</label>
-    <p class="hint" style="margin:.1rem 0 .6rem">Schreibt Vial-Inhalt und Wasservolumen von oben in die Karte <strong>Aktuelle Vials</strong> des Bogens und speichert sie — die Tageseinträge der Substanz laufen dann in ml und werden über diese Konzentration umgerechnet.</p>
+    <p class="hint" style="margin:.1rem 0 .6rem">Schreibt Vial-Inhalt und Wasservolumen von oben in die Karte <strong>Aktuelle Vials</strong> des Bogens und speichert sie — die Tageseinträge der Substanz laufen dann in I.E. und werden über diese Konzentration in mg umgerechnet.</p>
     <div class="btnrow" style="grid-template-columns:repeat(3,1fr);gap:.3rem;margin:0">
       <button class="btn ghost" data-vialziel="glow" style="font-size:.82rem;padding:.5rem .3rem">GLOW</button>
       <button class="btn ghost" data-vialziel="kiss" style="font-size:.82rem;padding:.5rem .3rem">Kisspeptin</button>

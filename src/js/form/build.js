@@ -59,13 +59,21 @@ export function vialKonz(k) {
 const modus = {};
 
 const rund3 = (v) => Math.round(v * 1000) / 1000;
+const rund1 = (v) => Math.round(v * 10) / 10;
+
+/* Eingetragen wird, was an der Spritze abgelesen wird: Insulineinheiten.
+   Gerechnet und gespeichert wird in ml — auf einer U-100-Spritze sind
+   100 I.E. genau ein Milliliter. */
+const IE_PRO_ML = 100;
 
 /** ml einer Zelle in die Substanz-Einheit umrechnen (µg-Substanzen ×1000). */
 const mlZuMenge = (ml, x, konz) => rund3(ml * konz * (x.u === 'µg' ? 1000 : 1));
 const mengeZuMl = (menge, x, konz) => rund3(menge / (x.u === 'µg' ? 1000 : 1) / konz);
+const ieZuMenge = (ie, x, konz) => mlZuMenge(ie / IE_PRO_ML, x, konz);
+const mengeZuIE = (menge, x, konz) => rund1(mengeZuMl(menge, x, konz) * IE_PRO_ML);
 
 /** Raster auslesen. `tage` traegt immer die Wirkstoffmenge in der Einheit der
-    Substanz; `tageMl` die ml-Rohwerte der Spalten im ml-Modus. */
+    Substanz; `tageMl` die ml-Werte der Spalten im I.E.-Modus. */
 export function readExpo() {
   const start = weekDays(state.weekKey)[0];
   const tage = { start };
@@ -80,8 +88,8 @@ export function readExpo() {
       const v = document.getElementById(zellId(x.k, i)).value.trim();
       if (Number(v) > 0) leer = false;
       if (!(konz > 0)) { tageMl[x.k].push(''); return v; }
-      tageMl[x.k].push(v);
-      return Number(v) > 0 ? String(mlZuMenge(Number(v), x, konz)) : '';
+      tageMl[x.k].push(Number(v) > 0 ? String(rund3(Number(v) / IE_PRO_ML)) : '');
+      return Number(v) > 0 ? String(ieZuMenge(Number(v), x, konz)) : '';
     });
   });
   return { tage, tageMl, hatMl, leer };
@@ -157,7 +165,7 @@ function renderMengen() {
       const span = document.getElementById(`c${x.k}${i}`);
       if (!span) return;
       const v = Number(document.getElementById(zellId(x.k, i)).value);
-      span.textContent = konz > 0 && v > 0 ? `= ${mengeText(mlZuMenge(v, x, konz), x.u)}` : '';
+      span.textContent = konz > 0 && v > 0 ? `= ${mengeText(ieZuMenge(v, x, konz), x.u)}` : '';
     });
   });
 }
@@ -205,7 +213,7 @@ export function buildExpo() {
   EXPO.forEach((x) => { modus[x.k] = vialKonz(x.k); });
   const tage = weekDays(state.weekKey);
   const heute = iso(new Date());
-  const einheit = (x) => (modus[x.k] > 0 ? 'ml' : x.u);
+  const einheit = (x) => (modus[x.k] > 0 ? 'I.E.' : x.u);
   /* Die Einheit darf nicht in die Grossschreibung der Kopfzeile geraten —
      aus "µg" wuerde sonst optisch "MG", und das ist der Faktor tausend. */
   let html = '<thead><tr><th>Tag</th>' + EXPO.map((x) =>
@@ -220,7 +228,7 @@ export function buildExpo() {
       `<td class="tag">${wd} ${d.slice(8, 10)}.${d.slice(5, 7)}.</td>` +
       EXPO.map((x) =>
         `<td><input type="number" id="${zellId(x.k, i)}" min="0" ` +
-        `step="${modus[x.k] > 0 ? 0.01 : x.step}" inputmode="decimal" ` +
+        `step="${modus[x.k] > 0 ? 0.5 : x.step}" inputmode="decimal" ` +
         `aria-label="${x.n} (${einheit(x)}) am ${wd} ${d}">` +
         `<span class="xcalc" id="c${x.k}${i}"></span></td>`).join('') +
       ZUFUHR.map((x, j) =>
@@ -386,15 +394,15 @@ export function refreshExpoUnits() {
         const el = document.getElementById(zellId(x.k, i));
         const v = Number(el.value);
         if (!(v > 0)) return;
-        el.value = neu > 0 ? String(mengeZuMl(v, x, neu)) : String(mlZuMenge(v, x, alt));
+        el.value = neu > 0 ? String(mengeZuIE(v, x, neu)) : String(ieZuMenge(v, x, alt));
       });
     }
     modus[x.k] = neu;
-    const u = neu > 0 ? 'ml' : x.u;
+    const u = neu > 0 ? 'I.E.' : x.u;
     const th = document.getElementById(`xh${x.k}`);
     if (th) th.innerHTML = `${x.n} <span style="text-transform:none;letter-spacing:0">(${u})</span>`;
     IDX.forEach((i) => {
-      document.getElementById(zellId(x.k, i)).step = neu > 0 ? 0.01 : x.step;
+      document.getElementById(zellId(x.k, i)).step = neu > 0 ? 0.5 : x.step;
     });
   });
   expoChanged();
@@ -465,8 +473,11 @@ export function fuelleExpo(dose) {
         d.setDate(d.getDate() + i);
         let wert = v;
         if (konz > 0) {
+          /* Gespeichert sind ml; im Feld stehen Einheiten. */
           const ml = tageMl && tageMl[x.k] && tageMl[x.k][i];
-          wert = ml || (Number(v) > 0 ? String(mengeZuMl(Number(v), x, konz)) : '');
+          wert = Number(ml) > 0
+            ? String(rund1(Number(ml) * IE_PRO_ML))
+            : (Number(v) > 0 ? String(mengeZuIE(Number(v), x, konz)) : '');
         }
         map[`${x.k}|${iso(d)}`] = wert;
       });

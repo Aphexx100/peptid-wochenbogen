@@ -269,8 +269,8 @@ async function laufe(browser, url, label, mitModulTest) {
     /GLOW-Vial übernommen/.test(await seite.locator('#rcUebInfo').innerText()));
   await seite.click('#tab-bogen');
   pruefe('Vial-Karte zeigt die Konzentration', /23,33 mg\/ml/.test(await seite.locator('#vKonzglow').innerText()));
-  pruefe('GLOW-Spalte läuft jetzt in ml', /\(ml\)/.test(await seite.locator('#xhglow').innerText()));
-  pruefe('mg-Eintrag wurde in ml umgerechnet', (await seite.inputValue('#xglow0')) === '0.12');
+  pruefe('GLOW-Spalte läuft jetzt in I.E.', /\(I\.E\.\)/.test(await seite.locator('#xhglow').innerText()));
+  pruefe('mg-Eintrag wurde in I.E. umgerechnet', (await seite.inputValue('#xglow0')) === '12');
   pruefe('Wirkstoffmenge wird je Zelle ausgewiesen', /= 2,8 mg/.test(await seite.locator('#cglow0').innerText()));
   const sumMl = await seite.locator('#expoSum').innerText();
   pruefe('Wochensumme bleibt in mg', /GLOW: 7 Injektionstage à 2,8 mg/.test(sumMl), sumMl.slice(0, 90));
@@ -279,7 +279,7 @@ async function laufe(browser, url, label, mitModulTest) {
   await seite.waitForTimeout(500);
   await seite.reload({ waitUntil: 'networkidle' });
   await seite.waitForTimeout(500);
-  pruefe('ml-Eintrag überlebt das Neuladen', (await seite.inputValue('#xglow0')) === '0.12');
+  pruefe('I.E.-Eintrag überlebt das Neuladen', (await seite.inputValue('#xglow0')) === '12');
   pruefe('Vial überlebt das Neuladen', (await seite.inputValue('#vMgglow')) === '70');
 
   /* Auswertung */

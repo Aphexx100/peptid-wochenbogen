@@ -7,7 +7,7 @@ Sprachmodell einordnen lassen.
 Der Bogen läuft in zwei Takten. **Täglich** erfasst er die Exposition (GLOW-Stack,
 Kisspeptin, PT-141, Tirzepatid aus dem Pen), die Zufuhr (Kreatin, Protein, Alkohol), je Tag
 eine Notiz zu den Einstichstellen, Schlaf und Training vom Vortag sowie den WHO-5. Wer im Rekonstitutionsrechner sein aktuelles Vial hinterlegt,
-trägt die Dosis als aufgezogenes **Volumen in ml** ein und der Bogen rechnet die
+trägt die Dosis als **aufgezogene Einheiten (I.E.)** ein und der Bogen rechnet die
 Wirkstoffmenge selbst aus.
 Oben im Bogen zeigt eine Grafik die Tagesmengen je Wirkstoff in mg — als Woche mit
 Blättern in frühere Wochen, als eigener Zeitraum oder als gesamter Verlauf.
