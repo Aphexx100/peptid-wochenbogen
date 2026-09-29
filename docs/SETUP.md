@@ -119,6 +119,17 @@ Schlüssel hat `peptid-daten` nicht in seiner Repository-Auswahl.
 
 **„kein Schreibrecht"** — dem Schlüssel fehlt `Contents: Read and write`.
 
+**„Zugriffsschlüssel ungültig, abgelaufen oder zurückgezogen (GitHub 401)"** — neuen Token
+erzeugen (Schritt 3) und im Setup eintragen. Der alte Wert lässt sich nicht wiederherstellen.
+
+**„Noch leer: …"** — die Felder sind wirklich leer. Der graue Text darin ist ein Platzhalter,
+kein Wert. Häufigste Ursache: der Browser hat den Speicher dieser Website geräumt — durch
+gelöschte Browserdaten oder, auf iPhone und iPad, automatisch nach etwa sieben Tagen ohne
+Besuch (WebKit räumt dort den Speicher selten besuchter Seiten). Die Wochen im Repository
+bleiben davon unberührt; nach dem erneuten Eintragen von Benutzer, Repository und einem
+**neuen** Token sind sie wieder da. Wer die Seite selten öffnet, legt sie sich auf iOS besser
+über *Teilen → Zum Home-Bildschirm* ab: eine so installierte Seite behält ihren Speicher.
+
 **„Lokal gespeichert, GitHub-Repository nicht erreicht"** — die Woche ist im Browser
 sicher. Ursache beheben (meist ein abgelaufener Schlüssel), dann speichert der nächste
 Klick auf *Woche speichern* sie hoch.
