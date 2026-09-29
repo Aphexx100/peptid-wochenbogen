@@ -48,7 +48,7 @@ label.fl{display:block;font-family:"IBM Plex Mono",ui-monospace,monospace;font-s
   letter-spacing:.11em;text-transform:uppercase;color:var(--muted);margin:0 0 .35rem}
 .field{margin-bottom:.95rem}
 .field:last-child{margin-bottom:0}
-input[type="text"],input[type="number"],input[type="date"],textarea,select{
+input[type="text"],input[type="number"],input[type="date"],input[type="password"],textarea,select{
   width:100%;font-family:Archivo,sans-serif;font-size:.95rem;padding:.6rem .7rem;
   border:1px solid var(--border);border-radius:5px;background:var(--surface-2);color:var(--ink);min-height:2.8rem}
 textarea{min-height:5.5rem;resize:vertical;line-height:1.5}
@@ -270,3 +270,10 @@ tbody tr:last-child td{border-bottom:none}
   border-radius:50%;background:var(--good)}
 .tagwahl button[aria-pressed="true"][data-erfasst="1"]::after{background:var(--on-accent)}
 #whoLoeschen[hidden]{display:none}
+
+/* Schluesselfelder: Anzeigen-Schalter daneben, damit sichtbar ist, ob der
+   eingefuegte Wert wirklich im Feld steht. */
+.geheim{display:flex;gap:.4rem;align-items:stretch}
+.geheim input{flex:1}
+.geheim .btn.small{flex:none;min-height:auto;padding:.4rem .7rem;font-size:.78rem}
+.geheim .btn[aria-pressed="true"]{background:var(--accent);color:var(--on-accent)}

@@ -319,6 +319,23 @@ async function laufe(browser, url, label, mitModulTest) {
   pruefe('Offline-Hinweis erklärt verlorene Zugangsdaten',
     /Zugangsdaten aus diesem Browser verschwunden/.test(await seite.locator('#offline').innerText()));
   pruefe('Anthropic-Schlüsselfeld vorhanden', (await seite.locator('#anKey').count()) === 1);
+  /* Schlüsselfeld: leer heißt leer, und der eingefügte Wert wird nachgewiesen. */
+  pruefe('Leeres Schlüsselfeld sagt, dass es leer ist',
+    /leer — der graue Text/.test(await seite.locator('#ghTokenInfo').innerText()));
+  await seite.fill('#ghToken', 'github_pat_11ABCDEFG0123456789');
+  pruefe('Gefülltes Schlüsselfeld weist Länge und Anfang nach',
+    /30 Zeichen, beginnt mit „github_pat_…“/.test(await seite.locator('#ghTokenInfo').innerText()),
+    await seite.locator('#ghTokenInfo').innerText());
+  await seite.fill('#ghToken', 'ghp_altesFormat');
+  pruefe('Falsches Schlüsselformat wird benannt',
+    /erwartet wird ein Schlüssel, der mit „github_pat_“ beginnt/.test(await seite.locator('#ghTokenInfo').innerText()));
+  pruefe('Schlüssel bleibt zunächst verdeckt', (await seite.locator('#ghToken').getAttribute('type')) === 'password');
+  await seite.click('#ghTokenZeigen');
+  pruefe('Anzeigen macht den Schlüssel lesbar',
+    (await seite.locator('#ghToken').getAttribute('type')) === 'text'
+    && (await seite.locator('#ghTokenZeigen').innerText()) === 'verbergen');
+  await seite.click('#ghTokenZeigen');
+  await seite.fill('#ghToken', '');
 
   /* CSV — in der Einzeldatei sind die Module nicht mehr einzeln erreichbar,
      deshalb dort ueber den Export-Knopf statt ueber einen Modulimport. */

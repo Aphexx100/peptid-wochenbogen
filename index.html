@@ -484,7 +484,12 @@
     </div>
     <div class="field">
       <label class="fl" for="ghToken">Zugriffsschlüssel (fine-grained, Contents: Read and write)</label>
-      <input type="password" id="ghToken" autocomplete="off" spellcheck="false" placeholder="github_pat_…">
+      <div class="geheim">
+        <input type="password" id="ghToken" autocomplete="off" spellcheck="false" autocapitalize="off"
+               autocorrect="off" inputmode="text" placeholder="github_pat_…">
+        <button type="button" class="btn ghost small" id="ghTokenZeigen" aria-pressed="false">anzeigen</button>
+      </div>
+      <p class="gatehint" id="ghTokenInfo"></p>
     </div>
     <p class="hint">Der Schlüssel bleibt in diesem Browser und geht nur an api.github.com. Er steht nicht im Repository. Auf einem zweiten Gerät trägst du ihn einmal neu ein.</p>
     <div class="btnrow two">
@@ -500,7 +505,12 @@
     <p class="hint">Läuft der Bogen als Webseite statt als Claude-Artifact, gibt es keine eingebaute Analysefunktion. Mit einem eigenen Anthropic-Schlüssel spricht die Seite direkt mit der API — dieselben Auswertungsregeln, abgerechnet über dein API-Konto.</p>
     <div class="field">
       <label class="fl" for="anKey">Anthropic API-Schlüssel</label>
-      <input type="password" id="anKey" autocomplete="off" spellcheck="false" placeholder="sk-ant-…">
+      <div class="geheim">
+        <input type="password" id="anKey" autocomplete="off" spellcheck="false" autocapitalize="off"
+               autocorrect="off" inputmode="text" placeholder="sk-ant-…">
+        <button type="button" class="btn ghost small" id="anKeyZeigen" aria-pressed="false">anzeigen</button>
+      </div>
+      <p class="gatehint" id="anKeyInfo"></p>
     </div>
     <div class="field">
       <label class="fl" for="anModel">Modell</label>

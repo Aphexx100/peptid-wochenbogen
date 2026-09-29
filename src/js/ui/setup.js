@@ -23,6 +23,33 @@ export function renderStoreState() {
   el.className = `saveinfo ${st.ok ? 'ok' : ''}`;
 }
 
+/* Schluesselfeld: Anzeigen-Schalter und eine Zeile, die sagt, was im Feld
+   steht. Ein Passwortfeld zeigt nur Punkte — bleibt der Platzhalter grau
+   stehen, ist das Einfuegen fehlgeschlagen, und genau das war ohne diese
+   Zeile nicht zu unterscheiden. */
+function geheimfeld(feldId, schalterId, infoId, erwartet) {
+  const feld = $(feldId);
+  const schalter = $(schalterId);
+  const info = $(infoId);
+  const zeigeInfo = () => {
+    const v = feld.value.trim();
+    if (!v) {
+      info.textContent = 'leer — der graue Text im Feld ist nur ein Platzhalter.';
+      return;
+    }
+    info.textContent = `${v.length} Zeichen, beginnt mit „${v.slice(0, 11)}…“` +
+      (v.startsWith(erwartet) ? '' : ` — erwartet wird ein Schlüssel, der mit „${erwartet}“ beginnt.`);
+  };
+  schalter.addEventListener('click', () => {
+    const offen = feld.type === 'password';
+    feld.type = offen ? 'text' : 'password';
+    schalter.setAttribute('aria-pressed', offen ? 'true' : 'false');
+    schalter.textContent = offen ? 'verbergen' : 'anzeigen';
+  });
+  ['input', 'change', 'paste'].forEach((ev) => feld.addEventListener(ev, () => setTimeout(zeigeInfo, 0)));
+  zeigeInfo();
+}
+
 export function initSetupUi() {
   const s = settings();
 
@@ -35,6 +62,8 @@ export function initSetupUi() {
   $('anKey').value = s.anthropic.key;
   $('anModel').value = s.anthropic.model;
   renderStoreState();
+  geheimfeld('ghToken', 'ghTokenZeigen', 'ghTokenInfo', 'github_pat_');
+  geheimfeld('anKey', 'anKeyZeigen', 'anKeyInfo', 'sk-ant-');
 
   const lesenGh = () => ({
     owner: $('ghOwner').value.trim(),
