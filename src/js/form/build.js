@@ -164,6 +164,10 @@ function glowInjTage() {
 
 const komma = (v) => String(v).replace('.', ',');
 
+/** Supplemente mit eigener Wochenform (Summe bzw. Mittel) statt der
+    allgemeinen "n Tage à x". */
+const SUPP_WOCHE = ['kreatin', 'protein'];
+
 function renderExpoSummary() {
   const el = $('expoSum');
   const { tage, leer } = readExpo();
@@ -177,7 +181,9 @@ function renderExpoSummary() {
     return;
   }
   const a = ableiten(tage);
-  const teil = stoffe().map((x) => {
+  /* Kreatin und Protein stehen mit ihrer eigenen Wochenform in zufuhrText()
+     und wuerden hier sonst ein zweites Mal auftauchen. */
+  const teil = stoffe().filter((x) => SUPP_WOCHE.indexOf(x.k) < 0).map((x) => {
     if (x.k === 'tirz') return `Tirzepatid: ${a.tirz ? `${komma(a.tirz)} mg diese Woche` : '—'}`;
     const e = a.extra[x.k];
     if (e) {
@@ -193,8 +199,9 @@ function renderExpoSummary() {
 
 function zufuhrText() {
   const z = ableitenZufuhr(readZufuhr().tage);
-  return `<b>Zufuhr:</b> Kreatin ${z.kreatin ? `${komma(z.kreatin)} g an ${z.kreatinTage} Tag${z.kreatinTage > 1 ? 'en' : ''}` : '—'} · ` +
-    `Protein Ø ${z.protein ? `${komma(z.protein)} g/Tag` : '—'} · ` +
+  const sp = ableitenSupp(readExpo().tage);
+  return `<b>Zufuhr:</b> Kreatin ${sp.kreatin ? `${komma(sp.kreatin)} g an ${sp.kreatinTage} Tag${sp.kreatinTage > 1 ? 'en' : ''}` : '—'} · ` +
+    `Protein Ø ${sp.protein ? `${komma(sp.protein)} g/Tag` : '—'} · ` +
     `Alkohol ${z.alk ? `${komma(z.alk)} l` : '—'}`;
 }
 
@@ -308,12 +315,11 @@ export function buildExpo() {
   expoChanged();
 }
 
-/* ---- Taegliche Zufuhr (Kreatin, Protein, Alkohol) ----
-   Gespeichert als dose.zufuhr = {start, kreatin[7], protein[7], alk[7]} und
-   unabhaengig von den Injektionen, damit auch eine Woche ohne Injektion ihre
-   Zufuhr behaelt. Die Wochenwerte fuer Protein (Tagesmittel) und Alkohol
-   (Summe) landen weiter in conf.protein/conf.alk, wo Auswertung, CSV und
-   Datenblock sie seit jeher lesen. */
+/* ---- Alkohol ----
+   Gespeichert als dose.zufuhr = {start, alk[7]}; der Wochenwert (Summe)
+   landet weiter in conf.alk, wo Auswertung, CSV und Datenblock ihn seit
+   jeher lesen. Kreatin und Protein stehen seit 2026-10 als Supplemente im
+   Substanzraster; ihre Wochenwerte entstehen in ableitenSupp(). */
 
 export function readZufuhr() {
   const tage = { start: weekDays(state.weekKey)[0] };
@@ -328,24 +334,31 @@ export function readZufuhr() {
   return { tage, leer };
 }
 
+const zahlen = (reihe) => (reihe || []).filter((v) => v !== '' && v !== undefined).map(Number);
+const summe = (a) => (a.length ? String(+a.reduce((x, y) => x + y, 0).toFixed(1)) : '');
+
 export function ableitenZufuhr(tage) {
-  const wert = (k) => (tage[k] || []).filter((v) => v !== '' && v !== undefined).map(Number);
-  const summe = (a) => (a.length ? String(+a.reduce((x, y) => x + y, 0).toFixed(1)) : '');
-  const kreatin = wert('kreatin').filter((v) => v > 0);
-  const protein = wert('protein');
+  return { alk: summe(zahlen(tage.alk)) };
+}
+
+/** Wochenwerte der Supplemente aus dem Substanzraster: Kreatin als Summe
+    mit der Zahl der Tage, Protein als Tagesmittel — dieselbe Form, in der
+    Auswertung, CSV und Datenblock sie seit jeher lesen. */
+export function ableitenSupp(tage) {
+  const kreatin = zahlen(tage.kreatin).filter((v) => v > 0);
+  const protein = zahlen(tage.protein);
   return {
     kreatin: summe(kreatin),
     kreatinTage: kreatin.length,
-    protein: protein.length ? String(Math.round(protein.reduce((x, y) => x + y, 0) / protein.length)) : '',
-    alk: summe(wert('alk'))
+    protein: protein.length ? String(Math.round(protein.reduce((x, y) => x + y, 0) / protein.length)) : ''
   };
 }
 
-/** Zufuhrspalten fuellen. Wochen aus der Zeit, als Protein und Alkohol in
-    02b standen, tragen sie dort mit Vortagsbezug: der Wert in Zeile i gilt
-    fuer Tag i-1. Er wird deshalb eine Zeile hoeher eingetragen. Der Wert
-    der ersten Zeile gehoert zum letzten Tag der Vorwoche und bleibt dort
-    unberuehrt im gespeicherten Objekt (conf.vortagAlt), statt verloren zu gehen. */
+/** Alkoholspalte fuellen. Wochen aus der Zeit, als Alkohol in 02b stand,
+    tragen ihn dort mit Vortagsbezug: der Wert in Zeile i gilt fuer Tag i-1.
+    Er wird deshalb eine Zeile hoeher eingetragen. Der Wert der ersten Zeile
+    gehoert zum letzten Tag der Vorwoche und bleibt dort unberuehrt im
+    gespeicherten Objekt (conf.vortagAlt), statt verloren zu gehen. */
 export function fuelleZufuhr(dose, conf) {
   const dates = weekDays(state.weekKey);
   const map = {};
@@ -357,8 +370,8 @@ export function fuelleZufuhr(dose, conf) {
       d.setDate(d.getDate() + i);
       map[`${x.k}|${iso(d)}`] = v;
     }));
-  } else if (alt && alt.start && (alt.protein || alt.alk)) {
-    ['protein', 'alk'].forEach((k) => (alt[k] || []).forEach((v, i) => {
+  } else if (alt && alt.start && alt.alk) {
+    ['alk'].forEach((k) => (alt[k] || []).forEach((v, i) => {
       if (v === '' || v === undefined) return;
       const d = new Date(`${alt.start}T12:00:00`);
       d.setDate(d.getDate() + i - 1);
@@ -513,14 +526,41 @@ export function buildVials() {
   renderVialKonz();
 }
 
+/* Alte Ablageorte von Kreatin und Protein, aelteste zuerst — ein spaeterer
+   Fund ueberschreibt den frueheren, und das Raster selbst schlaegt alles. */
+function suppAltbestand(dose, conf, map) {
+  const alt = conf && conf.tage;
+  if (alt && alt.start && alt.protein) {
+    alt.protein.forEach((v, i) => {
+      if (v === '' || v === undefined) return;
+      const d = new Date(`${alt.start}T12:00:00`);
+      d.setDate(d.getDate() + i - 1);
+      map[`protein|${iso(d)}`] = v;
+    });
+  }
+  const z = dose && dose.zufuhr;
+  if (z && z.start) {
+    SUPP_WOCHE.forEach((k) => (z[k] || []).forEach((v, i) => {
+      if (v === '' || v === undefined) return;
+      const d = new Date(`${z.start}T12:00:00`);
+      d.setDate(d.getDate() + i);
+      map[`${k}|${iso(d)}`] = v;
+    }));
+  }
+}
+
 /** Raster aus einem gespeicherten Eintrag fuellen; `dose` darf fehlen.
     Spalten im ml-Modus bekommen die ml-Rohwerte (oder rechnen die
     Wirkstoffmenge zurueck), die uebrigen die Wirkstoffmenge direkt.
     Zugeordnet wird ueber das Kalenderdatum, damit ein spaeter geaenderter
     Erfassungstag die Werte nicht in falsche Zeilen schiebt. */
-export function fuelleExpo(dose) {
+export function fuelleExpo(dose, conf) {
   const dates = weekDays(state.weekKey);
   const map = {};
+  /* Kreatin und Protein standen bis 2026-10 unter dose.zufuhr, Protein davor
+     mit Vortagsbezug unter conf.tage. Beide Altbestaende werden hier
+     eingelesen; beim naechsten Speichern stehen sie im Raster. */
+  suppAltbestand(dose, conf, map);
   const tage = dose && dose.tage;
   const tageMl = dose && dose.tageMl;
   if (tage && tage.start) {

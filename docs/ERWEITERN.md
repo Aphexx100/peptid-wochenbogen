@@ -59,6 +59,11 @@ Umgekehrt, eine Frage **wöchentlich** machen: Karte bekommt `weekly`, und ihr S
 kommt in `WOCHEN_FELDER` in `src/js/form/model.js` — sonst schreibt das tägliche Speichern
 ihre Vorgabewerte mit.
 
+Der ausführliche Fragebogen gilt immer für **einen** Tag. Welcher das ist, sagt die
+Tagesleiste unter seinem Knopf; `fragebogenTag()` in `src/js/ui/weekly.js` liefert ihn,
+und `readForm()` schreibt ihn als `bogenTag` in den Eintrag. Wer eine Frage ergänzt, die
+sich auf diesen Tag bezieht, liest ihn von dort — nicht vom heutigen Datum.
+
 ## Eine Notizspalte im Tagesraster ergänzen
 
 Eine Zeile in `EXPO_TEXT` in `src/js/schema.js` (`k`, `n`, `kurz` für den Spaltenkopf,
@@ -77,6 +82,12 @@ der Knopf *Stoff hinzufügen*: Name, Erfassung (Vial, mg, µg, g, l) und Einstuf
 im Formular auf; Vial-Inhalt und Wasservolumen werden mitgespeichert, die Spalte läuft
 dann in I.E. Das Kreuz im Spaltenkopf entfernt eine Spalte wieder — zweimal klicken, der
 erste Klick fragt nach.
+
+Kreatin und Protein stehen seit 2026-10 als eingebaute **Supplemente** in derselben
+Liste; ihre Wochenwerte (Kreatin als Summe, Protein als Tagesmittel) entstehen in
+`ableitenSupp()` und behalten ihre gewohnten Felder `dose.kreatin` und `conf.protein`.
+Alkohol bleibt eine eigene Spalte (`ZUFUHR`), weil er kein Stoff des Protokolls ist,
+sondern ein Confounder.
 
 Selbst angelegte Stoffe liegen in `cfg.stoffe` und werden mit der Konfiguration
 gespeichert, sind also auf jedem Gerät an derselben Ablage da. Ihre Wochenwerte stehen
@@ -200,7 +211,7 @@ grep -n '#[0-9a-fA-F]\{3,6\}' src/css/app.css   # muss leer bleiben
 ## Nach jeder Änderung
 
 ```bash
-npm run check     # baut die Einzeldatei und fährt beide Fassungen durch 266 Prüfungen
+npm run check     # baut die Einzeldatei und fährt beide Fassungen durch 286 Prüfungen
 ```
 
 Der Rauchtest startet einen echten Browser, füllt den Bogen aus, speichert, lädt neu und

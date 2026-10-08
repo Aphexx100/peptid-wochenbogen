@@ -75,6 +75,11 @@ das tägliche Speichern für sie den zuletzt gespeicherten Stand der Woche
 (`behalteWochenfragen()` in `form/model.js`) — ihre Regler stehen dann auf Vorgabewerten,
 die sonst wie Antworten aussähen.
 
+Der ausführliche Fragebogen trägt den Tag, für den er gilt (`bogenTag`), nicht den Tag,
+an dem gespeichert wurde. Deshalb lässt er sich nachtragen: die Tagesleiste unter seinem
+Knopf wählt den Tag, `fragebogenTag()` in `ui/weekly.js` ist die eine Stelle, die ihn
+kennt.
+
 Der Schnitt hat einen Grund: Was nur der Tag weiß — eine Injektion, drei Stunden Schlaf,
 zwei Bier — ist am Samstag nicht mehr rekonstruierbar, sondern geraten. Was die Woche
 beurteilt — Hautbild, Gelenke, Kernbereiche — wird schlechter, wenn man es am Mittwoch
@@ -89,6 +94,11 @@ Welche Spalten das Tagesraster zeigt, entscheidet `substanzen.js`: die eingebaut
 `schema.js` und die selbst angelegten aus `cfg.stoffe`. Ein neuer Stoff ist damit eine
 Eingabe und keine Programmänderung — er entsteht im Bogen selbst, wird mit der
 Konfiguration gespeichert und ist auf jedem Gerät an derselben Ablage da.
+
+Kreatin und Protein sind dort eingebaute Supplemente: erfasst wie jede andere Spalte,
+aber mit ihrer gewohnten Wochenform (Summe bzw. Tagesmittel) und außerhalb der Grafik.
+Alkohol steht daneben als eigene Spalte, weil er kein Stoff des Protokolls ist, sondern
+ein Confounder.
 
 Zwei Angaben steuern alles Weitere. Die Einheit `u` bestimmt, worin gerechnet wird; mit
 `vial` wird eingetragen, was an der Spritze abgelesen wird (I.E.), und über die

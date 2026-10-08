@@ -62,7 +62,10 @@ async function laufe(browser, url, label, mitModulTest) {
   pruefe('Segmentfragen aufgebaut', segmente >= 60, `${segmente} gefunden`);
   pruefe('Kraftfelder aufgebaut', (await seite.locator('#kw0').count()) === 1);
   const expoZellen = await seite.locator('#s-expo input[type="number"]').count();
-  pruefe('Tagesraster: 7 Tage × 5 Substanzen + 3 Zufuhrspalten', expoZellen === 56, `${expoZellen} Zellen`);
+  pruefe('Tagesraster: 7 Tage × 7 Substanzen + Alkohol', expoZellen === 56, `${expoZellen} Zellen`);
+  pruefe('Kreatin und Protein stehen bei den Substanzen',
+    (await seite.locator('#xkreatin0').count()) === 1 && (await seite.locator('#xprotein0').count()) === 1
+    && (await seite.locator('#zkreatin0, #zprotein0').count()) === 0);
   pruefe('Wochengrafik leer mit Hinweis', (await seite.locator('#wochenGraph svg').count()) === 0
     && /Noch keine Injektion/.test(await seite.locator('#wochenGraphLeer').innerText()));
   const notizZellen = await seite.locator('#s-expo input[type="text"]').count();
@@ -95,15 +98,23 @@ async function laufe(browser, url, label, mitModulTest) {
   pruefe('WHO-5 täglich offen, IIEF-5 ist Wochenfrage',
     (await seite.locator('#s-who').isVisible()) && (await seite.locator('#s-iief').isHidden()));
   const bar = await seite.locator('#gateBar').innerText();
-  pruefe('Knopf erstellt den Fragebogen für heute',
-    /Ausführlichen Fragebogen für heute erstellen/.test(bar) && /ohne Fragebogen/.test(bar)
+  pruefe('Knopf erstellt den Fragebogen',
+    /Ausführlichen Fragebogen erstellen/.test(bar) && /ohne Fragebogen/.test(bar)
     && /Fragebogen offen/.test(await seite.locator('#statusrow').innerText()), bar);
   await seite.click('#gateOpen');
   pruefe('Knopf öffnet den Fragebogen', await seite.locator('#s-kern').isVisible());
+  /* Der Fragebogen gilt für genau einen Tag — vorgewählt heute, nachtragbar
+     über die Tagesleiste; künftige Tage bleiben gesperrt. */
+  pruefe('Tagesleiste zeigt heute vorgewählt', await seite.locator('#gateTag').isVisible()
+    && (await seite.locator('#gateTagwahl button[aria-pressed="true"]').innerText()) === 'Heute');
+  pruefe('Hinweis nennt den Tag des Fragebogens',
+    /Fragebogen für \d\d\.\d\d\.\d{4}/.test(await seite.locator('#gateBar').innerText()),
+    await seite.locator('#gateBar').innerText());
   pruefe('Knopf bietet danach das Ausblenden an',
     /Fragebogen ausblenden/.test(await seite.locator('#gateBar').innerText()));
   await seite.click('#gateOpen');
   pruefe('„Fragebogen ausblenden" schließt ihn wieder', await seite.locator('#s-kern').isHidden());
+  pruefe('Ohne Fragebogen keine Tagesleiste', await seite.locator('#gateTag').isHidden());
 
   await setzeTag(heuteWt);
   await seite.click('#gateOpen');
@@ -177,15 +188,20 @@ async function laufe(browser, url, label, mitModulTest) {
 
   /* Tägliche Zufuhr in der Exposition: Kreatin summiert, Protein gemittelt,
      Alkohol summiert in Litern. */
-  await seite.fill('#zkreatin0', '5');
-  await seite.fill('#zkreatin1', '5');
-  await seite.fill('#zprotein0', '180');
-  await seite.fill('#zprotein1', '160');
+  await seite.fill('#xkreatin0', '5');
+  await seite.fill('#xkreatin1', '5');
+  await seite.fill('#xprotein0', '180');
+  await seite.fill('#xprotein1', '160');
   await seite.fill('#zalk5', '2');
   const zs = await seite.locator('#expoSum').innerText();
   pruefe('Kreatin als Wochensumme mit Tagen', /Kreatin 10 g an 2 Tagen/.test(zs), zs);
   pruefe('Protein als Tagesmittel', /Protein Ø 170 g\/Tag/.test(zs), zs);
   pruefe('Alkohol zählt in Litern', /Alkohol 2 l/.test(zs), zs);
+  pruefe('Supplemente stehen nicht doppelt in der Zusammenfassung',
+    !/Kreatin: 2 Tage/.test(zs) && !/Protein: 2 Tage/.test(zs), zs);
+  pruefe('Supplemente bleiben aus der Grafik',
+    (await seite.locator('#wochenGraph path[data-serie="kreatin"]').count()) === 0
+    && (await seite.locator('#wochenGraph path[data-serie="protein"]').count()) === 0);
 
   /* Tagesraster: sieben GLOW-Tage eintragen, Zusammenfassung und
      Kupferhinweis rechnen mit; ein PT-141-Tag blendet die PT-Karte ein. */
@@ -199,7 +215,7 @@ async function laufe(browser, url, label, mitModulTest) {
   const wgGlow = await seite.locator('#wochenGraph path[data-serie="glow"]').count();
   const wgPunkte = await seite.locator('#wochenGraph circle.wg-punkt').count();
   pruefe('Wochengrafik zeichnet die GLOW-Linie mit sieben Punkten', wgGlow === 1 && wgPunkte === 7, `${wgLinien} Linien, ${wgPunkte} Punkte`);
-  pruefe('Wochengrafik hat Legende und Beschriftung', (await seite.locator('#wochenGraphLegende > span').count()) === 5
+  pruefe('Wochengrafik zeigt nur Wirkstoffe', (await seite.locator('#wochenGraphLegende > span').count()) === 5
     && /GLOW 2,8/.test(await seite.locator('#wochenGraph').innerText()));
   pruefe('Wochengrafik zeichnet Bezier-Kurven',
     /C/.test(await seite.locator('#wochenGraph path[data-serie="glow"]').getAttribute('d')));
@@ -235,6 +251,32 @@ async function laufe(browser, url, label, mitModulTest) {
   pruefe('Tageseintrag überlebt das Neuladen', (await seite.inputValue('#xglow0')) === '2.8');
   pruefe('IIEF-5 überlebt das Neuladen', (await seite.locator('#iiefScore').innerText()) === '20');
   pruefe('Schlaf-Tageswert überlebt das Neuladen', (await seite.inputValue('#tschlaf0')) === '7');
+  /* Nachtragen: der Fragebogen gilt für einen früheren Tag der Woche. */
+  const gestern = await seite.evaluate(() => {
+    const t = new Date();
+    t.setDate(t.getDate() - 1);
+    return `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, '0')}-${String(t.getDate()).padStart(2, '0')}`;
+  });
+  await seite.click('#gateTagwahl button[aria-pressed="false"]:not([disabled])');
+  pruefe('Anderer Tag lässt sich wählen',
+    /Fragebogen für /.test(await seite.locator('#gateBar').innerText())
+    && (await seite.locator('#gateTagwahl button[aria-pressed="true"]').innerText()) !== 'Heute',
+    await seite.locator('#gateBar').innerText());
+  await seite.click('#saveBtn');
+  await seite.waitForTimeout(500);
+  const nachgetragen = await seite.evaluate(() => {
+    const weeks = JSON.parse(localStorage.getItem('pwb.weeks.v1'));
+    return weeks[Object.keys(weeks).sort().pop()].bogenTag;
+  });
+  pruefe('Nachgetragener Tag wird gespeichert',
+    !!nachgetragen && nachgetragen < new Date().toISOString().slice(0, 10), String(nachgetragen));
+  const zurueck = await seite.locator('#gateTagwahl button').last();
+  if (!(await zurueck.isDisabled())) await zurueck.click();
+  await seite.click('#saveBtn');
+  await seite.waitForTimeout(500);
+  pruefe('Zurück auf den letzten Tag der Woche',
+    (await seite.locator('#gateTagwahl button[aria-pressed="true"]').count()) === 1, gestern);
+
   /* Eine Woche mit Fragebogen zeigt ihn nach dem Neuladen ohne Klick, samt
      Datum in der Statuszeile. */
   pruefe('Fragebogen bleibt nach dem Neuladen offen', await seite.locator('#s-kern').isVisible());
@@ -288,7 +330,7 @@ async function laufe(browser, url, label, mitModulTest) {
   /* Eigene Stoffe: im Bogen anlegen — mit Vial und ohne —, in der Grafik
      nur die Wirkstoffe, und wieder entfernen, ohne Werte zu verlieren. */
   pruefe('Jede Spalte hat ein Kreuz zum Entfernen',
-    (await seite.locator('#s-expo .spaltweg').count()) === 5);
+    (await seite.locator('#s-expo .spaltweg').count()) === 7);
   await seite.click('#stoffNeu');
   pruefe('Formular für neue Stoffe öffnet', await seite.locator('#stoffForm').isVisible());
   await seite.fill('#snName', 'Retatrutid');
@@ -538,6 +580,31 @@ async function laufe(browser, url, label, mitModulTest) {
     pruefe('Liter werden nicht zweimal halbiert', (await seite.inputValue('#zalk5')) === '2',
       await seite.inputValue('#zalk5'));
 
+    /* Kreatin und Protein lagen bis 2026-10 unter dose.zufuhr und gehören
+       seither ins Substanzraster. */
+    await seite.evaluate((k) => {
+      const weeks = JSON.parse(localStorage.getItem('pwb.weeks.v1'));
+      const e = weeks[k];
+      e.dose.zufuhr.kreatin = ['', '', '3', '', '', '', ''];
+      e.dose.zufuhr.protein = ['', '', '120', '', '', '', ''];
+      delete e.dose.tage.kreatin;
+      delete e.dose.tage.protein;
+      localStorage.setItem('pwb.weeks.v1', JSON.stringify(weeks));
+    }, key);
+    await seite.reload({ waitUntil: 'networkidle' });
+    await seite.waitForTimeout(500);
+    await seite.click('#tab-bogen');
+    pruefe('Alte Zufuhrwerte stehen im Substanzraster',
+      (await seite.inputValue('#xkreatin2')) === '3' && (await seite.inputValue('#xprotein2')) === '120');
+    await seite.click('#saveBtn');
+    await seite.waitForTimeout(500);
+    const umgehaengt = await seite.evaluate((k) =>
+      JSON.parse(localStorage.getItem('pwb.weeks.v1'))[k].dose, key);
+    pruefe('Umzug wird gespeichert, der alte Ort bleibt leer',
+      umgehaengt.tage.kreatin[2] === '3' && umgehaengt.tage.protein[2] === '120'
+      && !(umgehaengt.zufuhr && 'kreatin' in umgehaengt.zufuhr),
+      JSON.stringify(umgehaengt.zufuhr));
+
     /* Protein und Alkohol aus der Zeit, als sie in 02b mit Vortagsbezug
        standen: Zeile i meinte Tag i-1, landet also eine Zeile höher. Der
        Wert der ersten Zeile gehört zur Vorwoche und bleibt als Altbestand. */
@@ -545,6 +612,7 @@ async function laufe(browser, url, label, mitModulTest) {
       const weeks = JSON.parse(localStorage.getItem('pwb.weeks.v1'));
       const e = weeks[k];
       delete e.dose.zufuhr;
+      delete e.dose.tage.protein;
       e.conf.tage.protein = ['140', '150', '', '', '', '', ''];
       e.conf.tage.alk = ['', '', '', '1', '', '', ''];
       localStorage.setItem('pwb.weeks.v1', JSON.stringify(weeks));
@@ -552,13 +620,13 @@ async function laufe(browser, url, label, mitModulTest) {
     await seite.reload({ waitUntil: 'networkidle' });
     await seite.waitForTimeout(500);
     pruefe('Alte Vortagswerte rücken auf ihren Tag',
-      (await seite.inputValue('#zprotein0')) === '150' && (await seite.inputValue('#zalk2')) === '1'
+      (await seite.inputValue('#xprotein0')) === '150' && (await seite.inputValue('#zalk2')) === '1'
       && (await seite.inputValue('#zalk3')) === '');
     await seite.click('#saveBtn');
     await seite.waitForTimeout(500);
     const umgezogen = await seite.evaluate((k) => JSON.parse(localStorage.getItem('pwb.weeks.v1'))[k], key);
     pruefe('Umzug gespeichert, Vorwochenwert als Altbestand erhalten',
-      umgezogen.dose.zufuhr && umgezogen.dose.zufuhr.protein[0] === '150'
+      umgezogen.dose.tage && umgezogen.dose.tage.protein[0] === '150'
       && umgezogen.conf.vortagAlt && umgezogen.conf.vortagAlt.protein[0] === '140'
       && !('protein' in umgezogen.conf.tage), JSON.stringify(umgezogen.conf));
   }

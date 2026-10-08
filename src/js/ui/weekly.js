@@ -7,9 +7,16 @@
 
    Frueher war dieser Teil an den Erfassungstag gebunden. Das setzt voraus,
    dass an genau diesem Tag Zeit ist; ist sie es nicht, faellt die Woche aus.
-   Jetzt entscheidet der Knopf: "Ausführlichen Fragebogen für heute
-   erstellen". Ein unregelmaessig, aber ehrlich ausgefuellter Bogen ist mehr
-   wert als ein Pflichttermin, der ausfaellt.
+   Jetzt entscheidet der Knopf. Ein unregelmaessig, aber ehrlich
+   ausgefuellter Bogen ist mehr wert als ein Pflichttermin, der ausfaellt.
+
+   Der Fragebogen gilt immer fuer genau einen Tag, und welcher das ist,
+   waehlt die Tagesleiste unter dem Knopf. Vorgewaehlt ist heute; jeder
+   vergangene Tag der angezeigten Woche laesst sich nachtragen, kuenftige
+   sind gesperrt. Fuer eine fruehere Woche wird oben die Woche gewechselt.
+   Der gewaehlte Tag landet als `bogenTag` im Eintrag — er sagt, worauf sich
+   die Antworten beziehen, und ist deshalb nicht dasselbe wie der Tag, an
+   dem gespeichert wurde.
 
    Karten tragen dafuer die Klasse `weekly`. Sichtbar sind sie, sobald der
    Knopf geklickt wurde oder die angezeigte Woche schon einen Fragebogen
@@ -17,11 +24,17 @@
 
 import { state } from '../state.js';
 import { $ } from '../util/dom.js';
-import { iso } from '../util/date.js';
+import { iso, weekDays } from '../util/date.js';
 
 /* Von Hand geoeffnet — gilt nur fuer genau die Woche, fuer die geklickt
    wurde. Beim Wochenwechsel verfaellt die Oeffnung damit von selbst. */
 let manuellFuer = null;
+
+/* Von Hand gewaehlter Tag, ebenfalls nur fuer die Woche, fuer die er
+   gewaehlt wurde — sonst traegt ein Klick von heute den Fragebogen der
+   Vorwoche auf ein Datum, das gar nicht in ihr liegt. */
+let wahlFuer = null;
+let wahlTag = '';
 
 const manuell = () => manuellFuer !== null && manuellFuer === state.weekKey;
 
@@ -34,6 +47,50 @@ export function bogenTag() {
 export const wochenfragenOffen = () => manuell() || !!bogenTag();
 
 const kurz = (d) => `${d.slice(8, 10)}.${d.slice(5, 7)}.${d.slice(0, 4)}`;
+const WTAG = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
+const tagName = (d) => `${WTAG[new Date(`${d}T12:00:00`).getDay()]} ${d.slice(8, 10)}.${d.slice(5, 7)}.`;
+
+/** Letzter nicht kuenftiger Tag der angezeigten Woche — heute, wenn er in
+    ihr liegt, sonst ihr Abschlusstag. */
+function standardTag() {
+  const heute = iso(new Date());
+  const tage = weekDays(state.weekKey).filter((d) => d <= heute);
+  return tage[tage.length - 1] || weekDays(state.weekKey)[6];
+}
+
+/** Auf welchen Tag sich der Fragebogen bezieht: die Wahl des Nutzers, sonst
+    der gespeicherte Tag, sonst die Vorgabe. Liest auch model.js beim
+    Speichern. */
+export function fragebogenTag() {
+  if (wahlFuer === state.weekKey && wahlTag) return wahlTag;
+  return bogenTag() || standardTag();
+}
+
+/* Tagesleiste wie beim WHO-5: sieben Tage, kuenftige gesperrt, der
+   gewaehlte gedrueckt. */
+function renderTagwahl(offen) {
+  const host = $('gateTagwahl');
+  const block = $('gateTag');
+  block.hidden = !offen;
+  if (!offen) return;
+  const heute = iso(new Date());
+  const gewaehlt = fragebogenTag();
+  host.textContent = '';
+  weekDays(state.weekKey).forEach((d, i) => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.id = `gateTag${i}`;
+    b.textContent = d === heute ? 'Heute' : tagName(d).slice(0, 6);
+    b.disabled = d > heute;
+    b.setAttribute('aria-pressed', d === gewaehlt ? 'true' : 'false');
+    b.addEventListener('click', () => {
+      wahlFuer = state.weekKey;
+      wahlTag = d;
+      renderWeeklyGate();
+    });
+    host.appendChild(b);
+  });
+}
 
 export function renderWeeklyGate() {
   const offen = wochenfragenOffen();
@@ -50,17 +107,18 @@ export function renderWeeklyGate() {
   const bar = $('gateBar');
   bar.hidden = false;
   const tag = bogenTag();
-  const hinweis = tag
-    ? `Fragebogen vom ${kurz(tag)}`
-    : 'ohne Fragebogen — nur Tageswerte';
+  const hinweis = offen
+    ? `Fragebogen für ${kurz(fragebogenTag())}`
+    : (tag ? `Fragebogen vom ${kurz(tag)}` : 'ohne Fragebogen — nur Tageswerte');
   bar.innerHTML = `<span class="gatehint">${hinweis}</span>` +
     `<button class="btn ghost small" id="gateOpen" type="button">${
-      offen ? 'Fragebogen ausblenden' : 'Ausführlichen Fragebogen für heute erstellen'
+      offen ? 'Fragebogen ausblenden' : 'Ausführlichen Fragebogen erstellen'
     }</button>`;
   $('gateOpen').addEventListener('click', () => {
     manuellFuer = offen ? null : state.weekKey;
     renderWeeklyGate();
   });
+  renderTagwahl(offen);
 }
 
 /** Beim Tageswechsel ueber Mitternacht stimmt das Datum sonst nicht mehr. */

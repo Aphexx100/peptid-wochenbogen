@@ -15,17 +15,23 @@ export const EXPO = [
   {k:"kiss", n:"Kisspeptin", u:"µg", step:5,    ph:"100"},
   {k:"pt",   n:"PT-141",     u:"mg", step:0.25, ph:"1,75"},
   {k:"tirz", n:"Tirzepatid", u:"mg", step:0.5,  ph:"2,5", vial:false},
-  {k:"dhea", n:"DHEA",       u:"mg", step:5,    ph:"25", vial:false}
+  {k:"dhea", n:"DHEA",       u:"mg", step:5,    ph:"25", vial:false},
+  /* Supplemente stehen in derselben Liste und derselben Tabelle wie die
+     Wirkstoffe — erfasst wird beides gleich. `kat:"supp"` haelt sie nur aus
+     der Tagesmengen-Grafik heraus. */
+  {k:"kreatin", n:"Kreatin", u:"g", step:1, vial:false, kat:"supp"},
+  {k:"protein", n:"Protein", u:"g", step:5, vial:false, kat:"supp"}
 ];
-/* Taegliche Zufuhr, ebenfalls im Raster von Abschnitt 02. Anders als die
-   Confounder in 02b gilt hier die Zeile fuer den Tag selbst: Protein und
-   Alkohol von gestern gehoeren in die Zeile von gestern. Alkohol zaehlt seit
-   2026-10 in Litern (vorher in 0,5-l-Flaschen; alte Eintraege werden beim
-   Laden halbiert, siehe storage/migrate.js). Gespeichert unter dose.zufuhr. */
+/* Alkohol — kein Stoff, den man sich setzt, sondern ein Confounder, und
+   deshalb als eigene Spalte neben den Substanzen. Wie bei ihnen gilt die
+   Zeile fuer den Tag selbst: der Alkohol von gestern gehoert in die Zeile
+   von gestern. Gezaehlt wird seit 2026-10 in Litern (vorher in
+   0,5-l-Flaschen; alte Eintraege werden beim Laden halbiert, siehe
+   storage/migrate.js). Gespeichert unter dose.zufuhr.
+   Kreatin und Protein standen bis 2026-10 ebenfalls hier und sind als
+   Supplemente zu den Substanzen gewandert. */
 export const ZUFUHR = [
-  {k:"kreatin", n:"Kreatin", u:"g", step:1},
-  {k:"protein", n:"Protein", u:"g", step:5},
-  {k:"alk",     n:"Alkohol", u:"l", step:0.5}
+  {k:"alk", n:"Alkohol", u:"l", step:0.5}
 ];
 /* Freitextspalten des Tagesrasters in Abschnitt 02 — je Tag eine Notiz.
    Getrennt von EXPO, weil dort gerechnet wird und hier nur notiert. Das

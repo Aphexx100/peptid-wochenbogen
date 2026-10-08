@@ -5,9 +5,9 @@ und ohne Backend: erfassen, auswerten, exportieren, und auf Wunsch von einem
 Sprachmodell einordnen lassen.
 
 Der Bogen läuft in zwei Takten. **Täglich** erfasst er die Exposition (GLOW-Stack,
-Kisspeptin, PT-141, Tirzepatid aus dem Pen, DHEA als Kapsel), die Zufuhr (Kreatin,
-Protein in Gramm, Alkohol in Litern), je Tag eine Notiz zu den Einstichstellen, Schlaf
-und Training vom Vortag sowie den WHO-5. Wer im Rekonstitutionsrechner sein aktuelles
+Kisspeptin, PT-141, Tirzepatid aus dem Pen, DHEA als Kapsel), im selben Raster die
+Supplemente (Kreatin, Protein) und den Alkohol in Litern, je Tag eine Notiz zu den
+Einstichstellen, Schlaf und Training vom Vortag sowie den WHO-5. Wer im Rekonstitutionsrechner sein aktuelles
 Vial hinterlegt, trägt die Dosis als **aufgezogene Einheiten (I.E.)** ein und der Bogen
 rechnet die Wirkstoffmenge selbst aus.
 **Weitere Stoffe legst du im Bogen selbst an** — Name, Erfassung (Vial, mg, µg, g, l) und
@@ -23,8 +23,9 @@ WHO-5 wählt eine Tagesleiste den Tag.
 **Wann Zeit ist** kommt der ausführliche Fragebogen dazu: sechs Kernbereiche, die drei erwarteten
 GLOW-Wirkungen, Sexualfunktion (IIEF-5) und Morgenerektionen, Körpermaße und Kraftwerte,
 Pigmentierung, Negativkontrollen und die Beobachtungsliste. Bis dahin bleiben diese Fragen
-verborgen. Der Knopf **Ausführlichen Fragebogen für heute erstellen** öffnet sie; der Bogen
-merkt sich das Datum. Ein sporadisch, aber ehrlich ausgefüllter Fragebogen ist mehr wert
+verborgen. Der Knopf **Ausführlichen Fragebogen erstellen** öffnet sie. Eine Tagesleiste
+darunter sagt, für welchen Tag er gilt — vorgewählt heute, nachtragen lässt sich jeder
+vergangene Tag der Woche, für eine frühere Woche wird oben die Woche gewechselt. Ein sporadisch, aber ehrlich ausgefüllter Fragebogen ist mehr wert
 als ein Pflichttermin, der ausfällt. Die allgemeinen Erklärungen stehen im Reiter **Info**.
 Aus allem entstehen Verlaufsgrafiken, eine Wochentabelle und ein CSV-Export.
 
@@ -41,7 +42,7 @@ die Architektur in [docs/ARCHITEKTUR.md](docs/ARCHITEKTUR.md).
 ```
 npm install          # esbuild und playwright, nur zum Bauen und Testen
 npm start            # http://localhost:8080
-npm test             # 266 Prüfungen in einem echten Browser
+npm test             # 286 Prüfungen in einem echten Browser
 npm run build        # dist/peptid-wochenbogen.html — eine Datei für Claude
 ```
 

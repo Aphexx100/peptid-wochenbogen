@@ -9,7 +9,12 @@
    alte Wert ist also die Haelfte wert. Gezaehlt wird an drei Stellen —
    im Zufuhrraster (dose.zufuhr.alk), im Wochenwert (conf.alk) und in den
    alten Vortagsreihen aus der Zeit, als Alkohol in 02b stand
-   (conf.tage.alk, conf.vortagAlt.alk). */
+   (conf.tage.alk, conf.vortagAlt.alk).
+
+   Kreatin und Protein: bis 2026-10 unter dose.zufuhr, seither als
+   Supplemente im Substanzraster unter dose.tage. Hier braucht es keine
+   Marke — umgezogen wird nur, was noch am alten Ort liegt, und danach ist
+   er leer. */
 
 /** Marke am Eintrag: Alkohol steht in Litern. */
 export const ALK_MARKE = 'alkL';
@@ -23,9 +28,30 @@ const halb = (v) => {
 
 const halbReihe = (a) => (Array.isArray(a) ? a.map(halb) : a);
 
+const hatWerte = (a) => Array.isArray(a) && a.some((v) => v !== '' && v !== undefined && v !== null);
+
+/* Kreatin und Protein vom Zufuhrraster ins Substanzraster umhaengen. Beide
+   Raster decken dieselben sieben Tage ab, deshalb geht die Reihe
+   unveraendert mit; nur wenn die Startdaten einmal auseinanderlaufen
+   sollten, bleibt die Reihe lieber stehen, als auf falschen Tagen zu
+   landen. */
+function umzugSupp(e) {
+  const z = e.dose && e.dose.zufuhr;
+  if (!z || !z.start) return;
+  if (!e.dose.tage) e.dose.tage = { start: z.start };
+  if (e.dose.tage.start !== z.start) return;
+  ['kreatin', 'protein'].forEach((k) => {
+    if (!(k in z)) return;
+    if (hatWerte(z[k]) && !hatWerte(e.dose.tage[k])) e.dose.tage[k] = z[k].slice();
+    delete z[k];
+  });
+}
+
 /** Einen Eintrag auf das aktuelle Format bringen. Gibt ihn selbst zurueck. */
 export function migriereWoche(e) {
-  if (!e || e[ALK_MARKE]) return e;
+  if (!e) return e;
+  umzugSupp(e);
+  if (e[ALK_MARKE]) return e;
   if (e.dose && e.dose.zufuhr) e.dose.zufuhr.alk = halbReihe(e.dose.zufuhr.alk);
   if (e.conf) {
     e.conf.alk = halb(e.conf.alk);

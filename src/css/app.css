@@ -162,7 +162,7 @@ tbody tr:last-child td{border-bottom:none}
 /* Spaltenkopf: Einstufung als Supplement und das Kreuz zum Entfernen.
    Der erste Klick macht aus dem Kreuz die Rückfrage, deshalb darf es
    breiter werden, ohne die Spalte zu verschieben. */
-.expo .xsupp{display:block;font-size:.58rem;letter-spacing:.06em;color:var(--muted);font-weight:400}
+.expo .xsupp{font-size:.58rem;letter-spacing:.06em;color:var(--muted);font-weight:400;margin-left:.3rem}
 .expo .spaltweg{display:inline-flex;align-items:center;justify-content:center;margin-left:.3rem;
   min-width:1.15rem;height:1.15rem;padding:0 .25rem;border:1px solid transparent;border-radius:.3rem;
   background:none;color:var(--muted);font-family:inherit;font-size:.78rem;line-height:1;cursor:pointer}
@@ -280,6 +280,11 @@ tbody tr:last-child td{border-bottom:none}
 #wwHeute[hidden]{display:none}
 
 /* Tageswahl beim WHO-5. Erfasste Tage tragen einen Punkt. */
+/* Tagesleiste des Fragebogens: hängt direkt unter seinem Knopf. */
+.gatetag{margin:-.5rem 0 1rem}
+.gatetag[hidden]{display:none!important}
+.gatetag .tagwahl{justify-content:flex-end}
+.gatetag .hint{text-align:right}
 .tagwahl{display:flex;flex-wrap:wrap;gap:.25rem;margin:.2rem 0 .5rem}
 .tagwahl button{position:relative;font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:.72rem;font-weight:600;
   padding:.35rem .55rem;min-height:2.1rem;border:1px solid var(--border);border-radius:4px;

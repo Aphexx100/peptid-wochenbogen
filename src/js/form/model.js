@@ -11,13 +11,12 @@ import {
   KERN, GLOWZIEL, MASSE, MORGEN, PT, PT_SIGNS, PIGMENT, NEG, WATCH, CONF_CHECKS, MONTH, EXPO_TEXT_ALT
 } from '../schema.js';
 import { sVal, setS, segVal, setSeg, checked } from '../ui/controls.js';
-import { wochenfragenOffen } from '../ui/weekly.js';
+import { wochenfragenOffen, fragebogenTag } from '../ui/weekly.js';
 import { ALK_MARKE } from '../storage/migrate.js';
-import { iso } from '../util/date.js';
 import {
   recalcScores, readExpo, ableiten, fuelleExpo, setLegacyDose, getLegacyDose,
   readConfTage, ableitenConf, fuelleConfTage, setLegacyConf, getLegacyConf,
-  readZufuhr, ableitenZufuhr, fuelleZufuhr,
+  readZufuhr, ableitenZufuhr, ableitenSupp, fuelleZufuhr,
   mergeHeute, tagesMittel, setTagesSaetze, startWhoTag, readNotizen, ableitenNotizen, fuelleNotizen
 } from './build.js';
 
@@ -64,11 +63,14 @@ export function readForm(){
       if(e.dose.notizen.start===altD.notizen.start) e.dose.notizen[k]=reihe.slice();
     }
   });
-  /* Taegliche Zufuhr: Kreatin als Wochensumme am Dose-Objekt, Protein und
-     Alkohol weiter unter conf (siehe unten), wo sie immer schon standen. */
+  /* Alkohol steht als eigene Spalte im Raster, Kreatin und Protein als
+     Supplemente bei den Substanzen. Ihre Wochenwerte behalten die gewohnte
+     Form: Kreatin als Summe am Dose-Objekt, Protein und Alkohol unter conf
+     (siehe unten), wo sie immer schon standen. */
   var zf=readZufuhr(), zw=ableitenZufuhr(zf.tage);
+  var sp=ableitenSupp(g.tage);
   if(!zf.leer) e.dose.zufuhr=zf.tage;
-  e.dose.kreatin=zw.kreatin; e.dose.kreatinTage=zw.kreatinTage;
+  e.dose.kreatin=sp.kreatin; e.dose.kreatinTage=sp.kreatinTage;
   KERN.forEach(function(x){ e.kern[x.k]=sVal(x.k); });
   e.glow={ort:$("gGelenkOrt").value.trim()};
   GLOWZIEL.forEach(function(x){ e.glow[x.k]=sVal(x.k); });
@@ -106,8 +108,9 @@ export function readForm(){
   var cw=(c.leer&&legacyC)
     ? {train:legacyC.train||"", schlaf:legacyC.schlaf||""}
     : ableitenConf(c.tage);
-  if(zf.leer&&legacyC){ zw.protein=legacyC.protein||""; zw.alk=legacyC.alk||""; }
-  e.conf={train:cw.train, schlaf:cw.schlaf, alk:zw.alk, protein:zw.protein,
+  if(!sp.protein&&legacyC) sp.protein=legacyC.protein||"";
+  if(zf.leer&&legacyC) zw.alk=legacyC.alk||"";
+  e.conf={train:cw.train, schlaf:cw.schlaf, alk:zw.alk, protein:sp.protein,
           gew:$("cGew").value, bauch:$("cBauch").value,
           stress:sVal("cStress"), sonst:$("cSonst").value.trim(), flags:[]};
   if(!c.leer) e.conf.tage=c.tage;
@@ -125,12 +128,13 @@ export function readForm(){
      bleiben im gespeicherten Objekt und in CSV und Datenblock lesbar. */
   var alt=state.weeks[state.weekKey];
   if(alt&&alt.text&&(alt.text.anders||alt.text.ohnehin)) e.text=alt.text;
-  /* Der ausfuehrliche Fragebogen haelt fest, an welchem Tag er ausgefuellt
-     wurde — er haengt nicht mehr am Erfassungstag. */
+  /* Der ausfuehrliche Fragebogen haelt fest, fuer welchen Tag er gilt — er
+     haengt nicht mehr am Erfassungstag, und nachgetragen wird er fuer den
+     Tag, den die Tagesleiste zeigt, nicht fuer heute. */
   /* Alkohol steht in Litern — die Marke verhindert, dass der Eintrag beim
      naechsten Laden noch einmal halbiert wird (storage/migrate.js). */
   e[ALK_MARKE]=1;
-  if(wochenfragenOffen()) e.bogenTag=iso(new Date());
+  if(wochenfragenOffen()) e.bogenTag=fragebogenTag();
   else behalteWochenfragen(e, alt);
   return e;
 }
@@ -164,7 +168,7 @@ export function fillForm(e){
   /* Erst den Bestandsschutz setzen, dann das Raster fuellen — fuelleExpo()
      aktualisiert Zusammenfassung, Kupferlast und PT-Karte gleich mit. */
   setLegacyDose(e.dose&&!e.dose.tage?e.dose:null);
-  fuelleExpo(e.dose||null);
+  fuelleExpo(e.dose||null, e.conf||null);
   fuelleNotizen(e.dose||null);
   fuelleZufuhr(e.dose||null, e.conf||null);
   KERN.forEach(function(x){ setS(x.k, e.kern&&e.kern[x.k]); });
