@@ -12,6 +12,7 @@ import {
 } from '../schema.js';
 import { sVal, setS, segVal, setSeg, checked } from '../ui/controls.js';
 import { wochenfragenOffen } from '../ui/weekly.js';
+import { iso } from '../util/date.js';
 import {
   recalcScores, readExpo, ableiten, fuelleExpo, setLegacyDose, getLegacyDose,
   readConfTage, ableitenConf, fuelleConfTage, setLegacyConf, getLegacyConf,
@@ -121,7 +122,10 @@ export function readForm(){
      bleiben im gespeicherten Objekt und in CSV und Datenblock lesbar. */
   var alt=state.weeks[state.weekKey];
   if(alt&&alt.text&&(alt.text.anders||alt.text.ohnehin)) e.text=alt.text;
-  if(!wochenfragenOffen()) behalteWochenfragen(e, alt);
+  /* Der ausfuehrliche Fragebogen haelt fest, an welchem Tag er ausgefuellt
+     wurde — er haengt nicht mehr am Erfassungstag. */
+  if(wochenfragenOffen()) e.bogenTag=iso(new Date());
+  else behalteWochenfragen(e, alt);
   return e;
 }
 
@@ -130,7 +134,7 @@ export function readForm(){
    taegliche Speichern uebernimmt deshalb fuer alles Woechentliche den
    zuletzt gespeicherten Stand dieser Woche, oder laesst es ganz weg. */
 var WOCHEN_FELDER=["exp","kern","glow","masse","kraft","iief","iiefTage","morgen","pt",
-                   "pigment","neg","watch","watchNote","month"];
+                   "pigment","neg","watch","watchNote","month","bogenTag"];
 var WOCHEN_CONF=["gew","bauch","stress","sonst","flags"];
 function behalteWochenfragen(e, alt){
   alt=alt||{};

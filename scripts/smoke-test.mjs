@@ -74,9 +74,8 @@ async function laufe(browser, url, label, mitModulTest) {
   pruefe('Tirzepatid (Pen) nicht bei den Vials',
     (await seite.locator('#vMgtirz').count()) === 0 && (await seite.locator('[data-vialziel="tirz"]').count()) === 0);
 
-  /* Freischaltung der Wochenfragen. Erst ein Erfassungstag, der nicht heute
-     ist — dann muss alles Wöchentliche verborgen sein und die Ausnahme
-     greifen. Danach der heutige Tag, damit der Rest des Tests ausfüllen kann. */
+  /* Der ausführliche Fragebogen hängt an keinem Tag mehr: ohne Klick bleibt
+     er verborgen, der Knopf öffnet und schließt ihn. */
   const heuteWt = new Date().getDay();
   const andererWt = (heuteWt + 3) % 7;
   const setzeTag = async (wt) => {
@@ -88,28 +87,26 @@ async function laufe(browser, url, label, mitModulTest) {
   };
 
   await setzeTag(andererWt);
-  pruefe('Wochenfragen außerhalb des Erfassungstags verborgen', await seite.locator('#s-kern').isHidden());
+  pruefe('Fragebogen ohne Klick verborgen', await seite.locator('#s-kern').isHidden());
   const offeneKarten = await seite.locator('.card:visible h2').allInnerTexts();
   pruefe('Nur die Tageskarten offen (samt Wochengrafik)', offeneKarten.length === 6, offeneKarten.join(' | '));
   pruefe('Tagesfelder bleiben sichtbar', await seite.locator('#s-expo').isVisible());
   pruefe('WHO-5 täglich offen, IIEF-5 ist Wochenfrage',
     (await seite.locator('#s-who').isVisible()) && (await seite.locator('#s-iief').isHidden()));
   const bar = await seite.locator('#gateBar').innerText();
-  pruefe('Statt Sperrkarte ein Knopf „Wochenfragen nachtragen"',
-    /Wochenfragen nachtragen/.test(bar) && /regulär am/.test(bar)
-    && (await seite.locator('#weeklyNote').count()) === 0, bar);
+  pruefe('Knopf erstellt den Fragebogen für heute',
+    /Ausführlichen Fragebogen für heute erstellen/.test(bar) && /ohne Fragebogen/.test(bar)
+    && /Fragebogen offen/.test(await seite.locator('#statusrow').innerText()), bar);
   await seite.click('#gateOpen');
-  pruefe('„Wochenfragen nachtragen" öffnet die Wochenfragen', await seite.locator('#s-kern').isVisible());
+  pruefe('Knopf öffnet den Fragebogen', await seite.locator('#s-kern').isVisible());
   pruefe('Knopf bietet danach das Ausblenden an',
-    /Wochenfragen ausblenden/.test(await seite.locator('#gateBar').innerText()));
+    /Fragebogen ausblenden/.test(await seite.locator('#gateBar').innerText()));
   await seite.click('#gateOpen');
-  pruefe('„Wochenfragen ausblenden" schließt sie wieder', await seite.locator('#s-kern').isHidden());
+  pruefe('„Fragebogen ausblenden" schließt ihn wieder', await seite.locator('#s-kern').isHidden());
 
   await setzeTag(heuteWt);
-  pruefe('Am Erfassungstag sind die Wochenfragen offen', await seite.locator('#s-kern').isVisible());
-  pruefe('Am Erfassungstag kein Knopf, dafür der Status',
-    (await seite.locator('#gateBar').isHidden())
-    && /Wochenabschluss heute/.test(await seite.locator('#statusrow').innerText()));
+  await seite.click('#gateOpen');
+  pruefe('Fragebogen auch am Erfassungstag erst auf Klick', await seite.locator('#s-kern').isVisible());
 
   /* Info-Reiter: die allgemeinen Erklärungen stehen dort, nicht im Bogen. */
   await seite.click('#tab-info');
@@ -237,11 +234,16 @@ async function laufe(browser, url, label, mitModulTest) {
   pruefe('Tageseintrag überlebt das Neuladen', (await seite.inputValue('#xglow0')) === '2.8');
   pruefe('IIEF-5 überlebt das Neuladen', (await seite.locator('#iiefScore').innerText()) === '20');
   pruefe('Schlaf-Tageswert überlebt das Neuladen', (await seite.inputValue('#tschlaf0')) === '7');
+  /* Eine Woche mit Fragebogen zeigt ihn nach dem Neuladen ohne Klick, samt
+     Datum in der Statuszeile. */
+  pruefe('Fragebogen bleibt nach dem Neuladen offen', await seite.locator('#s-kern').isVisible());
+  const chips = (await seite.locator('#statusrow .chip').allInnerTexts()).join(' | ');
+  pruefe('Statuszeile nennt das Datum des Fragebogens', /Fragebogen \d\d\.\d\d\./.test(chips), chips);
   pruefe('Tagesnotiz überlebt das Neuladen', (await seite.inputValue('#nstellen2')) === 'leichte Rötung links');
   pruefe('Notiz bleibt an ihrem Tag', (await seite.inputValue('#nstellen4')) === 'kleiner Knoten'
     && (await seite.inputValue('#nstellen3')) === '');
 
-  /* Die PT-Karte hat zwei Bedingungen — Anwendung UND Wochenabschluss.
+  /* Die PT-Karte hat zwei Bedingungen — Anwendung UND offener Fragebogen.
      Das Tor darf ihre eigene nicht überstimmen und umgekehrt. Geprüft in
      einer fremden Woche (anderer Erfassungstag), damit die gespeicherte
      Woche unberührt bleibt; beim Zurückwechseln lädt sie wieder. */
@@ -249,9 +251,9 @@ async function laufe(browser, url, label, mitModulTest) {
   pruefe('Anderer Erfassungstag lädt die andere Woche, statt Werte zu verschieben',
     (await seite.inputValue('#xglow0')) === '' && (await seite.inputValue('#nstellen4')) === '');
   await seite.fill('#xpt2', '1.75');
-  pruefe('PT-Karte bleibt außerhalb des Erfassungstags zu', await seite.locator('#ptCard').isHidden());
+  pruefe('PT-Karte bleibt ohne Fragebogen zu', await seite.locator('#ptCard').isHidden());
   await seite.click('#gateOpen');
-  pruefe('PT-Karte kommt mit den Wochenfragen zurück', await seite.locator('#ptCard').isVisible());
+  pruefe('PT-Karte kommt mit dem Fragebogen zurück', await seite.locator('#ptCard').isVisible());
   await setzeTag(heuteWt);
   pruefe('Zurück beim Erfassungstag ist die gespeicherte Woche wieder da',
     (await seite.inputValue('#xglow0')) === '2.8' && (await seite.inputValue('#nstellen4')) === 'kleiner Knoten');

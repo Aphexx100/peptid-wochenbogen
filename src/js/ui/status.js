@@ -2,8 +2,8 @@
 
 import { state } from '../state.js';
 import { $ } from '../util/dom.js';
-import { weekNumber, istAbschlussTag, currentWeekKey, weekDays, plusTage } from '../util/date.js';
-import { renderWeeklyGate } from './weekly.js';
+import { weekNumber, currentWeekKey, weekDays, plusTage } from '../util/date.js';
+import { renderWeeklyGate, bogenTag } from './weekly.js';
 
 const kurz = (d) => `${d.slice(8, 10)}.${d.slice(5, 7)}.`;
 
@@ -39,7 +39,8 @@ export function renderStatus() {
   chip(state.weeks[state.weekKey] ? 'Woche gespeichert' : 'offen',
        state.weeks[state.weekKey] ? 'good' : 'warn');
   if (state.weekKey !== currentWeekKey()) chip('Korrektur einer früheren Woche', 'warn');
-  else chip(istAbschlussTag() ? 'Wochenabschluss heute' : 'Tageserfassung', istAbschlussTag() ? 'acc' : '');
+  chip(bogenTag() ? `Fragebogen ${kurz(bogenTag())}` : 'Fragebogen offen',
+       bogenTag() ? 'good' : '');
 
   /* Die Monatsmessung faellt jede vierte Woche an; sichtbar wird sie aber
      erst mit den uebrigen Wochenfragen. */

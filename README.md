@@ -14,12 +14,12 @@ Blättern in frühere Wochen, als eigener Zeitraum oder als gesamter Verlauf.
 Zum Korrigieren lässt sich der ganze Bogen auf eine frühere Woche umstellen; beim
 WHO-5 wählt eine Tagesleiste den Tag.
 
-**Am Erfassungstag** kommt der Rest dazu: sechs Kernbereiche, die drei erwarteten
+**Wann Zeit ist** kommt der ausführliche Fragebogen dazu: sechs Kernbereiche, die drei erwarteten
 GLOW-Wirkungen, Sexualfunktion (IIEF-5) und Morgenerektionen, Körpermaße und Kraftwerte,
 Pigmentierung, Negativkontrollen und die Beobachtungsliste. Bis dahin bleiben diese Fragen
-verborgen — wer sie mitten in der Woche beantwortet, bewertet einen Ausschnitt und nennt
-ihn Woche. Ein kleiner Knopf **Wochenfragen nachtragen** öffnet sie außer der Reihe, falls
-der Erfassungstag verpasst wurde. Die allgemeinen Erklärungen stehen im Reiter **Info**.
+verborgen. Der Knopf **Ausführlichen Fragebogen für heute erstellen** öffnet sie; der Bogen
+merkt sich das Datum. Ein sporadisch, aber ehrlich ausgefüllter Fragebogen ist mehr wert
+als ein Pflichttermin, der ausfällt. Die allgemeinen Erklärungen stehen im Reiter **Info**.
 Aus allem entstehen Verlaufsgrafiken, eine Wochentabelle und ein CSV-Export.
 
 ## Aufbau in einem Absatz
@@ -35,7 +35,7 @@ die Architektur in [docs/ARCHITEKTUR.md](docs/ARCHITEKTUR.md).
 ```
 npm install          # esbuild und playwright, nur zum Bauen und Testen
 npm start            # http://localhost:8080
-npm test             # 219 Prüfungen in einem echten Browser
+npm test             # 221 Prüfungen in einem echten Browser
 npm run build        # dist/peptid-wochenbogen.html — eine Datei für Claude
 ```
 
