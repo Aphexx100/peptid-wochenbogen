@@ -33,6 +33,13 @@ function weekLine(k){
            (e.dose.sonstMed?(", sonst: "+e.dose.sonstMed):"")+
            (e.dose.abw?(" [Abweichungen: "+e.dose.abw+"]"):"")+
            (e.dose.stellen?(" [Einstichstellen: "+e.dose.stellen+"]"):""));
+    if(e.dose.extra){
+      var ex=Object.keys(e.dose.extra).map(function(k){
+        var o=e.dose.extra[k];
+        return o.n+" "+o.tage+" Tage à "+s(o.dosis)+" "+o.u+(o.kat==="supp"?" [Supplement/Nahrungsmittel]":"");
+      });
+      if(ex.length) p.push("WEITERE STOFFE: "+ex.join(", "));
+    }
     var tk=tageKompakt(e);
     if(tk) p.push("TAGE: "+tk);
   }
@@ -71,7 +78,7 @@ function weekLine(k){
            (e.pt.vial?(", Spritze "+e.pt.vial+", Vermutung "+s(e.pt.guess)+", tatsächlich "+s(e.pt.actual)):""));
   }
   if(e.conf) p.push("Confounder: Gewicht "+s(e.conf.gew)+"kg, Bauch "+s(e.conf.bauch)+"cm, Protein "+s(e.conf.protein)+
-                    "g, Training "+s(e.conf.train)+"h, Schlaf "+s(e.conf.schlaf)+"h, Alkohol "+s(e.conf.alk)+
+                    "g, Training "+s(e.conf.train)+"h, Schlaf "+s(e.conf.schlaf)+"h, Alkohol "+s(e.conf.alk)+"l"+
                     ", Stress "+s(e.conf.stress)+
                     (e.conf.flags&&e.conf.flags.length?(", Flags: "+e.conf.flags.join(",")):"")+
                     (e.conf.sonst?(", sonst: "+e.conf.sonst):""));
@@ -96,8 +103,10 @@ export function dataBlock(limitWeeks){
            "Exposition und Confounder werden täglich erfasst, WHO-5 ebenfalls — sein Wochenwert ist "+
            "das Mittel der erfassten Tage, die Zahl der Tage steht dabei (steht sie auch beim IIEF-5, "+
            "stammt die Woche aus einer Phase, in der er täglich lief). Training und "+
-           "Alkohol sind Wochensummen (Alkohol in Flaschen à 0,5 l), Schlaf und Protein Tagesmittel. "+
+           "Alkohol sind Wochensummen (Alkohol in Litern), Schlaf und Protein Tagesmittel. "+
            "In TAGE stehen Injektionen und Zufuhr (Kreatin, Protein, Alkohol) am Tag selbst; "+
+           "selbst angelegte Stoffe stehen unter WEITERE STOFFE, Supplemente und Nahrungsmittel "+
+           "sind dort als solche gekennzeichnet; "+
            "CONFOUNDER-TAGE (Training, Schlaf) beziehen sich jeweils auf den Vortag. "+
            "Alle übrigen Angaben beurteilen die Woche als Ganzes.\n"+erw+"\n";
   var body=ks.map(weekLine).join("\n\n");

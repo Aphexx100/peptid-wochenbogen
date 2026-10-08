@@ -8,7 +8,7 @@ import { $ } from '../util/dom.js';
 import { fmt } from '../util/format.js';
 import { CU_ANTEIL, HALTBAR_TAGE, RC_PRESETS, GLOW_VIAL } from '../constants.js';
 import { state } from '../state.js';
-import { EXPO } from '../schema.js';
+import { vialStoffe } from '../substanzen.js';
 import { saveConfig } from '../storage/index.js';
 import { buildVials, refreshExpoUnits } from '../form/build.js';
 
@@ -17,21 +17,13 @@ const FELDER = ['rcVial', 'rcWasser', 'rcDosis', 'rcEinheit', 'rcSpritze', 'rcFr
 const row = (k, v, cls) =>
   `<div class="rcrow${cls ? ` ${cls}` : ''}"><span class="k">${k}</span><span class="v">${v}</span></div>`;
 
-export function renderRc() {
-  const vial = Number($('rcVial').value) || 0;
-  const wasser = Number($('rcWasser').value) || 0;
-  const faktor = Number($('rcEinheit').value) || 1;
-  const dosisMg = (Number($('rcDosis').value) || 0) * faktor;
-  const kap = Number($('rcSpritze').value) || 30;
-  const freq = Math.max(1, Number($('rcFreq').value) || 1);
-  const out = $('rcOut');
-  out.innerHTML = '';
-
+/* Die Rechnung selbst, ohne Oberflaeche: dieselben Zahlen braucht auch das
+   Formular "Stoff hinzufuegen" im Bogen, und zwei Rechenwege fuer dieselbe
+   Spritze waeren eine Fehlerquelle mehr. Gibt fertiges HTML zurueck. */
+export function rechne({ vial, wasser, dosisMg, kap = 30, freq = 1 }) {
   if (!(vial > 0 && wasser > 0 && dosisMg > 0)) {
-    out.innerHTML = '<div class="rcsub">Vial-Inhalt, Wasservolumen und Zieldosis eingeben.</div>';
-    return;
+    return '<div class="rcsub">Vial-Inhalt, Wasservolumen und Zieldosis eingeben.</div>';
   }
-
   const konz = vial / wasser;      /* mg je ml */
   const ml = dosisMg / konz;
   const ie = ml * 100;             /* U-100 */
@@ -88,7 +80,19 @@ export function renderRc() {
       `${HALTBAR_TAGE} Tage Haltbarkeit.</div>`;
   }
 
-  out.innerHTML = h;
+  return h;
+}
+
+/** Der Rechner im Setup-Reiter. */
+export function renderRc() {
+  const faktor = Number($('rcEinheit').value) || 1;
+  $('rcOut').innerHTML = rechne({
+    vial: Number($('rcVial').value) || 0,
+    wasser: Number($('rcWasser').value) || 0,
+    dosisMg: (Number($('rcDosis').value) || 0) * faktor,
+    kap: Number($('rcSpritze').value) || 30,
+    freq: Math.max(1, Number($('rcFreq').value) || 1)
+  });
 }
 
 export function initRechner() {
@@ -109,16 +113,34 @@ export function initRechner() {
     });
   });
 
-  /* Vial-Inhalt und Wasservolumen als aktuelles Vial in den Bogen schreiben.
-     Die Zieldosis spielt dafuer keine Rolle — massgeblich ist, was im Vial
-     ist und womit es aufgezogen wurde. */
-  document.querySelectorAll('[data-vialziel]').forEach((b) => {
+  renderVialZiele();
+  renderRc();
+}
+
+/* Vial-Inhalt und Wasservolumen als aktuelles Vial in den Bogen schreiben.
+   Die Zieldosis spielt dafuer keine Rolle — massgeblich ist, was im Vial ist
+   und womit es aufgezogen wurde. Ein Knopf je Stoff, der ueberhaupt ein Vial
+   hat; die Liste aendert sich, sobald im Bogen ein Stoff dazukommt. */
+export function renderVialZiele() {
+  const host = $('rcVialZiele');
+  if (!host) return;
+  const ziele = vialStoffe();
+  host.textContent = '';
+  host.style.gridTemplateColumns = `repeat(${Math.min(3, Math.max(1, ziele.length))},1fr)`;
+  $('rcVialLeer').hidden = ziele.length > 0;
+  ziele.forEach((x) => {
+    const b = document.createElement('button');
+    b.className = 'btn ghost';
+    b.type = 'button';
+    b.dataset.vialziel = x.k;
+    b.style.cssText = 'font-size:.82rem;padding:.5rem .3rem';
+    b.textContent = x.n;
+    host.appendChild(b);
     b.addEventListener('click', async () => {
       const info = $('rcUebInfo');
       const mg = Number($('rcVial').value);
       const ml = Number($('rcWasser').value);
-      const x = EXPO.find((s) => s.k === b.dataset.vialziel);
-      if (!(mg > 0 && ml > 0) || !x) {
+      if (!(mg > 0 && ml > 0)) {
         info.textContent = 'Erst Vial-Inhalt und Wasservolumen oben eingeben.';
         info.className = 'saveinfo bad';
         return;
@@ -133,6 +155,4 @@ export function initRechner() {
       info.className = `saveinfo ${r.ok ? 'ok' : 'bad'}`;
     });
   });
-
-  renderRc();
 }

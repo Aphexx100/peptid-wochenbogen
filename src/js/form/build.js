@@ -10,6 +10,7 @@ import {
   EXPO, EXPO_TEXT, ZUFUHR, CONF_TAGE, KERN, GLOWZIEL, WHO, WHO_LEG, IIEF, MORGEN, PT, PT_SIGNS, PIGMENT, NEG,
   WATCH, CONF_CHECKS, MONTH
 } from '../schema.js';
+import { stoffe, alleStoffe, vialStoffe, findeStoff } from '../substanzen.js';
 import { slider, segment, checkList, segVal, setSeg, setSegHandler } from '../ui/controls.js';
 import { cuWeek } from '../analysis/metrics.js';
 import { keys } from '../state.js';
@@ -19,18 +20,18 @@ import { renderWochenGraph } from '../ui/wochengraph.js';
 
 /* ---- Tagesraster der Exposition ----
    Sieben Zeilen (aeltester Tag zuerst, letzter ist der Erfassungstag), eine
-   Spalte je Substanz aus EXPO. Die Wochensummen fuer CSV, Auswertung und
-   Datenblock werden daraus abgeleitet — vor der Umstellung erfasste Wochen
-   tragen nur die Summen; ihr dose-Objekt bleibt beim erneuten Speichern
-   erhalten, solange das Raster leer ist. */
+   Spalte je Substanz aus substanzen.js — eingebaute und selbst angelegte
+   zusammen. Die Wochensummen fuer CSV, Auswertung und Datenblock werden
+   daraus abgeleitet — vor der Umstellung erfasste Wochen tragen nur die
+   Summen; ihr dose-Objekt bleibt beim erneuten Speichern erhalten, solange
+   das Raster leer ist. Selbst angelegte Stoffe landen gesammelt unter
+   dose.extra, damit sie den eingebauten Feldern nicht ins Gehege kommen. */
 
 const WTAG = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 const IDX = [0, 1, 2, 3, 4, 5, 6];
 const zellId = (k, i) => `x${k}${i}`;
 const zellIdN = (k, i) => `n${k}${i}`;
 const zellIdZ = (k, i) => `z${k}${i}`;
-/** Substanzen, fuer die ein Vial hinterlegt werden kann (ohne Fertigpens). */
-const VIAL_EXPO = EXPO.filter((x) => x.vial !== false);
 const tagLabel = (d) => `${WTAG[new Date(`${d}T12:00:00`).getDay()]} ${d.slice(8, 10)}.${d.slice(5, 7)}.`;
 
 /* Wochensummen einer vor der Umstellung erfassten Woche — gesetzt von
@@ -48,7 +49,8 @@ export function getLegacyDose() { return legacyDose; }
 
 /** Konzentration in mg/ml aus den gespeicherten Vials; 0 = kein Vial. */
 export function vialKonz(k) {
-  if (!VIAL_EXPO.some((x) => x.k === k)) return 0;
+  const x = findeStoff(k);
+  if (!x || !x.vial) return 0;
   const v = state.cfg.vials && state.cfg.vials[k];
   if (!v || !(Number(v.mg) > 0) || !(Number(v.ml) > 0)) return 0;
   return Number(v.mg) / Number(v.ml);
@@ -80,7 +82,8 @@ export function readExpo() {
   const tageMl = { start };
   let leer = true;
   let hatMl = false;
-  EXPO.forEach((x) => {
+  const sichtbar = stoffe();
+  sichtbar.forEach((x) => {
     const konz = modus[x.k] || 0;
     if (konz > 0) hatMl = true;
     tageMl[x.k] = [];
@@ -92,19 +95,23 @@ export function readExpo() {
       return Number(v) > 0 ? String(ieZuMenge(Number(v), x, konz)) : '';
     });
   });
+  /* Spalten, die nicht mehr angezeigt werden, behalten ihre Werte: eine
+     entfernte Spalte blendet aus, sie loescht keine Vergangenheit. */
+  const altT = ((state.weeks[state.weekKey] || {}).dose || {}).tage;
+  if (altT && altT.start === start) {
+    Object.keys(altT).forEach((k) => {
+      if (k === 'start' || tage[k] || !Array.isArray(altT[k])) return;
+      tage[k] = altT[k].slice();
+    });
+  }
   return { tage, tageMl, hatMl, leer };
 }
 
 /** Wochensummen aus dem Raster: Injektionstage, haeufigste Tagesdosis,
     Tirzepatid als Wochensumme — dieselbe Form wie vor der Umstellung. */
 export function ableiten(tage) {
-  const out = {};
-  EXPO.forEach((x) => {
-    const werte = tage[x.k].map(Number).filter((v) => v > 0);
-    if (x.k === 'tirz') {
-      out.tirz = werte.length ? String(+werte.reduce((a, b) => a + b, 0).toFixed(2)) : '';
-      return;
-    }
+  const out = { extra: {} };
+  const haeufigste = (werte) => {
     let best = '';
     let bestN = 0;
     const zaehl = {};
@@ -112,8 +119,39 @@ export function ableiten(tage) {
       zaehl[v] = (zaehl[v] || 0) + 1;
       if (zaehl[v] >= bestN) { bestN = zaehl[v]; best = v; }
     });
+    return werte.length ? String(best) : '';
+  };
+  const reihe = (k) => (Array.isArray(tage[k]) ? tage[k] : []).map(Number).filter((v) => v > 0);
+  EXPO.forEach((x) => {
+    const werte = reihe(x.k);
+    if (x.k === 'tirz') {
+      out.tirz = werte.length ? String(+werte.reduce((a, b) => a + b, 0).toFixed(2)) : '';
+      return;
+    }
     out[`n_${x.k}`] = werte.length;
-    out[`d_${x.k}`] = werte.length ? String(best) : '';
+    out[`d_${x.k}`] = haeufigste(werte);
+  });
+  /* Selbst angelegte Stoffe stehen gesammelt unter dose.extra, mit Name und
+     Einheit — so bleibt eine Woche lesbar, auch wenn die Spalte spaeter
+     entfernt wird. Gezaehlt wird, was im Raster steht, nicht was in der
+     Konfiguration: Daten eines entfernten Stoffes gehen so nicht verloren. */
+  Object.keys(tage).forEach((k) => {
+    if (k === 'start' || EXPO.some((x) => x.k === k)) return;
+    const werte = reihe(k);
+    if (!werte.length) return;
+    /* Name und Einheit kommen aus der Konfiguration; ist der Stoff dort
+       nicht mehr vorhanden, aus dem zuletzt gespeicherten Stand der Woche —
+       sonst stuende in der Auswertung nur noch der Schluessel. */
+    const def = findeStoff(k)
+      || ((((state.weeks[state.weekKey] || {}).dose || {}).extra || {})[k]);
+    out.extra[k] = {
+      n: (def && def.n) || k,
+      u: (def && def.u) || '',
+      kat: (def && def.kat) || 'wirk',
+      tage: werte.length,
+      dosis: haeufigste(werte),
+      summe: String(+werte.reduce((a, b) => a + b, 0).toFixed(3))
+    };
   });
   return out;
 }
@@ -139,9 +177,15 @@ function renderExpoSummary() {
     return;
   }
   const a = ableiten(tage);
-  const teil = EXPO.map((x) => {
+  const teil = stoffe().map((x) => {
     if (x.k === 'tirz') return `Tirzepatid: ${a.tirz ? `${komma(a.tirz)} mg diese Woche` : '—'}`;
+    const e = a.extra[x.k];
+    if (e) {
+      const art = x.kat === 'supp' ? 'Tag' : 'Anwendungstag';
+      return `${x.n}: ${e.tage} ${art}${e.tage > 1 ? 'e' : ''} à ${komma(e.dosis)} ${x.u}`;
+    }
     const n = a[`n_${x.k}`];
+    if (n === undefined) return `${x.n}: —`;
     return `${x.n}: ${n ? `${n} Injektionstag${n > 1 ? 'e' : ''} à ${komma(a[`d_${x.k}`])} ${x.u}` : '—'}`;
   });
   el.innerHTML = `<b>Diese Woche:</b> ${teil.join(' · ')}<br>${zufuhrText()}`;
@@ -151,7 +195,7 @@ function zufuhrText() {
   const z = ableitenZufuhr(readZufuhr().tage);
   return `<b>Zufuhr:</b> Kreatin ${z.kreatin ? `${komma(z.kreatin)} g an ${z.kreatinTage} Tag${z.kreatinTage > 1 ? 'en' : ''}` : '—'} · ` +
     `Protein Ø ${z.protein ? `${komma(z.protein)} g/Tag` : '—'} · ` +
-    `Alkohol ${z.alk ? `${komma(z.alk)} Flaschen (à 0,5 l)` : '—'}`;
+    `Alkohol ${z.alk ? `${komma(z.alk)} l` : '—'}`;
 }
 
 /** Menge huebsch anzeigen: bis zwei Nachkommastellen, ohne Nullenrest. */
@@ -159,7 +203,7 @@ const mengeText = (v, u) => `${komma(+Number(v).toFixed(u === 'µg' ? 1 : 2))} $
 
 /* Die berechnete Wirkstoffmenge unter jeder ml-Zelle nachfuehren. */
 function renderMengen() {
-  EXPO.forEach((x) => {
+  stoffe().forEach((x) => {
     const konz = modus[x.k] || 0;
     IDX.forEach((i) => {
       const span = document.getElementById(`c${x.k}${i}`);
@@ -189,8 +233,9 @@ function expoChanged() {
     ueberleben den Neuaufbau (etwa wenn sich der Erfassungstag aendert). */
 export function buildExpo() {
   const host = $('s-expo');
+  const spalten = stoffe();
   const alt = {};
-  EXPO.forEach((x) => {
+  alleStoffe().forEach((x) => {
     alt[x.k] = IDX.map((i) => {
       const el = document.getElementById(zellId(x.k, i));
       return el ? el.value : '';
@@ -210,14 +255,20 @@ export function buildExpo() {
       return el ? el.value : '';
     });
   });
-  EXPO.forEach((x) => { modus[x.k] = vialKonz(x.k); });
+  spalten.forEach((x) => { modus[x.k] = vialKonz(x.k); });
   const tage = weekDays(state.weekKey);
   const heute = iso(new Date());
   const einheit = (x) => (modus[x.k] > 0 ? 'I.E.' : x.u);
   /* Die Einheit darf nicht in die Grossschreibung der Kopfzeile geraten —
-     aus "µg" wuerde sonst optisch "MG", und das ist der Faktor tausend. */
-  let html = '<thead><tr><th>Tag</th>' + EXPO.map((x) =>
-    `<th id="xh${x.k}">${x.n} <span style="text-transform:none;letter-spacing:0">(${einheit(x)})</span></th>`).join('') +
+     aus "µg" wuerde sonst optisch "MG", und das ist der Faktor tausend.
+     Das Kreuz neben dem Namen entfernt die Spalte; der erste Klick fragt
+     nach, erst der zweite entfernt (siehe ui/stoffe.js). */
+  let html = '<thead><tr><th>Tag</th>' + spalten.map((x) =>
+    `<th id="xh${x.k}"${x.kat === 'supp' ? ' data-supp="1" title="als Supplement oder Nahrungsmittel eingestuft — nicht in der Grafik"' : ''}>${x.n} ` +
+    `<span class="xeinheit" id="xu${x.k}" style="text-transform:none;letter-spacing:0">(${einheit(x)})</span>` +
+    (x.kat === 'supp' ? '<span class="xsupp">Supp.</span>' : '') +
+    `<button type="button" class="spaltweg" id="xw${x.k}" data-stoffweg="${x.k}" ` +
+    `title="Spalte ${x.n} entfernen" aria-label="Spalte ${x.n} entfernen">×</button></th>`).join('') +
     ZUFUHR.map((x, j) =>
       `<th class="${j ? '' : 'erste'}">${x.n} <span style="text-transform:none;letter-spacing:0">(${x.u})</span></th>`).join('') +
     EXPO_TEXT.map((x, j) => `<th class="notiz${j ? '' : ' erste'}" title="${x.n}">${x.kurz}</th>`).join('') +
@@ -226,7 +277,7 @@ export function buildExpo() {
     const wd = WTAG[new Date(`${d}T12:00:00`).getDay()];
     html += `<tr${d === heute ? ' data-heute="1"' : ''}${d > heute ? ' data-zukunft="1"' : ''}>` +
       `<td class="tag">${wd} ${d.slice(8, 10)}.${d.slice(5, 7)}.</td>` +
-      EXPO.map((x) =>
+      spalten.map((x) =>
         `<td><input type="number" id="${zellId(x.k, i)}" min="0" ` +
         `step="${modus[x.k] > 0 ? 0.5 : x.step}" inputmode="decimal" ` +
         `aria-label="${x.n} (${einheit(x)}) am ${wd} ${d}">` +
@@ -241,7 +292,7 @@ export function buildExpo() {
       '</tr>';
   });
   host.innerHTML = `${html}</tbody>`;
-  EXPO.forEach((x) => IDX.forEach((i) => {
+  spalten.forEach((x) => IDX.forEach((i) => {
     const el = document.getElementById(zellId(x.k, i));
     if (alt[x.k][i]) el.value = alt[x.k][i];
     el.addEventListener('input', expoChanged);
@@ -386,7 +437,7 @@ export function fuelleNotizen(dose) {
     Wirkstoffmenge; ein blosser Konzentrationswechsel laesst ml-Werte stehen,
     denn aufgezogen wurde, was aufgezogen wurde. */
 export function refreshExpoUnits() {
-  EXPO.forEach((x) => {
+  stoffe().forEach((x) => {
     const alt = modus[x.k] || 0;
     const neu = vialKonz(x.k);
     if ((alt > 0) !== (neu > 0)) {
@@ -398,9 +449,8 @@ export function refreshExpoUnits() {
       });
     }
     modus[x.k] = neu;
-    const u = neu > 0 ? 'I.E.' : x.u;
-    const th = document.getElementById(`xh${x.k}`);
-    if (th) th.innerHTML = `${x.n} <span style="text-transform:none;letter-spacing:0">(${u})</span>`;
+    const span = document.getElementById(`xu${x.k}`);
+    if (span) span.textContent = `(${neu > 0 ? 'I.E.' : x.u})`;
     IDX.forEach((i) => {
       document.getElementById(zellId(x.k, i)).step = neu > 0 ? 0.5 : x.step;
     });
@@ -420,16 +470,17 @@ function vialKonzText(x) {
 }
 
 function renderVialKonz() {
-  VIAL_EXPO.forEach((x) => { $(`vKonz${x.k}`).textContent = vialKonzText(x); });
+  vialStoffe().forEach((x) => { $(`vKonz${x.k}`).textContent = vialKonzText(x); });
 }
 
 /** Felder der Vial-Karte in cfg.vials uebernehmen (ohne zu speichern). */
 export function readVials() {
-  const out = {};
-  VIAL_EXPO.forEach((x) => {
+  const out = { ...(state.cfg.vials || {}) };
+  vialStoffe().forEach((x) => {
     const mg = Number($(`vMg${x.k}`).value);
     const ml = Number($(`vMl${x.k}`).value);
     if (mg > 0 && ml > 0) out[x.k] = { mg, ml };
+    else delete out[x.k];
   });
   return out;
 }
@@ -437,10 +488,17 @@ export function readVials() {
 /** Vial-Karte aufbauen und aus cfg.vials fuellen. */
 export function buildVials() {
   const host = $('s-vials');
+  const reihen = vialStoffe();
+  if (!reihen.length) {
+    host.innerHTML = '';
+    $('vialLeer').hidden = false;
+    return;
+  }
+  $('vialLeer').hidden = true;
   host.innerHTML =
     '<thead><tr><th>Wirkstoff</th><th>Vial <span style="text-transform:none;letter-spacing:0">(mg)</span></th>' +
     '<th>Wasser <span style="text-transform:none;letter-spacing:0">(ml)</span></th><th>Konzentration</th></tr></thead><tbody>' +
-    VIAL_EXPO.map((x) => {
+    reihen.map((x) => {
       const v = (state.cfg.vials && state.cfg.vials[x.k]) || {};
       return `<tr><td class="tag">${x.n}</td>` +
         `<td><input type="number" id="vMg${x.k}" min="0" step="0.5" inputmode="decimal" value="${v.mg || ''}" ` +
@@ -449,7 +507,7 @@ export function buildVials() {
         `aria-label="${x.n}: Bac Water in ml"></td>` +
         `<td><span class="vkonz" id="vKonz${x.k}"></span></td></tr>`;
     }).join('') + '</tbody>';
-  VIAL_EXPO.forEach((x) => ['vMg', 'vMl'].forEach((p) => {
+  reihen.forEach((x) => ['vMg', 'vMl'].forEach((p) => {
     $(`${p}${x.k}`).addEventListener('input', renderVialKonz);
   }));
   renderVialKonz();
@@ -466,7 +524,7 @@ export function fuelleExpo(dose) {
   const tage = dose && dose.tage;
   const tageMl = dose && dose.tageMl;
   if (tage && tage.start) {
-    EXPO.forEach((x) => {
+    stoffe().forEach((x) => {
       const konz = modus[x.k] || 0;
       (tage[x.k] || []).forEach((v, i) => {
         const d = new Date(`${tage.start}T12:00:00`);
@@ -483,7 +541,7 @@ export function fuelleExpo(dose) {
       });
     });
   }
-  EXPO.forEach((x) => dates.forEach((d, i) => {
+  stoffe().forEach((x) => dates.forEach((d, i) => {
     document.getElementById(zellId(x.k, i)).value = map[`${x.k}|${d}`] || '';
   }));
   expoChanged();
@@ -492,7 +550,7 @@ export function fuelleExpo(dose) {
 /* ---- Taegliche Confounder (Abschnitt 02b) ----
    Gleiche sieben Tage wie das Expositionsraster; jede Zeile fragt nach dem
    Vortag (Schlaf der letzten Nacht, Training, Protein und Alkohol von
-   gestern; Alkohol in 0,5-l-Flaschen). Fuer Auswertung, CSV und Datenblock
+   gestern; Alkohol in Litern). Fuer Auswertung, CSV und Datenblock
    werden daraus die gewohnten Wochenwerte abgeleitet: Training und Alkohol
    als Summe, Schlaf und Protein als Durchschnitt. */
 

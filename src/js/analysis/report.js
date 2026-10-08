@@ -179,7 +179,7 @@ export function buildSeries(list, exps) {
     { n: 'Training (h/Woche)', v: list.map((e) => (e.conf ? num(e.conf.train) : null)), max: 'auto' },
     { n: 'Protein Ø (g/Tag)', v: list.map((e) => (e.conf ? num(e.conf.protein) : null)), max: 'auto' },
     { n: 'Kreatin (g/Woche)', v: list.map((e) => (e.dose ? num(e.dose.kreatin) : null)), max: 'auto' },
-    { n: 'Alkohol (Flaschen à 0,5 l/Woche)', v: list.map((e) => (e.conf ? num(e.conf.alk) : null)), max: 'auto' },
+    { n: 'Alkohol (Liter/Woche)', v: list.map((e) => (e.conf ? num(e.conf.alk) : null)), max: 'auto' },
     { n: 'Negativkontrollen Ø', v: list.map(negMean), max: 10 },
     { n: 'Bräunungsgeschwindigkeit', v: list.map((e) => (e.pigment ? e.pigment.pTempo : null)), max: 10 },
     { n: 'UV-Stunden', v: list.map((e) => (e.pigment && e.pigment.uv !== '' ? Number(e.pigment.uv) : null)), max: 20 },

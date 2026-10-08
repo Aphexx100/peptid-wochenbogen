@@ -12,6 +12,7 @@ import {
 } from '../schema.js';
 import { sVal, setS, segVal, setSeg, checked } from '../ui/controls.js';
 import { wochenfragenOffen } from '../ui/weekly.js';
+import { ALK_MARKE } from '../storage/migrate.js';
 import { iso } from '../util/date.js';
 import {
   recalcScores, readExpo, ableiten, fuelleExpo, setLegacyDose, getLegacyDose,
@@ -37,6 +38,8 @@ export function readForm(){
     e.dose={glow:a.n_glow, kiss:a.n_kiss, pt:a.n_pt, dhea:a.n_dhea,
             dGlow:a.d_glow, dKiss:a.d_kiss, dPt:a.d_pt, dDhea:a.d_dhea, ghk:state.cfg.ghk,
             tirz:a.tirz, tage:g.tage};
+    /* Selbst angelegte Stoffe gesammelt, mit Name und Einheit je Stoff. */
+    if(Object.keys(a.extra).length) e.dose.extra=a.extra;
     /* ml-Rohwerte und Vial-Stand mitschreiben, wenn in ml erfasst wurde —
        so bleibt nachvollziehbar, was aufgezogen wurde und womit. */
     if(g.hatMl){
@@ -97,7 +100,7 @@ export function readForm(){
   e.watchNote=$("watchNote").value.trim();
   /* Training, Schlaf, Protein und Alkohol kommen aus dem Tagesraster; Summe
      bei Training und Alkohol, Durchschnitt bei Schlaf und Protein. Alkohol
-     zaehlt in 0,5-l-Flaschen. Wie bei der Exposition bleiben die alten
+     zaehlt in Litern. Wie bei der Exposition bleiben die alten
      Wochenwerte stehen, solange kein Tag eingetragen ist. */
   var c=readConfTage(), legacyC=getLegacyConf();
   var cw=(c.leer&&legacyC)
@@ -124,6 +127,9 @@ export function readForm(){
   if(alt&&alt.text&&(alt.text.anders||alt.text.ohnehin)) e.text=alt.text;
   /* Der ausfuehrliche Fragebogen haelt fest, an welchem Tag er ausgefuellt
      wurde — er haengt nicht mehr am Erfassungstag. */
+  /* Alkohol steht in Litern — die Marke verhindert, dass der Eintrag beim
+     naechsten Laden noch einmal halbiert wird (storage/migrate.js). */
+  e[ALK_MARKE]=1;
   if(wochenfragenOffen()) e.bogenTag=iso(new Date());
   else behalteWochenfragen(e, alt);
   return e;

@@ -21,8 +21,9 @@ import { renderStatus } from './ui/status.js';
 import { initTabs } from './ui/tabs.js';
 import { initAnalyse } from './ui/analyse.js';
 import { initPrognose } from './ui/prognose.js';
+import { initStoffeUi } from './ui/stoffe.js';
 import { initSetupUi, renderStoreState } from './ui/setup.js';
-import { initRechner } from './tools/reconstitution.js';
+import { initRechner, renderVialZiele } from './tools/reconstitution.js';
 import { buildCsv } from './export/csv.js';
 import { renderAus } from './analysis/report.js';
 import { initStorage, loadConfig, loadWeeks, subscribeWeeks, storageStatus } from './storage/index.js';
@@ -83,6 +84,8 @@ function uebernehmeCfg(c) {
   if (c.ghk !== undefined) state.cfg.ghk = c.ghk;
   if (c.uebungen && c.uebungen.length === 4) state.cfg.uebungen = c.uebungen;
   if (c.vials) state.cfg.vials = c.vials;
+  if (c.stoffe) state.cfg.stoffe = c.stoffe;
+  if (c.ausStoffe) state.cfg.ausStoffe = c.ausStoffe;
 }
 
 async function start() {
@@ -92,6 +95,7 @@ async function start() {
   buildForm();
   initTabs();
   initRechner();
+  initStoffeUi();
   initWeeklyGate();
   wireEvents();
 
@@ -111,6 +115,8 @@ async function start() {
   fillSetup();
   buildKraft();
   buildVials();
+  /* Die Liste der Vial-Knoepfe im Rechner haengt an den geladenen Stoffen. */
+  renderVialZiele();
   state.weekKey = currentWeekKey();
   buildExpo();
   buildConfTage();

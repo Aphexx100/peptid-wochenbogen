@@ -3,13 +3,14 @@
    und Auswertung gemeinsam benutzt. Jede nimmt einen Eintrag und gibt eine
    Zahl oder null zurueck, wenn die Daten dafuer nicht reichen. */
 
-import { EXPO, ZUFUHR, CONF_TAGE, KERN, NEG } from '../schema.js';
+import { ZUFUHR, CONF_TAGE, KERN, NEG } from '../schema.js';
+import { alleStoffe } from '../substanzen.js';
 import { mean } from '../util/format.js';
 
 const WTAG = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 
 /** Kompaktes Tagesprotokoll von Exposition und Zufuhr, etwa
-    "Mo GLOW 2,8mg + Kreatin 5g + Protein 170g; Mi GLOW 2,8mg + Alkohol 2Fl.".
+    "Mo GLOW 2,8mg + Kreatin 5g + Protein 170g; Mi GLOW 2,8mg + Alkohol 1l".
     Leerer String, wenn die Woche keine Tagesdaten traegt. */
 export function tageKompakt(e) {
   const t = (e.dose && e.dose.tage) || {};
@@ -19,7 +20,7 @@ export function tageKompakt(e) {
   const eintrag = (quelle, i) => (x) => `${x.n} ${String(quelle[x.k][i]).replace('.', ',')}${x.u}`;
   const teile = [];
   for (let i = 0; i < 7; i++) {
-    const subs = EXPO
+    const subs = alleStoffe()
       .filter((x) => t[x.k] && Number(t[x.k][i]) > 0).map(eintrag(t, i))
       .concat(ZUFUHR.filter((x) => z[x.k] && Number(z[x.k][i]) > 0).map(eintrag(z, i)));
     if (subs.length) {

@@ -72,7 +72,7 @@
     <div class="wg-legende" id="wochenGraphLegende"></div>
     <div class="wg" id="wochenGraph"></div>
     <p class="empty" id="wochenGraphLeer" hidden></p>
-    <p class="hint" style="margin:.4rem 0 0">Tagesmenge je Wirkstoff als Kurve. Kisspeptin in mg umgerechnet (100 µg = 0,1 mg), GLOW als Gesamtmenge des Gemischs. Lücken: Tage ohne erfasste Woche; heute zählt erst mit Eintrag.</p>
+    <p class="hint" style="margin:.4rem 0 0">Tagesmenge je Wirkstoff als Kurve. Kisspeptin in mg umgerechnet (100 µg = 0,1 mg), GLOW als Gesamtmenge des Gemischs. Lücken: Tage ohne erfasste Woche; heute zählt erst mit Eintrag. Gezeichnet werden nur Wirkstoffe — Supplemente, Nahrungsmittel und Flüssigkeiten bleiben draußen.</p>
   </div>
 
   <div class="card weekly">
@@ -85,16 +85,63 @@
     <h2><span class="step">01b</span> Aktuelle Vials</h2>
     <p class="hint">Mit hinterlegtem Vial läuft die Spalte in 02 in Einheiten (I.E.). Am schnellsten über den Rekonstitutionsrechner unter Setup.</p>
     <div class="tablewrap"><table class="expo vials" id="s-vials"></table></div>
+    <p class="empty" id="vialLeer" hidden>Kein Stoff wird derzeit rekonstituiert — alle laufen direkt in ihrer Einheit.</p>
     <div class="gatebar" style="margin:.7rem 0 0"><span class="gatehint" id="vialInfo"></span>
       <button class="btn ghost small" id="vialSave" type="button">Vials speichern</button></div>
   </div>
 
   <div class="card wide">
     <h2><span class="step">02</span> Exposition — Tag für Tag</h2>
-    <p class="hint">Was tatsächlich gesetzt wurde, nicht was geplant war — <strong>je Tag die gesetzte Menge</strong>, leer gelassen heißt: an dem Tag nichts. Bei mehreren Injektionen desselben Wirkstoffs an einem Tag die Tagesgesamtmenge eintragen. Ist oben ein Vial hinterlegt, trägst du die <strong>aufgezogenen Einheiten (I.E.)</strong> ein, so wie du sie an der Spritze abliest — die Wirkstoffmenge steht darunter; ohne Vial gilt die Einheit im Spaltenkopf. Tirzepatid kommt aus dem Pen, DHEA aus Kapseln — beide laufen immer in mg. Daneben die tägliche <strong>Zufuhr</strong>: Kreatin und Protein in Gramm, Alkohol in 0,5-l-Flaschen — jeweils in der Zeile des Tages, an dem du sie aufgenommen hast, morgens also in die Zeile von gestern. Rechts je Tag ein Notizfeld für <strong>Auffälligkeiten an der Einstichstelle</strong>. Am besten trägst du jeden Tag direkt nach der Injektion ein — die restlichen Abschnitte kommen mit dem ausführlichen Fragebogen, den du oben erstellst, wann immer du Zeit hast.</p>
+    <p class="hint">Was tatsächlich gesetzt wurde, nicht was geplant war — <strong>je Tag die gesetzte Menge</strong>, leer gelassen heißt: an dem Tag nichts. Bei mehreren Injektionen desselben Wirkstoffs an einem Tag die Tagesgesamtmenge eintragen. Ist oben ein Vial hinterlegt, trägst du die <strong>aufgezogenen Einheiten (I.E.)</strong> ein, so wie du sie an der Spritze abliest — die Wirkstoffmenge steht darunter; ohne Vial gilt die Einheit im Spaltenkopf. Tirzepatid kommt aus dem Pen, DHEA aus Kapseln — beide laufen immer in mg. Daneben die tägliche <strong>Zufuhr</strong>: Kreatin und Protein in Gramm, Alkohol in <strong>Litern</strong> (eine 0,5-l-Flasche Bier also 0,5) — jeweils in der Zeile des Tages, an dem du sie aufgenommen hast, morgens also in die Zeile von gestern. Rechts je Tag ein Notizfeld für <strong>Auffälligkeiten an der Einstichstelle</strong>. Am besten trägst du jeden Tag direkt nach der Injektion ein — die restlichen Abschnitte kommen mit dem ausführlichen Fragebogen, den du oben erstellst, wann immer du Zeit hast. Weitere Stoffe legst du unter der Tabelle selbst an; das Kreuz im Spaltenkopf entfernt eine Spalte wieder.</p>
 
     <div class="tablewrap"><table class="expo" id="s-expo"></table></div>
     <p class="hint" style="margin:.7rem 0 1rem">Kisspeptin wird im Graumarkt üblicherweise in <strong>Mikrogramm</strong> dosiert (50–200 µg), PT-141, GLOW und Tirzepatid in <strong>Milligramm</strong>. Beim GLOW ist die Gesamtmenge des Gemischs gemeint; wie viel davon GHK-Cu ist, legst du einmalig im Setup fest.</p>
+
+    <div class="gatebar" style="justify-content:flex-start;margin:0 0 .8rem">
+      <button class="btn ghost small" id="stoffNeu" type="button" aria-expanded="false" aria-controls="stoffForm">+ Stoff hinzufügen</button>
+      <span class="gatehint" id="stoffInfo"></span>
+    </div>
+
+    <div class="stoffform" id="stoffForm" hidden>
+      <div class="grid3">
+        <div class="field"><label class="fl" for="snName">Name</label>
+          <input type="text" id="snName" autocomplete="off" placeholder="z. B. Retatrutid"></div>
+        <div class="field"><label class="fl" for="snArt">Erfassung</label>
+          <select id="snArt">
+            <option value="vial">Vial — wird rekonstituiert, Eingabe in I.E.</option>
+            <option value="mg">mg — fertig dosiert (Pen, Kapsel)</option>
+            <option value="µg">µg — fertig dosiert</option>
+            <option value="g">g — Pulver, Nahrungsmittel</option>
+            <option value="l">l — Flüssigkeit</option>
+          </select></div>
+        <div class="field"><label class="fl" for="snKat">Einstufung</label>
+          <select id="snKat">
+            <option value="wirk">Wirkstoff</option>
+            <option value="supp">Supplement oder Nahrungsmittel</option>
+          </select></div>
+      </div>
+      <p class="hint" style="margin:.2rem 0 0">Nur <strong>Wirkstoffe</strong> erscheinen in der Tagesmengen-Grafik; Supplemente und Nahrungsmittel werden erfasst und an die Analyse weitergegeben, aber nicht als Kurve gezeichnet. Flüssigkeiten in Litern lassen sich nicht in mg umrechnen und bleiben ebenfalls aus der Grafik.</p>
+
+      <div id="snVial">
+        <label class="fl" style="margin-top:1.1rem">Vial ansetzen</label>
+        <p class="hint" style="margin:.1rem 0 .6rem">Dieselbe Rechnung wie der Rekonstitutionsrechner unter Setup. Vial-Inhalt und Wasservolumen werden mit dem Stoff gespeichert — die Spalte läuft dann in <strong>I.E.</strong> und die Wirkstoffmenge entsteht aus der Konzentration.</p>
+        <div class="grid2">
+          <div class="field"><label class="fl" for="snVial-mg">Vial-Inhalt (mg)</label>
+            <input type="number" id="snVial-mg" min="0" step="0.5" inputmode="decimal"></div>
+          <div class="field"><label class="fl" for="snVial-ml">Bac Water (ml)</label>
+            <input type="number" id="snVial-ml" min="0" step="0.1" inputmode="decimal"></div>
+          <div class="field"><label class="fl" for="snDosis">Zieldosis (<span id="snDosisEinheit">mg</span>)</label>
+            <input type="number" id="snDosis" min="0" step="0.1" inputmode="decimal"></div>
+          <div class="field"><label class="fl" for="snSpritze">Spritze</label>
+            <select id="snSpritze"><option value="30" selected>30 I.E. / 0,3 ml</option><option value="50">50 I.E. / 0,5 ml</option><option value="100">100 I.E. / 1,0 ml</option></select></div>
+        </div>
+        <div class="rcout" id="snOut"></div>
+      </div>
+
+      <div class="gatebar" style="margin:1rem 0 0"><span class="gatehint" id="snInfo"></span>
+        <button class="btn ghost small" id="snAbbruch" type="button">Abbrechen</button>
+        <button class="btn small" id="snAdd" type="button">Stoff anlegen</button></div>
+    </div>
 
     <div class="note" id="expoSum" style="margin-bottom:1rem"></div>
     <div class="note" id="cuNote" style="margin-bottom:0"></div>
@@ -250,7 +297,7 @@
 
   <div class="card weekly">
     <h2><span class="step">09</span> Confounder der Woche</h2>
-    <p class="hint">Training, Schlaf, Protein und Alkohol laufen täglich in Abschnitt 02b. Hier bleibt, was sich nur über die Woche beurteilen lässt.</p>
+    <p class="hint">Training und Schlaf laufen täglich in Abschnitt 02b, Protein und Alkohol in 02. Hier bleibt, was sich nur über die Woche beurteilen lässt.</p>
     <div id="s-conf"></div>
     <div class="checks neutral" id="s-confChecks" style="margin-top:.9rem"></div>
     <div class="field" style="margin-top:.8rem">
@@ -492,11 +539,8 @@
 
     <label class="fl" style="margin-top:1.3rem">Als aktuelles Vial in den Bogen übernehmen</label>
     <p class="hint" style="margin:.1rem 0 .6rem">Schreibt Vial-Inhalt und Wasservolumen von oben in die Karte <strong>Aktuelle Vials</strong> des Bogens und speichert sie — die Tageseinträge der Substanz laufen dann in I.E. und werden über diese Konzentration in mg umgerechnet.</p>
-    <div class="btnrow" style="grid-template-columns:repeat(3,1fr);gap:.3rem;margin:0">
-      <button class="btn ghost" data-vialziel="glow" style="font-size:.82rem;padding:.5rem .3rem">GLOW</button>
-      <button class="btn ghost" data-vialziel="kiss" style="font-size:.82rem;padding:.5rem .3rem">Kisspeptin</button>
-      <button class="btn ghost" data-vialziel="pt" style="font-size:.82rem;padding:.5rem .3rem">PT-141</button>
-    </div>
+    <div class="btnrow" id="rcVialZiele" style="grid-template-columns:repeat(3,1fr);gap:.3rem;margin:0"></div>
+    <p class="empty" id="rcVialLeer" hidden>Kein Stoff im Bogen wird rekonstituiert.</p>
     <p class="saveinfo" id="rcUebInfo"></p>
   </div>
 

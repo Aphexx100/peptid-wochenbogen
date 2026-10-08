@@ -176,7 +176,7 @@ async function laufe(browser, url, label, mitModulTest) {
   pruefe('Confounder-Raster mittelt den Schlaf', /Schlaf Ø 7 h/.test(cs), cs.slice(0, 110));
 
   /* Tägliche Zufuhr in der Exposition: Kreatin summiert, Protein gemittelt,
-     Alkohol summiert in 0,5-l-Flaschen. */
+     Alkohol summiert in Litern. */
   await seite.fill('#zkreatin0', '5');
   await seite.fill('#zkreatin1', '5');
   await seite.fill('#zprotein0', '180');
@@ -185,7 +185,7 @@ async function laufe(browser, url, label, mitModulTest) {
   const zs = await seite.locator('#expoSum').innerText();
   pruefe('Kreatin als Wochensumme mit Tagen', /Kreatin 10 g an 2 Tagen/.test(zs), zs);
   pruefe('Protein als Tagesmittel', /Protein Ø 170 g\/Tag/.test(zs), zs);
-  pruefe('Alkohol zählt in 0,5-l-Flaschen', /Alkohol 2 Flaschen \(à 0,5 l\)/.test(zs), zs);
+  pruefe('Alkohol zählt in Litern', /Alkohol 2 l/.test(zs), zs);
 
   /* Tagesraster: sieben GLOW-Tage eintragen, Zusammenfassung und
      Kupferhinweis rechnen mit; ein PT-141-Tag blendet die PT-Karte ein. */
@@ -285,6 +285,74 @@ async function laufe(browser, url, label, mitModulTest) {
   pruefe('I.E.-Eintrag überlebt das Neuladen', (await seite.inputValue('#xglow0')) === '12');
   pruefe('Vial überlebt das Neuladen', (await seite.inputValue('#vMgglow')) === '70');
 
+  /* Eigene Stoffe: im Bogen anlegen — mit Vial und ohne —, in der Grafik
+     nur die Wirkstoffe, und wieder entfernen, ohne Werte zu verlieren. */
+  pruefe('Jede Spalte hat ein Kreuz zum Entfernen',
+    (await seite.locator('#s-expo .spaltweg').count()) === 5);
+  await seite.click('#stoffNeu');
+  pruefe('Formular für neue Stoffe öffnet', await seite.locator('#stoffForm').isVisible());
+  await seite.fill('#snName', 'Retatrutid');
+  await seite.selectOption('#snArt', 'vial');
+  await seite.fill('#snVial-mg', '20');
+  await seite.fill('#snVial-ml', '2');
+  await seite.fill('#snDosis', '2');
+  const snOut = await seite.locator('#snOut').innerText();
+  pruefe('Rechner im Formular rechnet mit', /20,0 I\.E\./.test(snOut) && /10,00 mg\/ml/.test(snOut), snOut.slice(0, 80));
+  await seite.click('#snAdd');
+  await seite.waitForTimeout(400);
+  pruefe('Neuer Stoff steht als Spalte im Raster', (await seite.locator('#xeretatrutid0').count()) === 1
+    && /\(I\.E\.\)/.test(await seite.locator('#xheretatrutid').innerText()));
+  pruefe('Neuer Stoff steht bei den aktuellen Vials', (await seite.inputValue('#vMgeretatrutid')) === '20'
+    && /10,00 mg\/ml/.test(await seite.locator('#vKonzeretatrutid').innerText()));
+  await seite.fill('#xeretatrutid3', '20');
+  pruefe('Eingabe in I.E. wird in mg umgerechnet',
+    /= 2 mg/.test(await seite.locator('#ceretatrutid3').innerText()));
+  pruefe('Neuer Wirkstoff kommt in die Grafik',
+    (await seite.locator('#wochenGraphLegende > span').count()) === 6
+    && (await seite.locator('#wochenGraph path[data-serie="eretatrutid"]').count()) === 1);
+
+  await seite.click('#stoffNeu');
+  await seite.fill('#snName', 'Magnesium');
+  await seite.selectOption('#snArt', 'g');
+  await seite.selectOption('#snKat', 'supp');
+  pruefe('Ohne Vial bleibt der Rechner aus', await seite.locator('#snVial').isHidden());
+  await seite.click('#snAdd');
+  await seite.waitForTimeout(400);
+  await seite.fill('#xemagnesium2', '400');
+  pruefe('Supplement wird erfasst', /Magnesium: 1 Tag à 400 g/.test(await seite.locator('#expoSum').innerText()),
+    await seite.locator('#expoSum').innerText());
+  pruefe('Supplement bleibt aus der Grafik',
+    (await seite.locator('#wochenGraphLegende > span').count()) === 6
+    && (await seite.locator('#wochenGraph path[data-serie="emagnesium"]').count()) === 0);
+
+  await seite.click('#saveBtn');
+  await seite.waitForTimeout(500);
+  await seite.reload({ waitUntil: 'networkidle' });
+  await seite.waitForTimeout(500);
+  pruefe('Eigene Stoffe überleben das Neuladen',
+    (await seite.inputValue('#xeretatrutid3')) === '20' && (await seite.inputValue('#xemagnesium2')) === '400');
+  await seite.click('#tab-setup');
+  pruefe('Rechner bietet den neuen Stoff als Vial-Ziel',
+    (await seite.locator('[data-vialziel="eretatrutid"]').count()) === 1);
+  await seite.click('#tab-bogen');
+  await seite.click('[data-stoffweg="emagnesium"]');
+  pruefe('Das Kreuz fragt erst nach', /entfernen\?/.test(await seite.locator('#xwemagnesium').innerText()));
+  await seite.click('[data-stoffweg="emagnesium"]');
+  await seite.waitForTimeout(400);
+  pruefe('Zweiter Klick entfernt die Spalte', (await seite.locator('#xemagnesium2').count()) === 0
+    && /Magnesium entfernt/.test(await seite.locator('#stoffInfo').innerText()),
+    await seite.locator('#stoffInfo').innerText());
+  await seite.click('#saveBtn');
+  await seite.waitForTimeout(500);
+  const nachWeg = await seite.evaluate(() => {
+    const weeks = JSON.parse(localStorage.getItem('pwb.weeks.v1'));
+    const e = weeks[Object.keys(weeks).sort().pop()];
+    return { tage: e.dose.tage.emagnesium, extra: e.dose.extra };
+  });
+  pruefe('Werte eines entfernten Stoffs bleiben gespeichert',
+    nachWeg.tage[2] === '400' && nachWeg.extra.emagnesium.n === 'Magnesium',
+    JSON.stringify(nachWeg));
+
   /* Auswertung */
   await seite.click('#tab-aus');
   await seite.waitForTimeout(300);
@@ -300,7 +368,10 @@ async function laufe(browser, url, label, mitModulTest) {
   pruefe('Datenblock nennt das Erwartungsfenster', ctx.includes('ERWARTUNGSFENSTER'));
   pruefe('Datenblock trägt das Tagesprotokoll', /TAGE: .*GLOW 2,8mg/.test(ctx));
   pruefe('Datenblock trägt die Zufuhr', /TAGE: .*Kreatin 5g \+ Protein 180g/.test(ctx)
-    && /Kreatin 10 g\/Woche an 2 Tagen/.test(ctx) && /Protein 170g/.test(ctx) && /Alkohol 2,/.test(ctx));
+    && /Kreatin 10 g\/Woche an 2 Tagen/.test(ctx) && /Protein 170g/.test(ctx) && /Alkohol 2l,/.test(ctx));
+  pruefe('Datenblock trägt die eigenen Stoffe', /WEITERE STOFFE: .*Retatrutid 1 Tage à 2 mg/.test(ctx)
+    && /Magnesium 1 Tage à 400 g \[Supplement\/Nahrungsmittel\]/.test(ctx),
+    (ctx.match(/WEITERE STOFFE:[^|]*/) || [''])[0]);
   pruefe('Datenblock trägt die Confounder-Tage', /CONFOUNDER-TAGE .*Schlaf 7h/.test(ctx));
   pruefe('Datenblock nennt die Messtage beim WHO-5', /WHO-5 80 \(Ø aus 1 Tagen\), IIEF-5 20(?! \()/.test(ctx));
   pruefe('Datenblock trägt Tagesnotizen mit Tagesangabe',
@@ -388,6 +459,8 @@ async function laufe(browser, url, label, mitModulTest) {
     pruefe('CSV führt Notizen mit Tagesangabe', /\w\w \d\d\.\d\d\.: kleiner Knoten/.test(zeilen[1]));
     pruefe('CSV führt die Confounder-Tage',
       zeilen[0].includes('Confounder-Tagesprotokoll') && /Schlaf 7h/.test(zeilen[1]));
+    pruefe('CSV bekommt Spalten für eigene Stoffe',
+      /Retatrutid Tage;Retatrutid mg je Dosis/.test(zeilen[0]), zeilen[0].slice(-60));
   } else {
     await seite.click('#tab-aus');
     const dl = seite.waitForEvent('download', { timeout: 5000 }).catch(() => null);
@@ -441,6 +514,29 @@ async function laufe(browser, url, label, mitModulTest) {
     pruefe('Tagesreihe einer entfallenen Spalte bleibt gespeichert',
       abwNachher.abw === 'Mo: GLOW ausgelassen' && abwNachher.notizen.abw[1] === 'GLOW ausgelassen',
       JSON.stringify(abwNachher.notizen));
+
+    /* Alkohol stand bis 2026-10 in 0,5-l-Flaschen und steht seither in
+       Litern: ein alter Eintrag wird beim Laden einmal halbiert, die Marke
+       verhindert ein zweites Mal. */
+    await seite.evaluate((k) => {
+      const weeks = JSON.parse(localStorage.getItem('pwb.weeks.v1'));
+      const e = weeks[k];
+      delete e.alkL;
+      e.dose.zufuhr.alk = ['', '', '', '', '', '4', ''];
+      e.conf.alk = '4';
+      localStorage.setItem('pwb.weeks.v1', JSON.stringify(weeks));
+    }, key);
+    await seite.reload({ waitUntil: 'networkidle' });
+    await seite.waitForTimeout(500);
+    await seite.click('#tab-bogen');
+    pruefe('Alte Flaschenangaben werden zu Litern', (await seite.inputValue('#zalk5')) === '2',
+      await seite.inputValue('#zalk5'));
+    await seite.click('#saveBtn');
+    await seite.waitForTimeout(500);
+    await seite.reload({ waitUntil: 'networkidle' });
+    await seite.waitForTimeout(500);
+    pruefe('Liter werden nicht zweimal halbiert', (await seite.inputValue('#zalk5')) === '2',
+      await seite.inputValue('#zalk5'));
 
     /* Protein und Alkohol aus der Zeit, als sie in 02b mit Vortagsbezug
        standen: Zeile i meinte Tag i-1, landet also eine Zeile höher. Der

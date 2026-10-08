@@ -159,6 +159,24 @@ tbody tr:last-child td{border-bottom:none}
   color:var(--muted);min-height:.95rem;padding:.15rem .1rem 0;font-variant-numeric:tabular-nums}
 .vkonz{display:block;font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:.74rem;
   color:var(--muted);line-height:1.4;padding-bottom:.55rem}
+/* Spaltenkopf: Einstufung als Supplement und das Kreuz zum Entfernen.
+   Der erste Klick macht aus dem Kreuz die Rückfrage, deshalb darf es
+   breiter werden, ohne die Spalte zu verschieben. */
+.expo .xsupp{display:block;font-size:.58rem;letter-spacing:.06em;color:var(--muted);font-weight:400}
+.expo .spaltweg{display:inline-flex;align-items:center;justify-content:center;margin-left:.3rem;
+  min-width:1.15rem;height:1.15rem;padding:0 .25rem;border:1px solid transparent;border-radius:.3rem;
+  background:none;color:var(--muted);font-family:inherit;font-size:.78rem;line-height:1;cursor:pointer}
+.expo .spaltweg:hover{border-color:var(--border);color:var(--ink)}
+.expo .spaltweg[data-scharf="1"]{border-color:var(--alert);color:var(--alert);
+  font-size:.6rem;letter-spacing:.04em;padding:0 .35rem}
+/* Formular für einen neuen Stoff: abgesetzt, aber in derselben Karte. */
+.stoffform{border:1px solid var(--border-soft);border-radius:.6rem;padding:.9rem 1rem;
+  background:var(--surface-2);margin-bottom:1rem}
+.stoffform[hidden]{display:none!important}
+.stoffform .rcout{margin-top:.8rem}
+@media (max-width:44rem){
+  .stoffform .grid3,.stoffform .grid2{grid-template-columns:1fr}
+}
 
 /* Freischaltung der Wochenfragen: ein kleiner Knopf statt einer Karte. */
 .gatebar{display:flex;justify-content:flex-end;align-items:center;gap:.7rem;margin-bottom:.8rem}

@@ -71,7 +71,21 @@ von 46rem hinaus bis 80rem wachsen. Weitere breite Karten bekommen dieselbe Klas
 
 ## Eine Substanz im Tagesraster ergänzen
 
-Auch das ist eine Zeile in `src/js/schema.js`, in der Liste `EXPO`:
+**Dafür ist keine Änderung am Programm nötig.** Unter dem Raster in Abschnitt 02 steht
+der Knopf *Stoff hinzufügen*: Name, Erfassung (Vial, mg, µg, g, l) und Einstufung
+(Wirkstoff oder Supplement/Nahrungsmittel). Bei *Vial* klappt der Rekonstitutionsrechner
+im Formular auf; Vial-Inhalt und Wasservolumen werden mitgespeichert, die Spalte läuft
+dann in I.E. Das Kreuz im Spaltenkopf entfernt eine Spalte wieder — zweimal klicken, der
+erste Klick fragt nach.
+
+Selbst angelegte Stoffe liegen in `cfg.stoffe` und werden mit der Konfiguration
+gespeichert, sind also auf jedem Gerät an derselben Ablage da. Ihre Wochenwerte stehen
+gesammelt unter `dose.extra.<k>` (`n`, `u`, `kat`, `tage`, `dosis`, `summe`), die
+Tageswerte wie bei allen Substanzen in `dose.tage.<k>`. Nur Wirkstoffe mit mg-Bezug
+erscheinen in der Tagesmengen-Grafik.
+
+Eine Substanz **eingebaut** mitzuliefern bleibt eine Zeile in `src/js/schema.js`, Liste
+`EXPO`:
 
 ```js
 export const EXPO = [
@@ -80,10 +94,10 @@ export const EXPO = [
 ];
 ```
 
-Das Raster in Abschnitt 02 bekommt die neue Spalte von selbst, ebenso das
-Tagesprotokoll im Datenblock und in der CSV. Die abgeleiteten Wochensummen
-(`dose.n_…`/`dose.d_…`) entstehen nur für die drei ursprünglichen Substanzen —
-wer für eine neue Substanz eigene Kennzahlen braucht, ergänzt sie in
+Beides führt `src/js/substanzen.js` zusammen; der Rest des Programms liest nur noch
+`stoffe()` (sichtbare Spalten) und `alleStoffe()` (auch ausgeblendete, zum Lesen alter
+Daten). Die eigenen Wochensummen (`dose.n_…`/`dose.d_…`) entstehen weiterhin nur für die
+eingebauten Substanzen — wer für eine neue eigene Kennzahlen braucht, ergänzt sie in
 `src/js/analysis/metrics.js` und liest die Tageswerte aus `dose.tage.neu`.
 
 ## Eine Verlaufsgrafik hinzufügen
@@ -134,6 +148,15 @@ HTML (Knopf, Abbrechen-Knopf, Ausgabefeld, Meldungszeile):
 
 Aufbau, Streaming, Abbruch und Fehlerbehandlung kommen dann von selbst.
 
+## Eine gespeicherte Angabe umstellen
+
+Ändert sich die Bedeutung eines gespeicherten Wertes — Alkohol zählte bis 2026-10 in
+0,5-l-Flaschen und zählt seither in Litern —, gehört die Umrechnung nach
+`src/js/storage/migrate.js` und nicht in die Oberfläche. Jede Umstellung braucht eine
+**Marke am Eintrag** (`alkL` für die Liter), sonst lässt sich nicht unterscheiden, ob ein
+Wert schon umgerechnet ist, und der zweite Ladevorgang halbiert ihn ein zweites Mal.
+`readForm()` setzt dieselbe Marke, damit neu gespeicherte Wochen sie tragen.
+
 ## Eine weitere Ablage anbinden
 
 Ein Modul in `src/js/storage/` mit diesen Methoden:
@@ -177,7 +200,7 @@ grep -n '#[0-9a-fA-F]\{3,6\}' src/css/app.css   # muss leer bleiben
 ## Nach jeder Änderung
 
 ```bash
-npm run check     # baut die Einzeldatei und fährt beide Fassungen durch 231 Prüfungen
+npm run check     # baut die Einzeldatei und fährt beide Fassungen durch 266 Prüfungen
 ```
 
 Der Rauchtest startet einen echten Browser, füllt den Bogen aus, speichert, lädt neu und

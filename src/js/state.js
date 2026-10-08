@@ -17,7 +17,13 @@ export const state = {
        Wasservolumen entsteht die Konzentration, mit der die ml-Eintraege des
        Tagesrasters in Wirkstoffmengen umgerechnet werden. Ohne Vial wird die
        Substanz weiter direkt in mg bzw. µg erfasst. */
-    vials: {}
+    vials: {},
+    /* Selbst angelegte Stoffe des Tagesrasters, je Eintrag
+       {k, n, u, step, vial, kat} — siehe substanzen.js. */
+    stoffe: [],
+    /* Schluessel eingebauter Spalten, die ausgeblendet sind. Ihre schon
+       erfassten Werte bleiben in den Wochen stehen. */
+    ausStoffe: []
   }
 };
 

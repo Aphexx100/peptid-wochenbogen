@@ -12,7 +12,9 @@
       Dekoration.
 
    Jede Substanz zaehlt ab dem Tag, an dem sie zum ersten Mal im Raster
-   steht. Deshalb bekommt das Modell die Startdaten mitgeliefert und nicht
+   steht — auch eine selbst angelegte, die es gestern noch nicht gab.
+   Supplemente und Nahrungsmittel werden als solche benannt, damit das Modell
+   sie nicht als Wirkstoff behandelt. Deshalb bekommt das Modell die Startdaten mitgeliefert und nicht
    nur die Wochenwerte — ein Stoff, der seit drei Tagen laeuft, erklaert
    keinen Verlauf ueber drei Monate.
 
@@ -21,7 +23,7 @@
    Trend Rauschen, und es gibt keine Dosierungsempfehlungen. */
 
 import { state, keys } from '../state.js';
-import { EXPO } from '../schema.js';
+import { alleStoffe } from '../substanzen.js';
 import { BRIEFING } from './briefing.js';
 import { dataBlock } from './context.js';
 
@@ -31,7 +33,7 @@ export function substanzStarts() {
   keys().forEach((k) => {
     const t = state.weeks[k] && state.weeks[k].dose && state.weeks[k].dose.tage;
     if (!t || !t.start) return;
-    EXPO.forEach((x) => {
+    alleStoffe().forEach((x) => {
       (t[x.k] || []).forEach((v, i) => {
         if (!(Number(v) > 0)) return;
         const d = new Date(`${t.start}T12:00:00`);
@@ -45,12 +47,14 @@ export function substanzStarts() {
       });
     });
   });
-  return EXPO.map((x) => {
+  return alleStoffe().map((x) => {
+    const art = x.kat === 'supp' ? ' [Supplement/Nahrungsmittel]' : '';
     const e = treffer[x.k];
-    if (!e) return `${x.n}: nie erfasst`;
+    if (!e) return `${x.n}${art}: nie erfasst`;
     const schnitt = +(e.mengen.reduce((a, b) => a + b, 0) / e.mengen.length).toFixed(2);
     const dauer = Math.round((Date.parse(e.bis) - Date.parse(e.von)) / 86400000) + 1;
-    return `${x.n}: seit ${e.von} (${dauer} Tage), zuletzt ${e.bis}, ${e.tage} Anwendungstage, Ø ${schnitt} ${x.u} je Tag`;
+    return `${x.n}${art}: seit ${e.von} (${dauer} Tage), zuletzt ${e.bis}, ` +
+      `${e.tage} Anwendungstage, Ø ${schnitt} ${x.u} je Tag`;
   }).join('\n');
 }
 

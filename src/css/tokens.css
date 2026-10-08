@@ -15,6 +15,9 @@
   --grid:#E3DFD9;
   /* Datenreihen der Wochengrafik, fest je Wirkstoff (validiert: dataviz-Palette, Slots 1-4). */
   --c-glow:#2a78d6; --c-kiss:#eb6834; --c-pt:#1baf7a; --c-tirz:#eda100; --c-dhea:#e87ba4;
+  /* Zusatzslots fuer selbst angelegte Stoffe, der Reihe nach vergeben. */
+  --c-s1:#7b55c9; --c-s2:#0e8fa8; --c-s3:#96603a;
+  --c-s4:#c23a8f; --c-s5:#5a6b86; --c-s6:#4a7a2b;
   --shadow:0 1px 2px rgba(26,23,20,.06), 0 10px 28px -20px rgba(26,23,20,.35);
 }
 @media (prefers-color-scheme: dark){
@@ -28,6 +31,8 @@
     --alert:#E0837A; --alert-bg:#331F1D;
     --grid:#2B2622;
     --c-glow:#3987e5; --c-kiss:#d95926; --c-pt:#199e70; --c-tirz:#c98500; --c-dhea:#d55181;
+    --c-s1:#9b7ae0; --c-s2:#2aa8c4; --c-s3:#b8824c;
+    --c-s4:#d85fa8; --c-s5:#8294b0; --c-s6:#76a84a;
     --shadow:0 1px 2px rgba(0,0,0,.5), 0 10px 28px -20px rgba(0,0,0,.9);
   }
 }
@@ -41,6 +46,8 @@
   --alert:#E0837A; --alert-bg:#331F1D;
   --grid:#2B2622;
   --c-glow:#3987e5; --c-kiss:#d95926; --c-pt:#199e70; --c-tirz:#c98500; --c-dhea:#d55181;
+  --c-s1:#9b7ae0; --c-s2:#2aa8c4; --c-s3:#b8824c;
+  --c-s4:#d85fa8; --c-s5:#8294b0; --c-s6:#76a84a;
   --shadow:0 1px 2px rgba(0,0,0,.5), 0 10px 28px -20px rgba(0,0,0,.9);
 }
 

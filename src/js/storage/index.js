@@ -15,6 +15,7 @@ import { localStore } from './local.js';
 import { claudeStore } from './claude-db.js';
 import { githubStore } from './github.js';
 import { settings } from '../settings.js';
+import { migriereWochen } from './migrate.js';
 import { inClaudeViewer } from '../util/dom.js';
 
 let remote = null;
@@ -65,7 +66,7 @@ export async function loadConfig() {
 export async function loadWeeks() {
   if (remote) {
     try {
-      const w = await remote.loadWeeks();
+      const w = migriereWochen(await remote.loadWeeks());
       if (w && Object.keys(w).length) {
         await localStore.replaceWeeks(w);
         return w;
@@ -74,7 +75,7 @@ export async function loadWeeks() {
          Bestand — sie werden beim naechsten Speichern hochgeschoben. */
     } catch { /* faellt auf die lokale Kopie zurueck */ }
   }
-  return localStore.loadWeeks();
+  return migriereWochen(await localStore.loadWeeks());
 }
 
 /** Ergebnis eines Schreibvorgangs, wie die Oberflaeche es anzeigt. */
@@ -134,6 +135,7 @@ export async function savePrognose(p) {
 export function subscribeWeeks(cb) {
   if (remote && typeof remote.subscribe === 'function') {
     return remote.subscribe((w) => {
+      migriereWochen(w);
       localStore.replaceWeeks(w);
       cb(w);
     });

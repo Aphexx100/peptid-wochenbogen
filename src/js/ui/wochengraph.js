@@ -16,14 +16,20 @@
    jeden Tageswert, schiessen aber nie darueber hinaus — ein Tag mit 0 mg
    bleibt auf der Nulllinie, ein Hoechstwert bleibt der Hoechstwert.
 
+   Gezeigt werden nur Wirkstoffe mit mg-Bezug: ein Supplement oder
+   Nahrungsmittel (Kreatin, Protein, Alkohol) gehoert nicht in dieselbe
+   mg-Achse wie Kisspeptin, und Liter lassen sich gar nicht in mg umrechnen.
+   Welche Spalte als was zaehlt, legt die Einstufung in substanzen.js fest.
+
    Farben aus tokens.css (--c-<wirkstoff>), fest je Wirkstoff, mit dem
-   dataviz-Validator geprueft. Zwei Farben liegen hell unter 3:1 Kontrast;
+   dataviz-Validator geprueft; selbst angelegte Stoffe bekommen der Reihe
+   nach die Zusatzslots --c-s1 bis --c-s6. Zwei Farben liegen hell unter 3:1 Kontrast;
    deshalb tragen die Hoechstwerte sichtbare Beschriftung, und das Raster
    darunter ist die Tabellenansicht. */
 
 import { state } from '../state.js';
 import { $ } from '../util/dom.js';
-import { EXPO } from '../schema.js';
+import { graphStoffe, alleStoffe, mgFaktor } from '../substanzen.js';
 import { iso, weekDays, currentWeekKey, daysBetween, plusTage } from '../util/date.js';
 
 const WTAG = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
@@ -38,7 +44,7 @@ let beobachter = null;
 let verdrahtet = false;
 const ansicht = { modus: 'woche', zurueck: 0, von: '', bis: '' };
 
-const zuMg = (x, v) => (x.u === 'µg' ? v / 1000 : v);
+const zuMg = (x, v) => v * mgFaktor(x.u);
 const zahl = (v) => (+v.toFixed(v < 1 ? 3 : 2)).toLocaleString('de-DE');
 const wtag = (d) => WTAG[new Date(`${d}T12:00:00`).getDay()];
 const tagMonat = (d) => `${d.slice(8, 10)}.${d.slice(5, 7)}.`;
@@ -64,7 +70,7 @@ function tageswerte() {
   const eintragen = (start, quelle) => {
     for (let i = 0; i < 7; i++) {
       const o = {};
-      EXPO.forEach((x) => { o[x.k] = Number(quelle[x.k] && quelle[x.k][i]) || 0; });
+      alleStoffe().forEach((x) => { o[x.k] = Number(quelle[x.k] && quelle[x.k][i]) || 0; });
       m.set(plusTage(start, i), o);
     }
   };
@@ -212,19 +218,23 @@ function zeichne() {
   const N = tage.length;
   steuerung(daten, tage);
 
+  /* Die Legende wird jedes Mal neu aufgebaut: die Reihen koennen sich
+     aendern, sobald ein Stoff dazukommt oder eine Spalte verschwindet. */
+  const reihen = graphStoffe();
   const legende = $('wochenGraphLegende');
-  if (legende && !legende.childElementCount) {
-    EXPO.forEach((x) => {
+  if (legende) {
+    legende.textContent = '';
+    reihen.forEach((x) => {
       const eintrag = document.createElement('span');
       const key = document.createElement('span');
       key.className = 'wg-key';
-      key.style.background = `var(--c-${x.k})`;
+      key.style.background = x.farbe;
       eintrag.append(key, document.createTextNode(x.n));
       legende.appendChild(eintrag);
     });
   }
 
-  const rs = EXPO.map((x) => {
+  const rs = reihen.map((x) => {
     const roh = tage.map((d) => (daten.has(d) ? daten.get(d)[x.k] : null));
     return {
       x,
@@ -297,14 +307,14 @@ function zeichne() {
       lauf.push({ x: px(i), y: py(v) });
     });
     schliesse();
-    if (pfad) el('path', { d: pfad, class: 'wg-linie', 'data-serie': r.x.k, style: `stroke:var(--c-${r.x.k})` }, svg);
+    if (pfad) el('path', { d: pfad, class: 'wg-linie', 'data-serie': r.x.k, style: `stroke:${r.x.farbe}` }, svg);
   });
 
   /* Punkte an Injektionstagen, mit Ring in Flaechenfarbe — nur solange die
      Tage weit genug auseinander liegen, dass sie sich nicht zudecken. */
   if (spalte >= PUNKT_ABSTAND) {
     rs.forEach((r) => r.werte.forEach((v, i) => {
-      if (v > 0) el('circle', { cx: px(i), cy: py(v), r: 4, class: 'wg-punkt', style: `fill:var(--c-${r.x.k})` }, svg);
+      if (v > 0) el('circle', { cx: px(i), cy: py(v), r: 4, class: 'wg-punkt', style: `fill:${r.x.farbe}` }, svg);
     }));
   }
 
@@ -361,7 +371,7 @@ function zeichne() {
         z.className = 'wg-tip-zeile';
         const key = document.createElement('span');
         key.className = 'wg-key';
-        key.style.background = `var(--c-${r.x.k})`;
+        key.style.background = r.x.farbe;
         const wert = document.createElement('b');
         wert.textContent = v === null ? '—' : `${zahl(v)} mg`;
         const name = document.createElement('span');

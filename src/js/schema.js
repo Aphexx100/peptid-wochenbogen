@@ -2,10 +2,14 @@
    Ein neues Item entsteht durch eine neue Zeile in einer dieser Listen —
    Formular, CSV, Datenblock und Sparklines lesen alle aus denselben Arrays.
    Siehe docs/ERWEITERN.md. */
-/* Substanzen des Tagesrasters in Abschnitt 02. `k` ist zugleich der Schluessel
-   in dose.tage; `step` steuert die Schrittweite des Zahlenfeldes. `vial:false`
-   heisst: kommt fertig dosiert (Pen, Kapsel), wird nicht rekonstituiert und
-   deshalb immer direkt in der Wirkstoffeinheit erfasst, nie in I.E. */
+/* Eingebaute Substanzen des Tagesrasters in Abschnitt 02. `k` ist zugleich der
+   Schluessel in dose.tage; `step` steuert die Schrittweite des Zahlenfeldes.
+   `vial:false` heisst: kommt fertig dosiert (Pen, Kapsel), wird nicht
+   rekonstituiert und deshalb immer direkt in der Wirkstoffeinheit erfasst,
+   nie in I.E.
+   Weitere Stoffe legt der Nutzer selbst im Bogen an; sie liegen in
+   cfg.stoffe und kommen hier nicht vor — zusammengefuehrt werden beide
+   Listen in substanzen.js, und nur die liest der Rest des Programms. */
 export const EXPO = [
   {k:"glow", n:"GLOW",       u:"mg", step:0.1,  ph:"2,8"},
   {k:"kiss", n:"Kisspeptin", u:"µg", step:5,    ph:"100"},
@@ -15,12 +19,13 @@ export const EXPO = [
 ];
 /* Taegliche Zufuhr, ebenfalls im Raster von Abschnitt 02. Anders als die
    Confounder in 02b gilt hier die Zeile fuer den Tag selbst: Protein und
-   Alkohol von gestern gehoeren in die Zeile von gestern. Alkohol zaehlt in
-   0,5-l-Flaschen. Gespeichert unter dose.zufuhr. */
+   Alkohol von gestern gehoeren in die Zeile von gestern. Alkohol zaehlt seit
+   2026-10 in Litern (vorher in 0,5-l-Flaschen; alte Eintraege werden beim
+   Laden halbiert, siehe storage/migrate.js). Gespeichert unter dose.zufuhr. */
 export const ZUFUHR = [
-  {k:"kreatin", n:"Kreatin", u:"g",   step:1},
-  {k:"protein", n:"Protein", u:"g",   step:5},
-  {k:"alk",     n:"Alkohol", u:"Fl.", step:0.5}
+  {k:"kreatin", n:"Kreatin", u:"g", step:1},
+  {k:"protein", n:"Protein", u:"g", step:5},
+  {k:"alk",     n:"Alkohol", u:"l", step:0.5}
 ];
 /* Freitextspalten des Tagesrasters in Abschnitt 02 — je Tag eine Notiz.
    Getrennt von EXPO, weil dort gerechnet wird und hier nur notiert. Das

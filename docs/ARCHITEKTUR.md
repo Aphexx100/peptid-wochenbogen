@@ -18,15 +18,16 @@ src/css/tokens.css      alle Farben, in drei Blöcken für hell, dunkel, umgesch
 src/css/app.css         Komponenten, ausschließlich über Tokens gefärbt
 src/js/
   main.js               Einstieg: aufbauen, verdrahten, laden
-  schema.js             ALLE Fragen und Listen des Bogens
+  schema.js             ALLE Fragen und eingebauten Listen des Bogens
+  substanzen.js         Spalten des Tagesrasters: eingebaute und selbst angelegte
   constants.js          feste Kennzahlen (Kupferanteil, Haltbarkeit, Vial-Presets)
   state.js              der gemeinsame Laufzeitzustand
   settings.js           gerätegebundene Zugangsdaten, nur localStorage
   util/                 dom, format, date — klein und ohne Abhängigkeiten
-  ui/                   controls, tabs, status, setup, analyse, weekly, wochengraph, prognose
+  ui/                   controls, tabs, status, setup, analyse, weekly, wochengraph, prognose, stoffe
   form/                 build (Aufbau), model (lesen/füllen), save (Aktionen)
   analysis/             metrics (reine Rechnung), sparkline, report
-  storage/              index (Fassade), local, github, claude-db
+  storage/              index (Fassade), local, github, claude-db, migrate
   ai/                   index (Fassade), briefing, context, prognose, claude-sample, anthropic
   tools/                reconstitution — der Rekonstitutionsrechner
   export/               csv
@@ -61,7 +62,7 @@ anderen Modul setzen. Ein Objekt löst das ohne Setter-Kaskaden.
 ```js
 state.weeks    // { "2026-09-12": {…}, … }  Schlüssel ist der Erfassungstag der Woche
 state.weekKey  // welche Woche das Formular zeigt
-state.cfg      // Protokollstart, Erfassungstag, Erwartungsfenster, Übungsnamen, Vials
+state.cfg      // Protokollstart, Erfassungstag, Erwartungsfenster, Übungsnamen, Vials, Stoffe
 ```
 
 ## Zwei Takte
@@ -82,6 +83,25 @@ beantwortet und Woche dazu sagt. Die Tagesraster speichern deshalb ihre Rohwerte
 Wochenwerte in der gewohnten Form — so rechnen Auswertung, CSV und Datenblock
 unverändert weiter, ohne dass die Tagesauflösung verloren geht.
 
+## Die Substanzspalten
+
+Welche Spalten das Tagesraster zeigt, entscheidet `substanzen.js`: die eingebauten aus
+`schema.js` und die selbst angelegten aus `cfg.stoffe`. Ein neuer Stoff ist damit eine
+Eingabe und keine Programmänderung — er entsteht im Bogen selbst, wird mit der
+Konfiguration gespeichert und ist auf jedem Gerät an derselben Ablage da.
+
+Zwei Angaben steuern alles Weitere. Die Einheit `u` bestimmt, worin gerechnet wird; mit
+`vial` wird eingetragen, was an der Spritze abgelesen wird (I.E.), und über die
+Konzentration umgerechnet. Die Einstufung `kat` trennt Wirkstoff von Supplement oder
+Nahrungsmittel — nur Wirkstoffe mit mg-Bezug kommen in die Tagesmengen-Grafik, denn eine
+gemeinsame mg-Achse für Kisspeptin und Kreatin sagt über beides nichts.
+
+Entfernt wird in zwei Varianten: ein selbst angelegter Stoff verschwindet aus
+`cfg.stoffe`, ein eingebauter wandert nach `cfg.ausStoffe` und ist nur ausgeblendet. In
+beiden Fällen bleiben erfasste Werte stehen — `readExpo()` trägt die Reihen einer nicht
+mehr sichtbaren Spalte unverändert weiter, und `dose.extra` merkt sich Name und Einheit,
+damit eine alte Woche lesbar bleibt, wenn es den Stoff nicht mehr gibt.
+
 ## Die Ablage
 
 `storage/index.js` ist die einzige Ablage, die der Rest der Anwendung kennt. Dahinter:
@@ -96,6 +116,11 @@ unverändert weiter, ohne dass die Tagesauflösung verloren geht.
 Neben den Wochen liegen dort die Prognosen (`prognosen/<id>.json`): je eine Datei mit den
 geschätzten Aussagen, den Bewertungen des Nutzers und dem Prognosetext. Die nächste
 Prognose bekommt die letzten vier davon zu sehen.
+
+Beim Laden geht jeder Eintrag durch `migrate.js`. Dort stehen die Umstellungen am
+Datenformat — Alkohol zählte bis 2026-10 in 0,5-l-Flaschen und zählt seither in Litern —
+jeweils mit einer Marke am Eintrag, ohne die sich nicht sagen ließe, ob ein Wert schon
+umgerechnet ist.
 
 Geschrieben wird **immer zuerst lokal** und danach entfernt. Der lokale Schritt kann
 nicht fehlschlagen, der entfernte schon — und wenn, sagt die Meldung es, statt die

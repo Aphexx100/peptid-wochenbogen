@@ -12,10 +12,16 @@ import { CU_ANTEIL } from '../constants.js';
 import {
   KERN, GLOWZIEL, MASSE, MORGEN, PT_SIGNS, PIGMENT, NEG, WATCH, CONF_CHECKS
 } from '../schema.js';
+import { alleStoffe } from '../substanzen.js';
 import {
   whoScore, iiefScore, hautMean, gelenkMean, kraftIndex, taillenQuotient, cuWeek,
   tageKompakt, confTageKompakt, tageErfasst
 } from '../analysis/metrics.js';
+
+/* Selbst angelegte Stoffe bekommen je zwei Spalten am Ende der Tabelle —
+   am Ende, damit die Spaltenfolge der eingebauten Fragen gleich bleibt und
+   eine aeltere Auswertung die Datei weiter liest. */
+const eigene = () => alleStoffe().filter(function(x){return x.eigen;});
 
 function cell(v){ var s=(v===null||v===undefined)?"":String(v);
   if(/[";\n]/.test(s)) s='"'+s.replace(/"/g,'""')+'"'; return s; }
@@ -35,10 +41,13 @@ export function buildCsv(){
     .concat(PIGMENT.map(function(x){return x.n;})).concat(["UV-Stunden","UV-Quelle","Muttermale"])
     .concat(NEG.map(function(x){return x.n;}))
     .concat(WATCH.map(function(x){return x.n;}))
-    .concat(["Beobachtung Detail","Training h/Woche","Schlaf Ø h","Alkohol Flaschen 0,5l",
+    .concat(["Beobachtung Detail","Training h/Woche","Schlaf Ø h","Alkohol l/Woche",
              "Confounder-Tagesprotokoll","Stress"])
     .concat(CONF_CHECKS.map(function(x){return x.n;}))
-    .concat(["Sonstiges","Was war anders","Was ohnehin erwartet","Abweichungen","Einstichstellen"]);
+    .concat(["Sonstiges","Was war anders","Was ohnehin erwartet","Abweichungen","Einstichstellen"])
+    .concat(eigene().reduce(function(sp,x){
+      return sp.concat([x.n+" Tage", x.n+" "+x.u+" je Dosis"]);
+    },[]));
   var rows=[cols.join(";")];
   keys().forEach(function(k){
     var e=state.weeks[k];
@@ -78,7 +87,11 @@ export function buildCsv(){
                confTageKompakt(e),e.conf?e.conf.stress:""])
       .concat(CONF_CHECKS.map(function(x){return (e.conf&&e.conf.flags&&e.conf.flags.indexOf(x.k)>=0)?"ja":"";}))
       .concat([e.conf?e.conf.sonst:"", e.text?e.text.anders:"", e.text?e.text.ohnehin:"",
-               e.dose?e.dose.abw:"", e.dose?e.dose.stellen:""]);
+               e.dose?e.dose.abw:"", e.dose?e.dose.stellen:""])
+      .concat(eigene().reduce(function(sp,x){
+        var o=(e.dose&&e.dose.extra&&e.dose.extra[x.k])||{};
+        return sp.concat([o.tage||"", o.dosis||""]);
+      },[]));
     rows.push(r.map(cell).join(";"));
   });
   return "﻿"+rows.join("\r\n");

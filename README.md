@@ -5,12 +5,18 @@ und ohne Backend: erfassen, auswerten, exportieren, und auf Wunsch von einem
 Sprachmodell einordnen lassen.
 
 Der Bogen läuft in zwei Takten. **Täglich** erfasst er die Exposition (GLOW-Stack,
-Kisspeptin, PT-141, Tirzepatid aus dem Pen, DHEA als Kapsel), die Zufuhr (Kreatin, Protein, Alkohol), je Tag
-eine Notiz zu den Einstichstellen, Schlaf und Training vom Vortag sowie den WHO-5. Wer im Rekonstitutionsrechner sein aktuelles Vial hinterlegt,
-trägt die Dosis als **aufgezogene Einheiten (I.E.)** ein und der Bogen rechnet die
-Wirkstoffmenge selbst aus.
+Kisspeptin, PT-141, Tirzepatid aus dem Pen, DHEA als Kapsel), die Zufuhr (Kreatin,
+Protein in Gramm, Alkohol in Litern), je Tag eine Notiz zu den Einstichstellen, Schlaf
+und Training vom Vortag sowie den WHO-5. Wer im Rekonstitutionsrechner sein aktuelles
+Vial hinterlegt, trägt die Dosis als **aufgezogene Einheiten (I.E.)** ein und der Bogen
+rechnet die Wirkstoffmenge selbst aus.
+**Weitere Stoffe legst du im Bogen selbst an** — Name, Erfassung (Vial, mg, µg, g, l) und
+Einstufung als Wirkstoff oder Supplement, bei einem Vial gleich mit Rechner. Sie stehen
+danach als Spalte im Raster, in der CSV und in der Prognose; das Kreuz im Spaltenkopf
+nimmt eine Spalte wieder heraus, ohne erfasste Werte zu löschen.
 Oben im Bogen zeigt eine Grafik die Tagesmengen je Wirkstoff in mg — als Woche mit
-Blättern in frühere Wochen, als eigener Zeitraum oder als gesamter Verlauf.
+Blättern in frühere Wochen, als eigener Zeitraum oder als gesamter Verlauf. Supplemente
+und Nahrungsmittel werden erfasst, aber nicht gezeichnet.
 Zum Korrigieren lässt sich der ganze Bogen auf eine frühere Woche umstellen; beim
 WHO-5 wählt eine Tagesleiste den Tag.
 
@@ -35,7 +41,7 @@ die Architektur in [docs/ARCHITEKTUR.md](docs/ARCHITEKTUR.md).
 ```
 npm install          # esbuild und playwright, nur zum Bauen und Testen
 npm start            # http://localhost:8080
-npm test             # 231 Prüfungen in einem echten Browser
+npm test             # 266 Prüfungen in einem echten Browser
 npm run build        # dist/peptid-wochenbogen.html — eine Datei für Claude
 ```
 
