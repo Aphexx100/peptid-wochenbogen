@@ -29,6 +29,7 @@
   <button role="tab" id="tab-bogen" aria-controls="p-bogen" aria-selected="true">Bogen</button>
   <button role="tab" id="tab-aus" aria-controls="p-aus" aria-selected="false">Auswertung</button>
   <button role="tab" id="tab-claude" aria-controls="p-claude" aria-selected="false">Analyse</button>
+  <button role="tab" id="tab-prognose" aria-controls="p-prognose" aria-selected="false">Prognose</button>
   <button role="tab" id="tab-setup" aria-controls="p-setup" aria-selected="false">Setup</button>
   <button role="tab" id="tab-info" aria-controls="p-info" aria-selected="false">Info</button>
 </div>
@@ -380,6 +381,52 @@
   </div>
 </section>
 
+<!-- ==================== PROGNOSE ==================== -->
+<section class="panel" id="p-prognose" role="tabpanel" aria-labelledby="tab-prognose" hidden>
+
+  <div class="offline" id="progOff" hidden>
+    Für die Prognose ist keine Analysequelle verfügbar. Unter Setup einen Anthropic-Schlüssel eintragen, dann läuft sie mitsamt Netzrecherche.
+  </div>
+
+  <div class="card">
+    <h2>Prognose</h2>
+    <p class="hint">Zwei Schritte. Erst schätzt Claude den heutigen Zustand — teils aus deinen Daten, teils aus der Forschungslage zu den Substanzen. Dann bewertest du jede Aussage, und daraus entsteht die Prognose. Deine Bewertung ist der eigentliche Wert: ohne sie wäre es ein Lehrbuchverlauf mit deinen Zahlen als Dekoration.</p>
+    <p class="hint" style="margin-bottom:0"><em>Quelle: <span id="progQuelle">—</span>. Jede fertige Prognose wird gespeichert und fließt in die nächste ein. Jede Substanz zählt ab dem Tag ihres ersten Eintrags.</em></p>
+  </div>
+
+  <div class="card">
+    <h2><span class="step">1</span> Ist-Zustand schätzen</h2>
+    <p class="hint">Dieser Schritt recherchiert im Netz und in Studien und dauert entsprechend — ein bis drei Minuten sind normal. Je weniger Wochen erfasst sind, desto mehr trägt die Forschungslage und desto weniger deine Daten.</p>
+    <div class="btnrow two">
+      <button class="btn" id="progIst">Ist-Zustand schätzen</button>
+      <button class="btn ghost" id="progIstStop" hidden>Abbrechen</button>
+    </div>
+    <p class="saveinfo" id="progIstInfo"></p>
+    <pre class="answer" id="progIstRoh" hidden></pre>
+    <p class="note" id="progStand" hidden></p>
+    <div class="tablewrap prog-tabelle" id="progTabelle"></div>
+  </div>
+
+  <div class="card" id="progSchritt2" hidden>
+    <h2><span class="step">2</span> Prognose erstellen</h2>
+    <p class="hint">Bewerte oben jede Aussage von 5 (stimme voll zu) bis 1 (stimme gar nicht zu). Unbewertete Aussagen gehen als „nicht bewertet“ ein — besser als geraten.</p>
+    <p class="saveinfo" id="progBewertet"></p>
+    <div class="btnrow two">
+      <button class="btn" id="progErstellen">Prognose erstellen</button>
+      <button class="btn ghost" id="progStop" hidden>Abbrechen</button>
+    </div>
+    <p class="saveinfo" id="progInfo"></p>
+    <pre class="answer" id="progAus" hidden></pre>
+  </div>
+
+  <div class="card">
+    <h2>Frühere Prognosen</h2>
+    <p class="hint">Gespeichert in derselben Ablage wie die Wochen. Jede neue Prognose bekommt die letzten vier mitsamt deinen Bewertungen zu sehen.</p>
+    <div id="progFrueher"></div>
+    <div class="empty" id="progFrueherLeer">Noch keine Prognose erstellt.</div>
+  </div>
+</section>
+
 <!-- ==================== SETUP ==================== -->
 <section class="panel" id="p-setup" role="tabpanel" aria-labelledby="tab-setup" hidden>
   <div class="card">
@@ -556,6 +603,15 @@
       <b>Lücken ehrlich lassen.</b> Eine ausgelassene Woche ist unschön, eine nachgetragene Woche ist Erfindung. Lieber eine Lücke im Verlauf als eine erfundene Zahl darin.
       <br><br>
       <b>Vier Wochen sind das Minimum, zwölf sind die Antwort.</b> Alles darunter ist Rauschen — bei Hautbild und Haaren gilt das doppelt.
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Prognose</h2>
+    <div class="note">
+      Der Reiter <b>Prognose</b> schätzt in zwei Schritten. Zuerst recherchiert Claude die Substanzen und stellt die Forschungslage neben deine Daten; heraus kommen einzelne Aussagen über den heutigen Zustand. Die bewertest du von <b>stimme voll zu</b> bis <b>stimme gar nicht zu</b>, und erst daraus entsteht die Prognose.
+      <br><br>
+      Deine Bewertung ist dabei kein Beiwerk: wo du widersprichst, zählt deine Beobachtung, und die Annahme wird korrigiert. Jede Prognose wird gespeichert und der nächsten mitgegeben — so lässt sich später nachlesen, was vermutet wurde und was daraus geworden ist.
     </div>
   </div>
 

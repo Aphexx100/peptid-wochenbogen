@@ -48,6 +48,7 @@ Danach entsteht dort:
 daten/config.json              Protokollstart, Erwartungsfenster, Übungsnamen
 daten/weeks/2026-09-05.json    eine Datei je Woche
 daten/weeks/2026-09-12.json
+daten/prognosen/2026-10-08T...json  eine Datei je Prognose
 ```
 
 ## 3. Zugriffsschlüssel erzeugen

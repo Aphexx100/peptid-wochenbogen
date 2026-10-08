@@ -171,6 +171,31 @@ export const githubStore = {
 
   async saveWeek(key, entry) {
     await schreibeJson(`${basis()}/weeks/${key}.json`, entry, `Woche ${key}`);
+  },
+
+  /* Prognosen liegen wie die Wochen als je eine Datei, damit jede als
+     eigener Commit lesbar bleibt und keine die andere ueberschreibt. */
+  async loadPrognosen() {
+    const liste = await api(`${basis()}/prognosen${refQuery()}`);
+    if (!Array.isArray(liste)) return {};
+    const dateien = liste.filter((f) => f.type === 'file' && f.name.endsWith('.json'))
+      .sort((a, b) => (a.name < b.name ? 1 : -1))
+      .slice(0, 20);
+    const out = {};
+    for (let i = 0; i < dateien.length; i += 5) {
+      const teil = dateien.slice(i, i + 5);
+      // eslint-disable-next-line no-await-in-loop
+      const ergebnisse = await Promise.all(teil.map(async (f) => {
+        shas.set(`${basis()}/prognosen/${f.name}`, f.sha);
+        return leseJson(`${basis()}/prognosen/${f.name}`);
+      }));
+      ergebnisse.forEach((p) => { if (p && p.id) out[p.id] = p; });
+    }
+    return out;
+  },
+
+  async savePrognose(p) {
+    await schreibeJson(`${basis()}/prognosen/${p.id}.json`, p, `Prognose ${p.id}`);
   }
 };
 

@@ -20,6 +20,7 @@ import {
 import { renderStatus } from './ui/status.js';
 import { initTabs } from './ui/tabs.js';
 import { initAnalyse } from './ui/analyse.js';
+import { initPrognose } from './ui/prognose.js';
 import { initSetupUi, renderStoreState } from './ui/setup.js';
 import { initRechner } from './tools/reconstitution.js';
 import { buildCsv } from './export/csv.js';
@@ -103,6 +104,8 @@ async function start() {
   await initStorage();
   initSetupUi();
   $('offline').hidden = storageStatus().ok;
+
+  await initPrognose();
 
   uebernehmeCfg(await loadConfig());
   fillSetup();

@@ -35,7 +35,7 @@ die Architektur in [docs/ARCHITEKTUR.md](docs/ARCHITEKTUR.md).
 ```
 npm install          # esbuild und playwright, nur zum Bauen und Testen
 npm start            # http://localhost:8080
-npm test             # 221 Prüfungen in einem echten Browser
+npm test             # 231 Prüfungen in einem echten Browser
 npm run build        # dist/peptid-wochenbogen.html — eine Datei für Claude
 ```
 
@@ -75,6 +75,18 @@ im Browser.
 
 Der Knopf **Datenblock anzeigen** zeigt genau das, was das Modell zu sehen bekommt. Er
 funktioniert auch ohne jede Analysequelle, weil der Block lokal entsteht.
+
+## Prognose
+
+Der Reiter **Prognose** arbeitet in zwei Schritten. Zuerst schätzt das Modell den heutigen
+Zustand — teils aus den erfassten Daten, teils aus der Forschungslage zu den Substanzen;
+mit eigenem Anthropic-Schlüssel recherchiert es dafür im Netz. Das Ergebnis sind einzelne,
+überprüfbare Aussagen, die du von "stimme voll zu" bis "stimme gar nicht zu" bewertest.
+Erst daraus entsteht die Prognose.
+
+Jede Prognose wird in der Ablage gespeichert (`daten/prognosen/`) und fließt in die
+nächste ein. Jede Substanz zählt ab dem Tag ihres ersten Eintrags im Raster, nicht ab
+Protokollstart.
 
 ## Zwei Betriebsarten, eine Quelle
 

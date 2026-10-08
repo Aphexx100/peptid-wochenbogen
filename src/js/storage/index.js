@@ -102,6 +102,34 @@ export async function saveWeek(key, entry) {
   }
 }
 
+/** Alle gespeicherten Prognosen. Entfernte Ablage schlaegt die lokale Kopie. */
+export async function loadPrognosen() {
+  if (remote && remote.loadPrognosen) {
+    try {
+      const p = await remote.loadPrognosen();
+      if (p && Object.keys(p).length) {
+        for (const k of Object.keys(p)) {
+          // eslint-disable-next-line no-await-in-loop
+          await localStore.savePrognose(p[k]);
+        }
+        return p;
+      }
+    } catch { /* faellt auf die lokale Kopie zurueck */ }
+  }
+  return localStore.loadPrognosen();
+}
+
+export async function savePrognose(p) {
+  await localStore.savePrognose(p);
+  if (!remote || !remote.savePrognose) return ergebnis(true, 'Auf diesem Gerät gespeichert.');
+  try {
+    await remote.savePrognose(p);
+    return ergebnis(true, `Gespeichert · ${remote.label}`);
+  } catch (err) {
+    return ergebnis(false, `Lokal gespeichert, ${remote.label} nicht erreicht (${err.message || 'Fehler'}).`);
+  }
+}
+
 /** Live-Aktualisierung, sofern die entfernte Ablage sie kann. */
 export function subscribeWeeks(cb) {
   if (remote && typeof remote.subscribe === 'function') {

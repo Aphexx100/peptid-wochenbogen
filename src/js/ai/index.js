@@ -26,6 +26,9 @@ export async function initAi() {
 
 export const aiAktiv = () => aktiv;
 
+/** Kann die aktive Quelle waehrend der Antwort im Netz nachschlagen? */
+export const aiRecherchiert = () => !!(aktiv && aktiv.kannRecherchieren);
+
 export function ask(prompt, opts) {
   if (!aktiv) throw Object.assign(new Error('keine Analysequelle'), { code: 'not_declared' });
   return aktiv.ask(prompt, opts);

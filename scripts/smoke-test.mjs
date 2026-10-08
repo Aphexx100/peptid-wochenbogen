@@ -306,6 +306,38 @@ async function laufe(browser, url, label, mitModulTest) {
     /Einstichstellen: \w\w \d\d\.\d\d\.: leichte Rötung links; \w\w \d\d\.\d\d\.: kleiner Knoten/.test(ctx));
   pruefe('Analyse-Knöpfe ohne Quelle deaktiviert', await seite.locator('#askWeek').isDisabled());
 
+  /* Prognose-Reiter: ohne Analysequelle gesperrt, Aussagentabelle bewertbar. */
+  await seite.click('#tab-prognose');
+  pruefe('Prognose-Reiter vorhanden', /Ist-Zustand schätzen/.test(await seite.locator('#p-prognose').innerText()));
+  pruefe('Ohne Analysequelle gesperrt', (await seite.locator('#progIst').isDisabled())
+    && (await seite.locator('#progErstellen').isDisabled())
+    && (await seite.locator('#progOff').isVisible()));
+  pruefe('Noch keine Prognose gespeichert', await seite.locator('#progFrueherLeer').isVisible());
+  if (mitModulTest) {
+    const ist = await seite.evaluate(async () => {
+      const m = await import('./src/js/ai/prognose.js');
+      const roh = '```json\n{"stand":"Testlage","aussagen":[' +
+        '{"id":"a1","bereich":"Haut","aussage":"Hautbild stabil","grundlage":"daten","beleg":"W1-W3","zuversicht":"mittel"},' +
+        '{"id":"a2","bereich":"Gelenke","aussage":"Keine Besserung vor Woche 9","grundlage":"forschung","beleg":"Studienlage","zuversicht":"hoch"}]}\n```';
+      const p = m.parseIst(roh);
+      const u = await import('./src/js/ui/prognose.js');
+      u.zeigeIst(p, {});
+      return { anzahl: p.aussagen.length, stand: p.stand };
+    });
+    pruefe('Antwort aus Schritt 1 wird gelesen', ist.anzahl === 2 && ist.stand === 'Testlage', JSON.stringify(ist));
+    pruefe('Aussagen stehen als Tabelle', (await seite.locator('#progTabelle tbody tr').count()) === 2
+      && /Keine Besserung vor Woche 9/.test(await seite.locator('#progTabelle').innerText()));
+    pruefe('Schritt 2 erscheint mit offenen Bewertungen',
+      (await seite.locator('#progSchritt2').isVisible())
+      && /0 von 2 bewertet/.test(await seite.locator('#progBewertet').innerText()));
+    await seite.click('#progTabelle tbody tr:nth-child(1) .prog-seg button:nth-child(1)');
+    await seite.click('#progTabelle tbody tr:nth-child(2) .prog-seg button:nth-child(5)');
+    pruefe('Bewertung je Aussage wird übernommen',
+      /Alle 2 Aussagen bewertet/.test(await seite.locator('#progBewertet').innerText())
+      && (await seite.locator('#progTabelle tbody tr:nth-child(1) .prog-seg button:nth-child(1)')
+        .getAttribute('aria-pressed')) === 'true');
+  }
+
   /* Setup: Ablagefelder */
   await seite.click('#tab-setup');
   await seite.waitForTimeout(100);

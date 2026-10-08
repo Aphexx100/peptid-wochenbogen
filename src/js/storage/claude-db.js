@@ -43,6 +43,22 @@ export const claudeStore = {
     await db.doc(`weeks/${key}`).set(entry);
   },
 
+  async loadPrognosen() {
+    if (!db) return {};
+    const snap = await db.collection('prognosen').orderBy('id', 'desc').limit(20).get();
+    const out = {};
+    snap.docs.forEach((d) => {
+      const v = d.data() || {};
+      out[v.id || d.id] = v;
+    });
+    return out;
+  },
+
+  async savePrognose(p) {
+    if (!db) throw new Error('keine Datenbank');
+    await db.doc(`prognosen/${p.id}`).set(p);
+  },
+
   /** Live-Aktualisierung; gibt eine Funktion zum Abbestellen zurueck. */
   subscribe(cb) {
     if (!db) return () => {};

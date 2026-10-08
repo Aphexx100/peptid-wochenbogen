@@ -15,6 +15,12 @@ import { settings } from '../settings.js';
 const URL_MESSAGES = 'https://api.anthropic.com/v1/messages';
 const MAX_TOKENS = 2000;
 
+/* Websuche laeuft auf Anthropics Servern, nicht im Browser: das Modell
+   bekommt das Werkzeug angeboten, fuehrt es dort aus und bekommt die
+   Ergebnisse in denselben Antwortstrom. Dadurch braucht die Seite keinen
+   eigenen Server und keine zweite Zugangsberechtigung. */
+const SUCH_WERKZEUG = { type: 'web_search_20250305', name: 'web_search', max_uses: 12 };
+
 const codeFor = (status) => {
   if (status === 401 || status === 403) return 'not_granted';
   if (status === 429) return 'rate_limited';
@@ -29,6 +35,9 @@ export const anthropicAi = {
   async init() {
     return !!settings().anthropic.key;
   },
+
+  /** Diese Quelle kann im Netz nachschlagen. */
+  kannRecherchieren: true,
 
   async ask(prompt, opts = {}) {
     const a = settings().anthropic;
@@ -47,8 +56,9 @@ export const anthropicAi = {
         },
         body: JSON.stringify({
           model: a.model || 'claude-sonnet-4-5',
-          max_tokens: MAX_TOKENS,
+          max_tokens: opts.maxTokens || MAX_TOKENS,
           stream: true,
+          ...(opts.recherche ? { tools: [SUCH_WERKZEUG] } : {}),
           messages: [{ role: 'user', content: prompt }]
         })
       });
@@ -93,6 +103,10 @@ export const anthropicAi = {
         if (ev.type === 'content_block_delta' && ev.delta && ev.delta.text) {
           text += ev.delta.text;
           if (opts.onText) opts.onText({ text });
+        } else if (ev.type === 'content_block_start' && ev.content_block
+                   && ev.content_block.type === 'server_tool_use' && opts.onSuche) {
+          /* Jede Suche melden, damit die lange Recherche sichtbar laeuft. */
+          opts.onSuche();
         } else if (ev.type === 'message_delta' && ev.delta && ev.delta.stop_reason === 'max_tokens') {
           truncated = true;
         } else if (ev.type === 'error') {

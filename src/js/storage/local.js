@@ -4,6 +4,7 @@
 
 const K_CFG = 'pwb.cfg.v1';
 const K_WEEKS = 'pwb.weeks.v1';
+const K_PROG = 'pwb.prognosen.v1';
 
 const lese = (k, fallback) => {
   try {
@@ -35,6 +36,17 @@ export const localStore = {
     } catch {
       return false;
     }
+  },
+
+  /** Alle gespeicherten Prognosen, Schluessel ist ihre id. */
+  async loadPrognosen() {
+    return lese(K_PROG, {});
+  },
+
+  async savePrognose(p) {
+    const alle = lese(K_PROG, {});
+    alle[p.id] = p;
+    schreibe(K_PROG, alle);
   },
 
   async loadConfig() {

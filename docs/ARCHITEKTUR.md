@@ -23,11 +23,11 @@ src/js/
   state.js              der gemeinsame Laufzeitzustand
   settings.js           gerätegebundene Zugangsdaten, nur localStorage
   util/                 dom, format, date — klein und ohne Abhängigkeiten
-  ui/                   controls, tabs, status, setup, analyse, weekly, wochengraph
+  ui/                   controls, tabs, status, setup, analyse, weekly, wochengraph, prognose
   form/                 build (Aufbau), model (lesen/füllen), save (Aktionen)
   analysis/             metrics (reine Rechnung), sparkline, report
   storage/              index (Fassade), local, github, claude-db
-  ai/                   index (Fassade), briefing, context, claude-sample, anthropic
+  ai/                   index (Fassade), briefing, context, prognose, claude-sample, anthropic
   tools/                reconstitution — der Rekonstitutionsrechner
   export/               csv
 scripts/                serve, build-single, smoke-test
@@ -92,6 +92,10 @@ unverändert weiter, ohne dass die Tagesauflösung verloren geht.
   bleibt, zwei Geräte sich seltener in die Quere kommen und ein fehlgeschlagener
   Schreibvorgang höchstens eine Woche beschädigt.
 - **`claude-db.js`** — die Artifact-Datenbank; als einzige mit Live-Aktualisierung.
+
+Neben den Wochen liegen dort die Prognosen (`prognosen/<id>.json`): je eine Datei mit den
+geschätzten Aussagen, den Bewertungen des Nutzers und dem Prognosetext. Die nächste
+Prognose bekommt die letzten vier davon zu sehen.
 
 Geschrieben wird **immer zuerst lokal** und danach entfernt. Der lokale Schritt kann
 nicht fehlschlagen, der entfernte schon — und wenn, sagt die Meldung es, statt die
