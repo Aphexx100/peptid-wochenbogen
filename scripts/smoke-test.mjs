@@ -62,7 +62,7 @@ async function laufe(browser, url, label, mitModulTest) {
   pruefe('Segmentfragen aufgebaut', segmente >= 60, `${segmente} gefunden`);
   pruefe('Kraftfelder aufgebaut', (await seite.locator('#kw0').count()) === 1);
   const expoZellen = await seite.locator('#s-expo input[type="number"]').count();
-  pruefe('Tagesraster: 7 Tage × 4 Substanzen + 3 Zufuhrspalten', expoZellen === 49, `${expoZellen} Zellen`);
+  pruefe('Tagesraster: 7 Tage × 5 Substanzen + 3 Zufuhrspalten', expoZellen === 56, `${expoZellen} Zellen`);
   pruefe('Wochengrafik leer mit Hinweis', (await seite.locator('#wochenGraph svg').count()) === 0
     && /Noch keine Injektion/.test(await seite.locator('#wochenGraphLeer').innerText()));
   const notizZellen = await seite.locator('#s-expo input[type="text"]').count();
@@ -201,12 +201,12 @@ async function laufe(browser, url, label, mitModulTest) {
   const wgGlow = await seite.locator('#wochenGraph path[data-serie="glow"]').count();
   const wgPunkte = await seite.locator('#wochenGraph circle.wg-punkt').count();
   pruefe('Wochengrafik zeichnet die GLOW-Linie mit sieben Punkten', wgGlow === 1 && wgPunkte === 7, `${wgLinien} Linien, ${wgPunkte} Punkte`);
-  pruefe('Wochengrafik hat Legende und Beschriftung', (await seite.locator('#wochenGraphLegende > span').count()) === 4
+  pruefe('Wochengrafik hat Legende und Beschriftung', (await seite.locator('#wochenGraphLegende > span').count()) === 5
     && /GLOW 2,8/.test(await seite.locator('#wochenGraph').innerText()));
   pruefe('Wochengrafik zeichnet Bezier-Kurven',
     /C/.test(await seite.locator('#wochenGraph path[data-serie="glow"]').getAttribute('d')));
   await seite.hover('#wochenGraph rect.wg-hit', { position: { x: 4, y: 40 } });
-  pruefe('Wochengrafik zeigt Tooltip mit allen Wirkstoffen', (await seite.locator('.wg-tip .wg-tip-zeile').count()) === 4
+  pruefe('Wochengrafik zeigt Tooltip mit allen Wirkstoffen', (await seite.locator('.wg-tip .wg-tip-zeile').count()) === 5
     && /2,8 mg/.test(await seite.locator('.wg-tip').innerText()));
   pruefe('PT-Karte ohne PT-141-Tag verborgen', await seite.locator('#ptCard').isHidden());
   await seite.fill('#xpt2', '1.75');
@@ -259,8 +259,8 @@ async function laufe(browser, url, label, mitModulTest) {
   /* Vials: Rechner-Preset als aktuelles GLOW-Vial übernehmen — die Spalte
      läuft danach in ml, der bestehende mg-Eintrag wird umgerechnet und die
      Wirkstoffmenge je Zelle ausgewiesen. */
-  pruefe('Vial-Karte kompakt: drei Wirkstoffe je eine Zeile',
-    (await seite.locator('#s-vials tbody tr').count()) === 3 && (await seite.locator('#s-vials input').count()) === 6);
+  pruefe('Vial-Karte kompakt: je Wirkstoff eine Zeile',
+    (await seite.locator('#s-vials tbody tr').count()) === 4 && (await seite.locator('#s-vials input').count()) === 8);
   await seite.click('#tab-setup');
   await seite.click('[data-preset="glow"]');
   await seite.click('[data-vialziel="glow"]');

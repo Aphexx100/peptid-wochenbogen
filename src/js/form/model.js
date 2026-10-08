@@ -33,8 +33,8 @@ export function readForm(){
             tirz:legacy.tirz||""};
   }else{
     var a=ableiten(g.tage);
-    e.dose={glow:a.n_glow, kiss:a.n_kiss, pt:a.n_pt,
-            dGlow:a.d_glow, dKiss:a.d_kiss, dPt:a.d_pt, ghk:state.cfg.ghk,
+    e.dose={glow:a.n_glow, kiss:a.n_kiss, pt:a.n_pt, dhea:a.n_dhea,
+            dGlow:a.d_glow, dKiss:a.d_kiss, dPt:a.d_pt, dDhea:a.d_dhea, ghk:state.cfg.ghk,
             tirz:a.tirz, tage:g.tage};
     /* ml-Rohwerte und Vial-Stand mitschreiben, wenn in ml erfasst wurde —
        so bleibt nachvollziehbar, was aufgezogen wurde und womit. */

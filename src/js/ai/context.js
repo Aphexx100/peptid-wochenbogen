@@ -27,6 +27,7 @@ function weekLine(k){
            ", Kisspeptin "+s(e.dose.kiss)+" Inj. à "+s(e.dose.dKiss)+" µg"+
            ", PT-141 "+s(e.dose.pt)+" Anw. à "+s(e.dose.dPt)+" mg"+
            ", Tirzepatid "+s(e.dose.tirz)+" mg/Woche"+
+           (Number(e.dose.dhea)>0?(", DHEA "+s(e.dose.dhea)+" Tage à "+s(e.dose.dDhea)+" mg"):"")+
            (cuW>0?(", elementares Kupfer "+cuW.toFixed(2)+" mg/Woche"):"")+
            (Number(e.dose.kreatin)>0?(", Kreatin "+e.dose.kreatin+" g/Woche an "+e.dose.kreatinTage+" Tagen"):"")+
            (e.dose.sonstMed?(", sonst: "+e.dose.sonstMed):"")+
