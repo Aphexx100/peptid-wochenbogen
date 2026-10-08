@@ -71,8 +71,9 @@ async function laufe(browser, url, label, mitModulTest) {
   pruefe('Alte Wochenfelder für Notizen entfernt', (await seite.locator('#nSonstMed, #abw, #stellen').count()) === 0);
   const confZellen = await seite.locator('#s-confTage input').count();
   pruefe('Confounder-Tagesraster: nur noch Training und Schlaf', confZellen === 14, `${confZellen} Zellen`);
-  pruefe('Tirzepatid (Pen) nicht bei den Vials',
-    (await seite.locator('#vMgtirz').count()) === 0 && (await seite.locator('[data-vialziel="tirz"]').count()) === 0);
+  pruefe('Fertig dosierte Stoffe nicht bei den Vials',
+    (await seite.locator('#vMgtirz').count()) === 0 && (await seite.locator('#vMgdhea').count()) === 0
+    && (await seite.locator('[data-vialziel="tirz"]').count()) === 0);
 
   /* Der ausführliche Fragebogen hängt an keinem Tag mehr: ohne Klick bleibt
      er verborgen, der Knopf öffnet und schließt ihn. */
@@ -262,7 +263,7 @@ async function laufe(browser, url, label, mitModulTest) {
      läuft danach in ml, der bestehende mg-Eintrag wird umgerechnet und die
      Wirkstoffmenge je Zelle ausgewiesen. */
   pruefe('Vial-Karte kompakt: je Wirkstoff eine Zeile',
-    (await seite.locator('#s-vials tbody tr').count()) === 4 && (await seite.locator('#s-vials input').count()) === 8);
+    (await seite.locator('#s-vials tbody tr').count()) === 3 && (await seite.locator('#s-vials input').count()) === 6);
   await seite.click('#tab-setup');
   await seite.click('[data-preset="glow"]');
   await seite.click('[data-vialziel="glow"]');
