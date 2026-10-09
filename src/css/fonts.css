@@ -1,0 +1,48 @@
+/* Schriften, lokal.
+
+   Vorher lagen sie bei fonts.googleapis.com. Das hatte zwei Haken: ohne Netz
+   startet der Bogen in einer Ersatzschrift, und jeder Aufruf schickt die
+   IP-Adresse des Nutzers an einen fremden Host — in einer Anwendung, deren
+   Versprechen lautet, dass die Daten das Gerät nicht verlassen, ist das ein
+   Widerspruch im eigenen Schaufenster.
+
+   Mitgeliefert ist nur das Subset `latin`; Umlaute, Eszett, µ, €, Gedanken-
+   striche und Anführungszeichen sind darin enthalten. Die Sternchen und
+   Haken in den Abschnittsnummern (★ ◷ ✓) haben diese Schriften ohnehin
+   nicht — dafür springt wie bisher die Systemschrift ein.
+
+   Archivo ist eine variable Schrift: eine Datei deckt 400 bis 700 ab.
+   Herkunft und Lizenz stehen in src/fonts/LIZENZ.txt.
+
+   `font-display: swap` haelt den Text waehrend des Ladens sichtbar. Lokal
+   dauert das Millisekunden; die Regel bleibt trotzdem stehen, damit ein
+   defektes Schriftpaket den Bogen nicht unlesbar macht. */
+
+@font-face{
+  font-family:Archivo;
+  font-style:normal;
+  font-weight:400 700;
+  font-display:swap;
+  src:url(../fonts/archivo-var-latin.woff2) format("woff2");
+}
+@font-face{
+  font-family:"IBM Plex Mono";
+  font-style:normal;
+  font-weight:400;
+  font-display:swap;
+  src:url(../fonts/ibm-plex-mono-400-latin.woff2) format("woff2");
+}
+@font-face{
+  font-family:"IBM Plex Mono";
+  font-style:normal;
+  font-weight:500;
+  font-display:swap;
+  src:url(../fonts/ibm-plex-mono-500-latin.woff2) format("woff2");
+}
+@font-face{
+  font-family:"IBM Plex Mono";
+  font-style:normal;
+  font-weight:600;
+  font-display:swap;
+  src:url(../fonts/ibm-plex-mono-600-latin.woff2) format("woff2");
+}

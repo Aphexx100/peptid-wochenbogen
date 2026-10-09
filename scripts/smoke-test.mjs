@@ -20,7 +20,10 @@ import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright';
 
 const WURZEL = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const TYPEN = { '.html': 'text/html', '.css': 'text/css', '.js': 'text/javascript', '.json': 'application/json' };
+const TYPEN = {
+  '.html': 'text/html', '.css': 'text/css', '.js': 'text/javascript',
+  '.json': 'application/json', '.woff2': 'font/woff2'
+};
 
 const server = http.createServer((req, res) => {
   const p = path.join(WURZEL, decodeURIComponent(req.url.split('?')[0]));
@@ -54,6 +57,14 @@ async function laufe(browser, url, label, mitModulTest) {
   await seite.goto(url, { waitUntil: 'networkidle' });
   await seite.waitForTimeout(400);
   pruefe('Seite lädt ohne JavaScript-Fehler', fehler.length === 0, fehler.join(' | '));
+  /* Kein fremder Host: die Schriften liegen lokal, geladen wird nur vom
+     eigenen Ursprung. Sonst startet die Seite ohne Netz in einer
+     Ersatzschrift und verrät nebenbei die IP-Adresse des Nutzers. */
+  const fremdeHosts = await seite.evaluate(() => performance.getEntriesByType('resource')
+    .map((r) => r.name).filter((u) => !u.startsWith(location.origin) && !u.startsWith('data:')));
+  pruefe('Lädt nichts von fremden Hosts', fremdeHosts.length === 0, fremdeHosts.join(' | '));
+  const schrift = await seite.evaluate(() => document.fonts.check('1rem Archivo'));
+  pruefe('Hausschrift ist da', schrift);
 
   /* Aufbau: Regler und Segmente kommen aus schema.js, nicht aus dem HTML. */
   const regler = await seite.locator('[data-s]').count();

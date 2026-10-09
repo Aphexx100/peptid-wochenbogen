@@ -20,6 +20,22 @@ const ZIEL = path.join(WURZEL, 'dist', 'peptid-wochenbogen.html');
 
 const lies = (p) => fs.readFile(path.join(WURZEL, p), 'utf8');
 
+/* Die Schriften liegen als eigene Dateien neben dem CSS. Eine Einzeldatei
+   darf aber nichts nachladen, auch nicht vom eigenen Host — deshalb wandern
+   sie hier als data:-URI in das Stylesheet. Rund 80 kB Schrift werden dabei
+   zu rund 107 kB Base64; das ist der Preis dafuer, dass das Artifact ohne
+   Nebendateien auskommt. */
+async function schriftenEinbetten(css) {
+  const treffer = [...css.matchAll(/url\(\.\.\/fonts\/([\w.-]+)\)/g)];
+  let out = css;
+  for (const [ganz, datei] of treffer) {
+    // eslint-disable-next-line no-await-in-loop
+    const roh = await fs.readFile(path.join(WURZEL, 'src/fonts', datei));
+    out = out.replace(ganz, `url(data:font/woff2;base64,${roh.toString('base64')})`);
+  }
+  return out;
+}
+
 const bundle = await esbuild.build({
   entryPoints: [path.join(WURZEL, 'src/js/main.js')],
   bundle: true,
@@ -30,12 +46,13 @@ const bundle = await esbuild.build({
 });
 const js = bundle.outputFiles[0].text;
 
-const css = `${await lies('src/css/tokens.css')}\n${await lies('src/css/app.css')}`;
+const css = `${await schriftenEinbetten(await lies('src/css/fonts.css'))}\n`
+  + `${await lies('src/css/tokens.css')}\n${await lies('src/css/app.css')}`;
 let html = await lies('index.html');
 
 /* Verweise durch den eingebetteten Inhalt ersetzen. */
 html = html.replace(
-  /<link rel="stylesheet" href="src\/css\/tokens\.css">\s*<link rel="stylesheet" href="src\/css\/app\.css">/,
+  /<link rel="stylesheet" href="src\/css\/fonts\.css">\s*<link rel="stylesheet" href="src\/css\/tokens\.css">\s*<link rel="stylesheet" href="src\/css\/app\.css">/,
   `<style>\n${css}\n</style>`
 );
 html = html.replace(
