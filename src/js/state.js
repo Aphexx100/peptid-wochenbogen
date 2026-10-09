@@ -23,7 +23,10 @@ export const state = {
     stoffe: [],
     /* Schluessel eingebauter Spalten, die ausgeblendet sind. Ihre schon
        erfassten Werte bleiben in den Wochen stehen. */
-    ausStoffe: []
+    ausStoffe: [],
+    /* Abgewaehlte Bereiche des ausfuehrlichen Fragebogens (siehe BEREICHE
+       in schema.js). Leer heisst: alle sichtbar. */
+    bereicheAus: []
   }
 };
 

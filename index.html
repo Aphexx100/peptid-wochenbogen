@@ -54,6 +54,10 @@
   <div class="gatetag" id="gateTag" hidden>
     <div class="tagwahl" id="gateTagwahl" role="group" aria-label="Tag des Fragebogens wählen"></div>
     <p class="hint" style="margin:.1rem 0 0">Für welchen Tag gilt der Fragebogen? Vergangene Tage lassen sich nachtragen; für eine frühere Woche oben die Woche wechseln.</p>
+    <div id="bereichBlock" hidden>
+      <div class="bereichwahl" id="bereichWahl" role="group" aria-label="Bereiche des Fragebogens"></div>
+      <p class="hint" style="margin:.1rem 0 0">Welche Bereiche willst du ausfüllen? Abgewählte Bereiche verschwinden aus dem Bogen; ihre gespeicherten Antworten bleiben unberührt. Erwartung und Speichern stehen immer. <span class="gatehint" id="bereichInfo"></span></p>
+    </div>
   </div>
 
   <div class="card">
@@ -158,10 +162,16 @@
     <div class="note" id="confSum" style="margin-top:1rem"></div>
   </div>
 
-  <div class="card weekly">
-    <h2><span class="step">★</span> GLOW-Zielgrößen</h2>
-    <p class="hint">Die drei Wirkungen, die du vom Stack erwartest — Haut, Gelenke, Wohlbefinden. Sie stehen als eigener Block, damit sie nicht im allgemeinen Kontext untergehen, und werden in der Auswertung gegen deine im Setup hinterlegte Erwartung geprüft: Tritt eine Verbesserung <em>vor</em> dem erwarteten Zeitpunkt auf, ist Erwartung die naheliegendere Erklärung als Kollagenumbau.</p>
-    <div id="s-glowziel"></div>
+  <div class="card weekly" data-bereich="haut">
+    <h2><span class="step">★</span> GLOW — Hautbild</h2>
+    <p class="hint">Eine der drei Wirkungen, die du vom Stack erwartest. Sie steht als eigener Block, damit sie nicht im allgemeinen Kontext untergeht, und wird in der Auswertung gegen deine im Setup hinterlegte Erwartung geprüft: Tritt eine Verbesserung <em>vor</em> dem erwarteten Zeitpunkt auf, ist Erwartung die naheliegendere Erklärung als Kollagenumbau.</p>
+    <div id="s-glow-haut"></div>
+  </div>
+
+  <div class="card weekly" data-bereich="schmerz">
+    <h2><span class="step">★</span> GLOW — Gelenke und Schmerz</h2>
+    <p class="hint">Dieselbe Prüfung gegen dasselbe Erwartungsfenster, nur für die Gelenke. Ein höherer Wert bedeutet hier <em>weniger</em> Beschwerden.</p>
+    <div id="s-glow-schmerz"></div>
     <div class="field" style="margin-top:1rem">
       <label class="fl" for="gGelenkOrt">Betroffene Gelenke — welche, seit wann</label>
       <input type="text" id="gGelenkOrt" placeholder="z. B. rechte Schulter seit Frühjahr, Knie beidseits bei Belastung">
@@ -169,10 +179,13 @@
     <p class="hint" style="margin-top:.8rem">Das Ortsfeld ist wichtiger, als es aussieht: Die Tierdaten zu BPC-157 betreffen die Heilung <em>akuter</em> Verletzungen, nicht diffuse Gelenkbeschwerden. Ein benanntes, abgrenzbares Gelenk ist der einzige Fall, in dem eine Besserung überhaupt einen Mechanismus hinter sich hätte.</p>
   </div>
 
-  <div class="card weekly">
+  <div class="card weekly" data-bereich="energie">
     <h2><span class="step">03</span> Kernbereiche</h2>
     <p class="hint">Für den Zeitraum seit dem letzten Fragebogen insgesamt — nicht heute, nicht der beste Tag. <em>0 = so schlecht wie es bei dir je war, 10 = so gut wie es bei dir je war.</em></p>
     <div id="s-kern"></div>
+    <label class="fl" style="margin-top:1.3rem">GLOW-Zielgröße</label>
+    <p class="hint" style="margin:.1rem 0 .7rem">Das allgemeine Wohlbefinden gehört zu den drei erwarteten Wirkungen und wird gegen dasselbe Erwartungsfenster geprüft.</p>
+    <div id="s-glow-wohl"></div>
   </div>
 
   <div class="card">
@@ -186,14 +199,14 @@
     <p class="daylist" id="whoTage"></p>
   </div>
 
-  <div class="card weekly">
+  <div class="card weekly" data-bereich="sex">
     <h2><span class="step">05</span> Sexualfunktion</h2>
     <p class="hint">IIEF-5, deutscher Standardwortlaut. <em>In den letzten sieben Tagen …</em></p>
     <div id="s-iief"></div>
     <div class="score">IIEF-5 <b id="iiefScore">—</b> von 25</div>
   </div>
 
-  <div class="card weekly">
+  <div class="card weekly" data-bereich="sex">
     <h2><span class="step">05b</span> Morgendliche Erektionen</h2>
     <p class="hint">Der wichtigste Einzelmarker in diesem ganzen Bogen. Spontane Erektionen im Schlaf und beim Aufwachen sind androgenabhängig und reagieren auf den Hormonstatus über Tage bis Wochen — nicht auf die Uhrzeit einer einzelnen Injektion. Damit trennen sie das Stehende vom Akuten: Was sich hier bewegt, gehört zur Dauergabe, nicht zu PT-141.</p>
     <div id="s-morgenCount"></div>
@@ -201,7 +214,7 @@
     <p class="hint" style="margin-top:.9rem"><em>Beim Zählen die volle Blase als Erklärung ausschließen — hält die Erektion nach dem Wasserlassen an, zählt sie.</em></p>
   </div>
 
-  <div class="card cond weekly" id="ptCard" data-faellig="0" hidden>
+  <div class="card cond weekly" id="ptCard" data-bereich="sex" data-faellig="0" hidden>
     <h2><span class="step">06</span> PT-141 — der einzige echte Vergleich</h2>
     <p class="hint">Weil PT-141 nicht täglich läuft, hast du hier Tage mit und Tage ohne — im selben Körper, in derselben Woche. Das ist der einzige Punkt im ganzen Protokoll, an dem eine Zuordnung möglich ist. Entsprechend sorgfältig ausfüllen.</p>
     <div id="s-pt"></div>
@@ -241,7 +254,7 @@
     </div>
   </div>
 
-  <div class="card weekly">
+  <div class="card weekly" data-bereich="haut">
     <h2><span class="step">06b</span> Pigmentierung</h2>
     <p class="hint">MC1-Rezeptoren auf den Melanozyten sind derselbe Rezeptorpfad, über den auch die Bräunung läuft. Beschleunigte Bräunung ist damit ein peripherer Wirknachweis — und gleichzeitig der Grund, warum die Muttermal-Beobachtung ab jetzt zum Protokoll gehört.</p>
     <div id="s-pigment"></div>
@@ -261,13 +274,13 @@
     </div>
   </div>
 
-  <div class="card weekly">
+  <div class="card weekly" data-bereich="sicher">
     <h2><span class="step">07</span> Negativkontrollen</h2>
     <p class="hint">Bereiche, auf die keine dieser Substanzen einen Mechanismus hat. Steigen sie mit, ist der Anstieg global — also Erwartung, gute Wochen, besserer Schlaf. Bleiben sie flach, während die Kernbereiche steigen, ist das dein stärkstes Argument dafür, dass etwas Substanzspezifisches passiert.</p>
     <div id="s-neg"></div>
   </div>
 
-  <div class="card weekly">
+  <div class="card weekly" data-bereich="sicher">
     <h2><span class="step">08</span> Beobachtungsliste</h2>
     <p class="hint">Nur ankreuzen, wenn diese Woche tatsächlich aufgetreten. Bei einem Stack ist das Datum die einzige Zuordnung, die dir bleibt.</p>
     <div class="checks" id="s-watch"></div>
@@ -277,7 +290,7 @@
     </div>
   </div>
 
-  <div class="card weekly">
+  <div class="card weekly" data-bereich="koerper">
     <h2><span class="step">★</span> Körperzusammensetzung</h2>
     <p class="hint">Der Tirzepatid-Endpunkt. Gewicht allein sagt nichts darüber, <em>was</em> abgenommen wurde — dafür braucht es die Umfänge und, wichtiger noch, die Kraftwerte.</p>
     <div class="grid3">
@@ -299,7 +312,7 @@
     <div id="s-kraft"></div>
   </div>
 
-  <div class="card weekly">
+  <div class="card weekly" data-bereich="umfeld">
     <h2><span class="step">09</span> Confounder der Woche</h2>
     <p class="hint">Training und Schlaf laufen täglich in Abschnitt 02b, Protein und Alkohol in 02. Hier bleibt, was sich nur über die Woche beurteilen lässt.</p>
     <div id="s-conf"></div>
@@ -317,7 +330,7 @@
     <p class="saveinfo" id="saveInfo"></p>
   </div>
 
-  <div class="card cond weekly" id="monthCard" data-faellig="0" hidden>
+  <div class="card cond weekly" id="monthCard" data-bereich="sicher" data-faellig="0" hidden>
     <h2><span class="step">★</span> Alle vier Wochen fällig</h2>
     <p class="hint">Diese Woche ist ein Vielfaches von vier seit Beginn. Was jetzt ansteht:</p>
     <div class="checks neutral" id="s-month"></div>
@@ -633,7 +646,7 @@
     <div class="note">
       <b>Täglich</b> trägst du ein, was gesetzt wurde, dazu Kreatin, Protein und Alkohol am Tag der Aufnahme, Auffälligkeiten an der Einstichstelle, Schlaf und Training vom Vortag und den WHO-5 für heute. Das dauert eine Minute und ist der Teil, der aus dem Gedächtnis nicht rekonstruierbar wäre.
       <br><br>
-      <b>Wann du Zeit hast</b> erstellst du mit dem Knopf oben im Bogen den <b>ausführlichen Fragebogen</b>: Erwartung, Kernbereiche, GLOW-Ziele, Sexualfunktion, Morgenerektionen, Pigmentierung, Negativkontrollen, Beobachtungsliste, Körpermaße. Er hängt an keinem festen Tag mehr: die Tagesleiste unter dem Knopf sagt, für welchen Tag er gilt — vorgewählt heute, nachtragen lässt sich jeder vergangene Tag der angezeigten Woche. Der Bogen merkt sich dieses Datum und zeigt es in der Statuszeile.
+      <b>Wann du Zeit hast</b> erstellst du mit dem Knopf oben im Bogen den <b>ausführlichen Fragebogen</b>: Erwartung, Kernbereiche, GLOW-Ziele, Sexualfunktion, Morgenerektionen, Pigmentierung, Negativkontrollen, Beobachtungsliste, Körpermaße. Er hängt an keinem festen Tag mehr: die Tagesleiste unter dem Knopf sagt, für welchen Tag er gilt — vorgewählt heute, nachtragen lässt sich jeder vergangene Tag der angezeigten Woche. Der Bogen merkt sich dieses Datum und zeigt es in der Statuszeile. Die Häkchen daneben wählen die <b>Bereiche</b>: was du gerade nicht beurteilen willst, blendest du aus, ohne etwas zu verlieren — die zuletzt gespeicherten Antworten des Bereichs bleiben stehen.
       <br><br>
       Beantworte ihn für den <b>Zeitraum seit dem letzten Fragebogen</b>, nicht nur für heute. Solange kein Fragebogen offen ist, lässt das tägliche Speichern diese Antworten unberührt. Sporadisch und ehrlich schlägt einen Pflichttermin, der ausfällt — nur geht mit größeren Abständen die Auflösung verloren, mit der sich Veränderungen zuordnen lassen.
     </div>

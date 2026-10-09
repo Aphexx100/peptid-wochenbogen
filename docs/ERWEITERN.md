@@ -64,6 +64,27 @@ Tagesleiste unter seinem Knopf; `fragebogenTag()` in `src/js/ui/weekly.js` liefe
 und `readForm()` schreibt ihn als `bogenTag` in den Eintrag. Wer eine Frage ergänzt, die
 sich auf diesen Tag bezieht, liest ihn von dort — nicht vom heutigen Datum.
 
+## Einen Bereich des Fragebogens ergänzen
+
+Eine Zeile in `BEREICHE` in `src/js/schema.js`, und `data-bereich="<k>"` an jede Karte,
+die dazugehört:
+
+```js
+export const BEREICHE = [
+  …
+  { k: 'schlaf', n: 'Schlaf und Erholung' }
+];
+```
+
+Das Häkchen unter dem Fragebogen-Knopf entsteht von selbst, ebenso das Ein- und
+Ausblenden. Eine Karte ohne `data-bereich` steht immer, solange der Fragebogen offen ist
+— so bleiben Erwartung und Speichern erreichbar. Hat die Karte zusätzlich `data-faellig`,
+gilt beides: der Bereich muss an und die Karte fällig sein.
+
+Abgewählt heißt **unsichtbar, nicht gelöscht**: die Felder bleiben im Formular, und
+`readForm()` schreibt ihre zuletzt geladenen Werte unverändert mit. Welche Bereiche aus
+sind, steht in `cfg.bereicheAus` und wird mit der Konfiguration gespeichert.
+
 ## Eine Notizspalte im Tagesraster ergänzen
 
 Eine Zeile in `EXPO_TEXT` in `src/js/schema.js` (`k`, `n`, `kurz` für den Spaltenkopf,
@@ -211,7 +232,7 @@ grep -n '#[0-9a-fA-F]\{3,6\}' src/css/app.css   # muss leer bleiben
 ## Nach jeder Änderung
 
 ```bash
-npm run check     # baut die Einzeldatei und fährt beide Fassungen durch 286 Prüfungen
+npm run check     # baut die Einzeldatei und fährt beide Fassungen durch 302 Prüfungen
 ```
 
 Der Rauchtest startet einen echten Browser, füllt den Bogen aus, speichert, lädt neu und

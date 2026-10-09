@@ -25,7 +25,10 @@ GLOW-Wirkungen, Sexualfunktion (IIEF-5) und Morgenerektionen, Körpermaße und K
 Pigmentierung, Negativkontrollen und die Beobachtungsliste. Bis dahin bleiben diese Fragen
 verborgen. Der Knopf **Ausführlichen Fragebogen erstellen** öffnet sie. Eine Tagesleiste
 darunter sagt, für welchen Tag er gilt — vorgewählt heute, nachtragen lässt sich jeder
-vergangene Tag der Woche, für eine frühere Woche wird oben die Woche gewechselt. Ein sporadisch, aber ehrlich ausgefüllter Fragebogen ist mehr wert
+vergangene Tag der Woche, für eine frühere Woche wird oben die Woche gewechselt.
+Darunter steht je ein Häkchen für die **Bereiche** (Haut, Schmerzbild, Energie,
+Körperzusammensetzung, Sexualfunktion, Sicherheit, Umfeld): abgewählt verschwindet der
+Bereich aus dem Bogen, seine gespeicherten Antworten bleiben unberührt. Ein sporadisch, aber ehrlich ausgefüllter Fragebogen ist mehr wert
 als ein Pflichttermin, der ausfällt. Die allgemeinen Erklärungen stehen im Reiter **Info**.
 Aus allem entstehen Verlaufsgrafiken, eine Wochentabelle und ein CSV-Export.
 
@@ -42,7 +45,7 @@ die Architektur in [docs/ARCHITEKTUR.md](docs/ARCHITEKTUR.md).
 ```
 npm install          # esbuild und playwright, nur zum Bauen und Testen
 npm start            # http://localhost:8080
-npm test             # 286 Prüfungen in einem echten Browser
+npm test             # 302 Prüfungen in einem echten Browser
 npm run build        # dist/peptid-wochenbogen.html — eine Datei für Claude
 ```
 

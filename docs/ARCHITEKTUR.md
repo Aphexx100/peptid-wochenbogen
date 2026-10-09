@@ -80,6 +80,14 @@ an dem gespeichert wurde. Deshalb lässt er sich nachtragen: die Tagesleiste unt
 Knopf wählt den Tag, `fragebogenTag()` in `ui/weekly.js` ist die eine Stelle, die ihn
 kennt.
 
+Ob er sichtbar ist, entscheiden drei Zustände: von Hand geöffnet, von Hand zugeklappt,
+oder ein gespeicherter `bogenTag`. Das Zuklappen braucht einen eigenen Zustand, weil eine
+Woche mit gespeichertem Fragebogen sonst für immer als offen gälte und der Knopf keine
+Wirkung mehr hätte. Innerhalb des Fragebogens wählen Häkchen die Bereiche (`BEREICHE` in
+`schema.js`, `data-bereich` an der Karte, `cfg.bereicheAus` als Auswahl). Abgewählt heißt
+unsichtbar, nicht gelöscht — die Felder bleiben im Formular und werden unverändert
+mitgespeichert.
+
 Der Schnitt hat einen Grund: Was nur der Tag weiß — eine Injektion, drei Stunden Schlaf,
 zwei Bier — ist am Samstag nicht mehr rekonstruierbar, sondern geraten. Was die Woche
 beurteilt — Hautbild, Gelenke, Kernbereiche — wird schlechter, wenn man es am Mittwoch

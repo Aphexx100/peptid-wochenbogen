@@ -865,7 +865,7 @@ export function buildForm() {
   slider($('s-erwartung'), 'erwartung',
     'Wie stark erwartest du, dass diese Woche einen Effekt zeigt?', 'gar nicht', 'sehr stark', 5);
   KERN.forEach((x) => slider($('s-kern'), x.k, x.n, x.lo, x.hi, 5));
-  GLOWZIEL.forEach((x) => slider($('s-glowziel'), x.k, x.n, x.lo, x.hi, 5));
+  GLOWZIEL.forEach((x) => slider($(`s-glow-${x.b}`), x.k, x.n, x.lo, x.hi, 5));
 
   buildKraft();
 

@@ -86,6 +86,7 @@ function uebernehmeCfg(c) {
   if (c.vials) state.cfg.vials = c.vials;
   if (c.stoffe) state.cfg.stoffe = c.stoffe;
   if (c.ausStoffe) state.cfg.ausStoffe = c.ausStoffe;
+  if (c.bereicheAus) state.cfg.bereicheAus = c.bereicheAus;
 }
 
 async function start() {

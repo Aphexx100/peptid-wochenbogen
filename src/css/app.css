@@ -284,6 +284,14 @@ tbody tr:last-child td{border-bottom:none}
 .gatetag{margin:-.5rem 0 1rem}
 .gatetag[hidden]{display:none!important}
 .gatetag .tagwahl{justify-content:flex-end}
+/* Bereiche des Fragebogens: ein Häkchen je Bereich. */
+.bereichwahl{display:flex;flex-wrap:wrap;gap:.3rem;justify-content:flex-end;margin:.7rem 0 0}
+.bereichwahl label{display:inline-flex;align-items:center;gap:.35rem;cursor:pointer;
+  font-size:.74rem;color:var(--ink-2);padding:.28rem .55rem;border:1px solid var(--border);
+  border-radius:.4rem;background:var(--surface)}
+.bereichwahl label[data-an="0"]{color:var(--muted);background:var(--surface-2)}
+.bereichwahl input{accent-color:var(--accent);margin:0}
+#bereichBlock[hidden]{display:none!important}
 .gatetag .hint{text-align:right}
 .tagwahl{display:flex;flex-wrap:wrap;gap:.25rem;margin:.2rem 0 .5rem}
 .tagwahl button{position:relative;font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:.72rem;font-weight:600;

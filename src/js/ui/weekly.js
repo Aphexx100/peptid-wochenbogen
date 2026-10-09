@@ -20,11 +20,21 @@
 
    Karten tragen dafuer die Klasse `weekly`. Sichtbar sind sie, sobald der
    Knopf geklickt wurde oder die angezeigte Woche schon einen Fragebogen
-   traegt (`bogenTag` im gespeicherten Eintrag). */
+   traegt (`bogenTag` im gespeicherten Eintrag) — und solange er nicht von
+   Hand wieder ausgeblendet wurde. Das Ausblenden braucht einen eigenen
+   Zustand: eine Woche mit gespeichertem Fragebogen gilt sonst fuer immer
+   als offen, und der Knopf haette keine Wirkung mehr.
+
+   Innerhalb des Fragebogens waehlen Haekchen, welche Bereiche zu sehen
+   sind (`BEREICHE` in schema.js, `data-bereich` an der Karte). Abgewaehlt
+   heisst unsichtbar, nicht geloescht: die Felder bleiben im Formular, und
+   das Speichern schreibt ihre zuletzt geladenen Werte unveraendert mit. */
 
 import { state } from '../state.js';
 import { $ } from '../util/dom.js';
 import { iso, weekDays } from '../util/date.js';
+import { BEREICHE } from '../schema.js';
+import { saveConfig } from '../storage/index.js';
 
 /* Von Hand geoeffnet — gilt nur fuer genau die Woche, fuer die geklickt
    wurde. Beim Wochenwechsel verfaellt die Oeffnung damit von selbst. */
@@ -36,7 +46,11 @@ let manuellFuer = null;
 let wahlFuer = null;
 let wahlTag = '';
 
+/* Von Hand ausgeblendet — ebenfalls nur fuer diese eine Woche. */
+let zuFuer = null;
+
 const manuell = () => manuellFuer !== null && manuellFuer === state.weekKey;
+const zugeklappt = () => zuFuer !== null && zuFuer === state.weekKey;
 
 /** Datum des Fragebogens dieser Woche, falls einer gespeichert ist. */
 export function bogenTag() {
@@ -44,7 +58,61 @@ export function bogenTag() {
   return (e && e.bogenTag) || '';
 }
 
-export const wochenfragenOffen = () => manuell() || !!bogenTag();
+export const wochenfragenOffen = () => !zugeklappt() && (manuell() || !!bogenTag());
+
+/* ---- Bereiche ---- */
+
+const bereicheAus = () => state.cfg.bereicheAus || [];
+
+/** Ist der Bereich eingeschaltet? Karten ohne Bereich stehen immer. */
+const bereichAn = (k) => !k || bereicheAus().indexOf(k) < 0;
+
+/* Die Auswahl gehoert zur Konfiguration, wird also mitgespeichert. Ein
+   Haekchen soll aber nicht jedes Mal sofort ins Netz schreiben — wer drei
+   Bereiche abwaehlt, meint eine Aenderung, nicht drei. */
+let uhr = null;
+function speichereSpaeter() {
+  if (uhr) clearTimeout(uhr);
+  uhr = setTimeout(async () => {
+    uhr = null;
+    const r = await saveConfig(state.cfg);
+    const el = $('bereichInfo');
+    if (el) {
+      el.textContent = r.ok ? 'Auswahl gespeichert.' : r.text;
+      el.className = `gatehint ${r.ok ? 'ok' : 'bad'}`;
+    }
+  }, 1200);
+}
+
+/* Die Leiste wird einmal gebaut und danach nur noch nachgefuehrt — ein
+   Neuaufbau bei jedem Tastendruck im Raster wuerde dem Haekchen unter der
+   Hand den Fokus nehmen. */
+function renderBereichwahl(offen) {
+  const host = $('bereichWahl');
+  if (!host) return;
+  if (!host.childElementCount) {
+    BEREICHE.forEach((b) => {
+      const lab = document.createElement('label');
+      const box = document.createElement('input');
+      box.type = 'checkbox';
+      box.id = `bw-${b.k}`;
+      box.addEventListener('change', () => {
+        const aus = bereicheAus().filter((k) => k !== b.k);
+        state.cfg.bereicheAus = box.checked ? aus : aus.concat([b.k]);
+        renderWeeklyGate();
+        speichereSpaeter();
+      });
+      lab.append(box, document.createTextNode(b.n));
+      host.appendChild(lab);
+    });
+  }
+  BEREICHE.forEach((b) => {
+    const box = $(`bw-${b.k}`);
+    box.checked = bereichAn(b.k);
+    box.parentElement.dataset.an = box.checked ? '1' : '0';
+  });
+  $('bereichBlock').hidden = !offen;
+}
 
 const kurz = (d) => `${d.slice(8, 10)}.${d.slice(5, 7)}.${d.slice(0, 4)}`;
 const WTAG = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
@@ -99,9 +167,10 @@ export function renderWeeklyGate() {
        jede vierte Woche) tragen `data-faellig`. Der Fragebogen schaltet sie
        zusaetzlich frei, statt ihre Bedingung zu ueberstimmen — sonst
        gewinnt schlicht, wer zuletzt gerendert hat. */
+    const an = offen && bereichAn(el.dataset.bereich);
     el.hidden = el.dataset.faellig === undefined
-      ? !offen
-      : !(offen && el.dataset.faellig === '1');
+      ? !an
+      : !(an && el.dataset.faellig === '1');
   });
 
   const bar = $('gateBar');
@@ -116,9 +185,11 @@ export function renderWeeklyGate() {
     }</button>`;
   $('gateOpen').addEventListener('click', () => {
     manuellFuer = offen ? null : state.weekKey;
+    zuFuer = offen ? state.weekKey : null;
     renderWeeklyGate();
   });
   renderTagwahl(offen);
+  renderBereichwahl(offen);
 }
 
 /** Beim Tageswechsel ueber Mitternacht stimmt das Datum sonst nicht mehr. */
@@ -129,6 +200,7 @@ export function initWeeklyGate() {
     if (jetzt !== tag) {
       tag = jetzt;
       manuellFuer = null;
+      zuFuer = null;
       renderWeeklyGate();
     }
   }, 60000);

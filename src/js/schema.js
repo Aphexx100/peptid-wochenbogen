@@ -60,15 +60,31 @@ export const KERN = [
   {k:"wunde",    n:"Heilung kleiner Wunden und Kratzer",        lo:"sehr langsam",   hi:"sehr schnell"},
   {k:"magen",    n:"Verdauung und Magen",                       lo:"schlecht",       hi:"sehr gut"}
 ];
+/* Bereiche des ausfuehrlichen Fragebogens. Jede Karte in index.html traegt
+   ihren Bereich als `data-bereich`; die Haekchen unter dem Fragebogen-Knopf
+   blenden ihn ein oder aus (ui/weekly.js). Abgewaehlt heisst nur unsichtbar
+   — gespeicherte Antworten bleiben unberuehrt. Karten ohne `data-bereich`
+   (Erwartung, Speichern) stehen immer. */
+export const BEREICHE = [
+  {k:"haut",    n:"Haut und Pigmentierung"},
+  {k:"schmerz", n:"Schmerzbild und Gelenke"},
+  {k:"energie", n:"Energie und Wohlbefinden"},
+  {k:"koerper", n:"Körperzusammensetzung und Kraft"},
+  {k:"sex",     n:"Sexualfunktion"},
+  {k:"sicher",  n:"Sicherheit und Kontrollen"},
+  {k:"umfeld",  n:"Umfeld und Confounder"}
+];
 /* Die drei Wirkungen, die vom GLOW-Stack erwartet werden — als eigener Endpunktblock,
-   damit sie nicht im allgemeinen Kontext untergehen. */
+   damit sie nicht im allgemeinen Kontext untergehen. `b` sagt, in welcher
+   Karte das Item steht: Haut, Gelenke oder Wohlbefinden. Die Schluessel
+   bleiben dieselben, die Aufteilung ist reine Darstellung. */
 export const GLOWZIEL = [
-  {k:"gHautText", n:"Hautbild — Textur und Straffheit",     lo:"schlecht",     hi:"sehr gut"},
-  {k:"gHautRot",  n:"Hautbild — Rötung und Reizung",        lo:"stark",        hi:"keine"},
-  {k:"gGelenkRuhe",n:"Gelenkschmerz in Ruhe",               lo:"stark",        hi:"keiner"},
-  {k:"gSteif",    n:"Morgendliche Steifigkeit",             lo:"stark",        hi:"keine"},
-  {k:"gGelenkLast",n:"Gelenke unter Belastung",             lo:"schmerzhaft",  hi:"beschwerdefrei"},
-  {k:"gWohl",     n:"Allgemeines Wohlbefinden",             lo:"schlecht",     hi:"sehr gut"}
+  {k:"gHautText", n:"Hautbild — Textur und Straffheit",     lo:"schlecht",     hi:"sehr gut",     b:"haut"},
+  {k:"gHautRot",  n:"Hautbild — Rötung und Reizung",        lo:"stark",        hi:"keine",        b:"haut"},
+  {k:"gGelenkRuhe",n:"Gelenkschmerz in Ruhe",               lo:"stark",        hi:"keiner",       b:"schmerz"},
+  {k:"gSteif",    n:"Morgendliche Steifigkeit",             lo:"stark",        hi:"keine",        b:"schmerz"},
+  {k:"gGelenkLast",n:"Gelenke unter Belastung",             lo:"schmerzhaft",  hi:"beschwerdefrei",b:"schmerz"},
+  {k:"gWohl",     n:"Allgemeines Wohlbefinden",             lo:"schlecht",     hi:"sehr gut",     b:"wohl"}
 ];
 export const MASSE = [
   {k:"mBrust",  n:"Brustumfang",              u:"cm"},

@@ -110,6 +110,24 @@ async function laufe(browser, url, label, mitModulTest) {
   pruefe('Hinweis nennt den Tag des Fragebogens',
     /Fragebogen für \d\d\.\d\d\.\d{4}/.test(await seite.locator('#gateBar').innerText()),
     await seite.locator('#gateBar').innerText());
+  /* Bereiche: ein Häkchen je Bereich, abwählen blendet die Karten aus, die
+     Antworten darin bleiben erhalten. */
+  const bwN = await seite.locator('#bereichWahl input').count();
+  pruefe('Bereichsleiste mit allen Bereichen', await seite.locator('#bereichBlock').isVisible() && bwN === 7,
+    `${bwN} Häkchen`);
+  pruefe('Alle Bereiche zunächst an',
+    (await seite.locator('#bereichWahl input:checked').count()) === 7);
+  pruefe('GLOW ist in Hautbild und Gelenke geteilt',
+    (await seite.locator('#s-glow-haut [data-s]').count()) === 2
+    && (await seite.locator('#s-glow-schmerz [data-s]').count()) === 3
+    && (await seite.locator('#s-glow-wohl [data-s]').count()) === 1);
+  await seite.uncheck('#bw-sex');
+  pruefe('Abgewählter Bereich verschwindet', await seite.locator('#s-iief').isHidden()
+    && await seite.locator('#s-morgen').isHidden());
+  pruefe('Andere Bereiche bleiben stehen', await seite.locator('#s-kern').isVisible()
+    && await seite.locator('#s-erwartung').isVisible());
+  await seite.check('#bw-sex');
+  pruefe('Wieder angehakt kommt der Bereich zurück', await seite.locator('#s-iief').isVisible());
   pruefe('Knopf bietet danach das Ausblenden an',
     /Fragebogen ausblenden/.test(await seite.locator('#gateBar').innerText()));
   await seite.click('#gateOpen');
@@ -276,6 +294,12 @@ async function laufe(browser, url, label, mitModulTest) {
   await seite.waitForTimeout(500);
   pruefe('Zurück auf den letzten Tag der Woche',
     (await seite.locator('#gateTagwahl button[aria-pressed="true"]').count()) === 1, gestern);
+
+  await seite.click('#gateOpen');
+  pruefe('Fragebogen lässt sich trotz gespeichertem Tag ausblenden',
+    await seite.locator('#s-kern').isHidden());
+  await seite.click('#gateOpen');
+  pruefe('Und wieder einblenden', await seite.locator('#s-kern').isVisible());
 
   /* Eine Woche mit Fragebogen zeigt ihn nach dem Neuladen ohne Klick, samt
      Datum in der Statuszeile. */
