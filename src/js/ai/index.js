@@ -40,9 +40,10 @@ export function ask(prompt, opts) {
 export function errCopy(code, detail) {
   switch (code) {
     case 'no_credit':
-      return 'Das Guthaben des API-Kontos ist aufgebraucht. Aufladen unter '
-        + 'console.anthropic.com → Plans & Billing. Ein Abo von claude.ai zählt dafür nicht — '
-        + 'API und Abo sind getrennte Konten.';
+      return 'Das API-Guthaben ist aufgebraucht. Zwei Wege: aufladen unter '
+        + 'console.anthropic.com → Plans & Billing, oder in Claude Code auffrischen lassen — '
+        + 'dort zahlt das Abo. API-Guthaben und claude.ai-Abo sind getrennte Konten, '
+        + 'ein Abo schaltet keine API frei.';
     case 'not_granted':
     case 'sampling_disabled':
     case 'not_declared':

@@ -547,6 +547,8 @@ async function laufe(browser, url, label, mitModulTest) {
     pruefe('Leeres Guthaben wird als solches benannt',
       /Guthaben/.test(texte.guthaben) && /Plans & Billing/.test(texte.guthaben)
       && /getrennte Konten/.test(texte.guthaben), texte.guthaben);
+    pruefe('Meldung nennt den Weg über Claude Code',
+      /Claude Code/.test(texte.guthaben), texte.guthaben);
     pruefe('Unbekannter Fehler zeigt den Originaltext',
       /something broke/.test(texte.unbekannt) && !/something/.test(texte.ohneDetail), texte.unbekannt);
   }
