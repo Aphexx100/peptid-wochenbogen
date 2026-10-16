@@ -5,6 +5,8 @@
 const K_CFG = 'pwb.cfg.v1';
 const K_WEEKS = 'pwb.weeks.v1';
 const K_PROG = 'pwb.prognosen.v1';
+const K_WISSEN = 'pwb.wissen.v1';
+const K_NEWS = 'pwb.news.v1';
 
 const lese = (k, fallback) => {
   try {
@@ -47,6 +49,26 @@ export const localStore = {
     const alle = lese(K_PROG, {});
     alle[p.id] = p;
     schreibe(K_PROG, alle);
+  },
+
+  /** Wissenseintraege, Schluessel ist der Stoffschluessel. */
+  async loadWissen() {
+    return lese(K_WISSEN, {});
+  },
+
+  async saveWissen(e) {
+    const alle = lese(K_WISSEN, {});
+    alle[e.k] = e;
+    schreibe(K_WISSEN, alle);
+  },
+
+  /** Die Newsliste als Ganzes — sie ist eine Reihenfolge, keine Sammlung. */
+  async loadNews() {
+    return lese(K_NEWS, []);
+  },
+
+  async saveNews(liste) {
+    schreibe(K_NEWS, liste);
   },
 
   async loadConfig() {

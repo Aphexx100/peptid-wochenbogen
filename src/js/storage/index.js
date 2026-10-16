@@ -131,6 +131,63 @@ export async function savePrognose(p) {
   }
 }
 
+/* ---- Wissensdatenbank ----
+   Dieselbe Regel wie bei den Wochen: entfernt gelesen schlaegt lokal, und
+   geschrieben wird zuerst lokal. Der Unterschied ist die Groesse — ein
+   Wissenseintrag kann einige Kilobyte Text sein, deshalb wird er nur
+   geschrieben, wenn er sich geaendert hat (das entscheidet der Aufrufer). */
+
+export async function loadWissen() {
+  if (remote && remote.loadWissen) {
+    try {
+      const w = await remote.loadWissen();
+      if (w && Object.keys(w).length) {
+        for (const k of Object.keys(w)) {
+          // eslint-disable-next-line no-await-in-loop
+          await localStore.saveWissen(w[k]);
+        }
+        return w;
+      }
+    } catch { /* faellt auf die lokale Kopie zurueck */ }
+  }
+  return localStore.loadWissen();
+}
+
+export async function saveWissen(e) {
+  await localStore.saveWissen(e);
+  if (!remote || !remote.saveWissen) return ergebnis(true, 'Auf diesem Gerät gespeichert.');
+  try {
+    await remote.saveWissen(e);
+    return ergebnis(true, `Gespeichert · ${remote.label}`);
+  } catch (err) {
+    return ergebnis(false, `Lokal gespeichert, ${remote.label} nicht erreicht (${err.message || 'Fehler'}).`);
+  }
+}
+
+export async function loadNews() {
+  if (remote && remote.loadNews) {
+    try {
+      const l = await remote.loadNews();
+      if (l && l.length) {
+        await localStore.saveNews(l);
+        return l;
+      }
+    } catch { /* faellt auf die lokale Kopie zurueck */ }
+  }
+  return localStore.loadNews();
+}
+
+export async function saveNews(liste) {
+  await localStore.saveNews(liste);
+  if (!remote || !remote.saveNews) return ergebnis(true, 'Auf diesem Gerät gespeichert.');
+  try {
+    await remote.saveNews(liste);
+    return ergebnis(true, `Gespeichert · ${remote.label}`);
+  } catch (err) {
+    return ergebnis(false, `Lokal gespeichert, ${remote.label} nicht erreicht (${err.message || 'Fehler'}).`);
+  }
+}
+
 /** Live-Aktualisierung, sofern die entfernte Ablage sie kann. */
 export function subscribeWeeks(cb) {
   if (remote && typeof remote.subscribe === 'function') {

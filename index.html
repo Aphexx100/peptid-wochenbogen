@@ -28,6 +28,7 @@
   <button role="tab" id="tab-aus" aria-controls="p-aus" aria-selected="false">Auswertung</button>
   <button role="tab" id="tab-claude" aria-controls="p-claude" aria-selected="false">Analyse</button>
   <button role="tab" id="tab-prognose" aria-controls="p-prognose" aria-selected="false">Prognose</button>
+  <button role="tab" id="tab-wissen" aria-controls="p-wissen" aria-selected="false">Wissen</button>
   <button role="tab" id="tab-setup" aria-controls="p-setup" aria-selected="false">Setup</button>
   <button role="tab" id="tab-info" aria-controls="p-info" aria-selected="false">Info</button>
 </div>
@@ -55,6 +56,14 @@
     <div id="bereichBlock" hidden>
       <div class="bereichwahl" id="bereichWahl" role="group" aria-label="Bereiche des Fragebogens"></div>
       <p class="hint" style="margin:.1rem 0 0">Welche Bereiche willst du ausfüllen? Abgewählte Bereiche verschwinden aus dem Bogen; ihre gespeicherten Antworten bleiben unberührt. Erwartung und Speichern stehen immer. <span class="gatehint" id="bereichInfo"></span></p>
+    </div>
+  </div>
+
+  <div class="card" id="newsKarte" hidden>
+    <h2><span class="step">⚡</span> Neues zu deinen Stoffen</h2>
+    <ul class="newsliste" id="newsListe"></ul>
+    <div class="gatebar" style="margin:.6rem 0 0">
+      <button class="btn ghost small" id="newsMehr" type="button" hidden></button>
     </div>
   </div>
 
@@ -488,6 +497,30 @@
     <div id="progFrueher"></div>
     <div class="empty" id="progFrueherLeer">Noch keine Prognose erstellt.</div>
   </div>
+</section>
+
+<!-- ==================== WISSEN ==================== -->
+<section class="panel" id="p-wissen" role="tabpanel" aria-labelledby="tab-wissen" hidden>
+
+  <div class="card">
+    <h2>Wissensdatenbank</h2>
+    <p class="hint">Zu jedem Stoff im Bogen, was darüber bekannt ist — getrennt nach Herkunft: was sich Anwender erhoffen, was Studien hergeben, was üblicherweise angewendet wird. Recherchiert wird im Netz, geschrieben für einen interessierten Laien. Jede Aussage trägt ihre Quelle.</p>
+    <p class="hint">Die Einträge veralten nach einer Woche. Der Bogen merkt das beim Start und sagt es hier; losgeschickt wird die Recherche auf Knopfdruck, weil sie Zeit und API-Guthaben kostet.</p>
+    <p class="gatehint bad" id="wissenFaellig" hidden></p>
+    <div class="btnrow two">
+      <button class="btn" id="wissenUpdate" type="button">Auffrischen</button>
+      <button class="btn ghost" id="wissenStop" type="button" hidden>Abbrechen</button>
+    </div>
+    <p class="saveinfo" id="wissenInfo"></p>
+    <div class="offline" id="wissenOhneKi" hidden>
+      Ohne Analysequelle lässt sich nicht recherchieren. Unter Setup einen Anthropic-Schlüssel eintragen.
+    </div>
+    <div class="offline" id="wissenOhneSuche" hidden>
+      Die aktive Analysequelle kann nicht im Netz nachschlagen. Dafür braucht es den eigenen API-Schlüssel unter Setup.
+    </div>
+  </div>
+
+  <div id="wissenListe"></div>
 </section>
 
 <!-- ==================== SETUP ==================== -->

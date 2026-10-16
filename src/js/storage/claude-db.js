@@ -54,6 +54,34 @@ export const claudeStore = {
     return out;
   },
 
+  async loadWissen() {
+    if (!db) return {};
+    const snap = await db.collection('wissen').limit(200).get();
+    const out = {};
+    snap.docs.forEach((d) => {
+      const v = d.data() || {};
+      if (v.k) out[v.k] = v;
+    });
+    return out;
+  },
+
+  async saveWissen(e) {
+    if (!db) throw new Error('keine Datenbank');
+    await db.doc(`wissen/${e.k}`).set(e);
+  },
+
+  async loadNews() {
+    if (!db) return [];
+    const snap = await db.doc('meta/news').get();
+    const v = snap.exists && snap.data();
+    return v && Array.isArray(v.liste) ? v.liste : [];
+  },
+
+  async saveNews(liste) {
+    if (!db) throw new Error('keine Datenbank');
+    await db.doc('meta/news').set({ liste });
+  },
+
   async savePrognose(p) {
     if (!db) throw new Error('keine Datenbank');
     await db.doc(`prognosen/${p.id}`).set(p);

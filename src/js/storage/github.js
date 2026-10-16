@@ -196,6 +196,42 @@ export const githubStore = {
 
   async savePrognose(p) {
     await schreibeJson(`${basis()}/prognosen/${p.id}.json`, p, `Prognose ${p.id}`);
+  },
+
+  /* Wissen liegt wie die Wochen als je eine Datei. Der Schluessel des
+     Stoffes ist der Dateiname — damit ist im Repository auf einen Blick zu
+     sehen, worueber recherchiert wurde, und jede Aktualisierung ist ein
+     eigener Commit mit lesbarem Verlauf. */
+  async loadWissen() {
+    const liste = await api(`${basis()}/wissen${refQuery()}`);
+    if (!Array.isArray(liste)) return {};
+    const dateien = liste.filter((f) => f.type === 'file' && f.name.endsWith('.json'));
+    const out = {};
+    for (let i = 0; i < dateien.length; i += 5) {
+      const teil = dateien.slice(i, i + 5);
+      // eslint-disable-next-line no-await-in-loop
+      const ergebnisse = await Promise.all(teil.map(async (f) => {
+        shas.set(`${basis()}/wissen/${f.name}`, f.sha);
+        return leseJson(`${basis()}/wissen/${f.name}`);
+      }));
+      ergebnisse.forEach((e) => { if (e && e.k) out[e.k] = e; });
+    }
+    return out;
+  },
+
+  async saveWissen(e) {
+    await schreibeJson(`${basis()}/wissen/${e.k}.json`, e, `Wissen ${e.n || e.k}`);
+  },
+
+  /* Die News sind eine Datei, keine je Meldung: sie werden immer als ganze
+     Liste gelesen und geschrieben, und ihre Reihenfolge ist Teil der Daten. */
+  async loadNews() {
+    const l = await leseJson(`${basis()}/news.json`);
+    return Array.isArray(l) ? l : [];
+  },
+
+  async saveNews(liste) {
+    await schreibeJson(`${basis()}/news.json`, liste, `News (${liste.length})`);
   }
 };
 

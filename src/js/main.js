@@ -21,6 +21,8 @@ import { renderStatus } from './ui/status.js';
 import { initTabs } from './ui/tabs.js';
 import { initAnalyse } from './ui/analyse.js';
 import { initPrognose } from './ui/prognose.js';
+import { initWissen } from './ui/wissen.js';
+import { initTicker } from './ui/newsticker.js';
 import { initStoffeUi } from './ui/stoffe.js';
 import { initSetupUi, renderStoreState } from './ui/setup.js';
 import { initRechner, renderVialZiele } from './tools/reconstitution.js';
@@ -97,6 +99,7 @@ async function start() {
   initTabs();
   initRechner();
   initStoffeUi();
+  initTicker();
   initWeeklyGate();
   wireEvents();
 
@@ -111,6 +114,7 @@ async function start() {
   $('offline').hidden = storageStatus().ok;
 
   await initPrognose();
+  await initWissen();
 
   uebernehmeCfg(await loadConfig());
   fillSetup();

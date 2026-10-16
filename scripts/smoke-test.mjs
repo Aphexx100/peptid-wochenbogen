@@ -518,6 +518,61 @@ async function laufe(browser, url, label, mitModulTest) {
         .getAttribute('aria-pressed')) === 'true');
   }
 
+  /* Wissensdatenbank: ohne Analysequelle gesperrt, Einträge als fällig
+     gemeldet. Der Ticker bleibt leer, solange keine News da sind. */
+  await seite.click('#tab-wissen');
+  await seite.waitForTimeout(100);
+  pruefe('Wissen-Reiter vorhanden', /Wissensdatenbank/.test(await seite.locator('#p-wissen').innerText()));
+  pruefe('Je Stoff eine Wissenskarte',
+    (await seite.locator('#wissenListe .card').count()) === 7);
+  pruefe('Noch nichts recherchiert',
+    /noch nie recherchiert/.test(await seite.locator('#wissenListe').innerText()));
+  pruefe('Alle Einträge als fällig gemeldet',
+    /7 von 7 Einträgen ist älter/.test(await seite.locator('#wissenFaellig').innerText()),
+    await seite.locator('#wissenFaellig').innerText());
+  pruefe('Ohne Analysequelle kein Auffrischen', (await seite.locator('#wissenUpdate').isDisabled())
+    && (await seite.locator('#wissenOhneKi').isVisible()));
+  await seite.click('#tab-bogen');
+  pruefe('Ticker bleibt ohne News verborgen', await seite.locator('#newsKarte').isHidden());
+
+  if (mitModulTest) {
+    /* Antwort der Recherche lesen, News zusammenführen, Ticker füllen. */
+    const w = await seite.evaluate(async () => {
+      const r = await import('./src/js/wissen/recherche.js');
+      const n = await import('./src/js/wissen/news.js');
+      const m = await import('./src/js/wissen/modell.js');
+      const roh = '```json\n{"abschnitte":{"ueberblick":"Ein Überblick.","evidenz":"Dünne Lage."},'
+        + '"quellen":[{"titel":"Studie A","url":"https://pubmed.ncbi.nlm.nih.gov/123","jahr":"2026","art":"studie"},'
+        + '{"titel":"Ohne Adresse","url":"keine"}],'
+        + '"news":[{"datum":"2026-10-14","titel":"Neue Studie am Menschen","kurz":"Erste Phase.",'
+        + '"url":"https://clinicaltrials.gov/study/NCT1","quelle":"ClinicalTrials.gov"}]}\n```';
+      const g = r.parseWissen(roh);
+      const eintrag = { ...m.leererEintrag({ k: 'test', n: 'Testpeptid' }), ...g, stand: new Date().toISOString() };
+      /* Dieselbe Meldung zweimal einarbeiten darf sie nicht verdoppeln. */
+      let liste = n.fuegeNews([], eintrag);
+      liste = n.fuegeNews(liste, eintrag);
+      const t = await import('./src/js/ui/newsticker.js');
+      t.renderTicker(liste);
+      return {
+        abschnitte: Object.keys(g.abschnitte).length,
+        quellen: g.quellen.length,
+        news: liste.length,
+        datum: n.newsDatum(liste[0]),
+        faellig: m.faellig(eintrag),
+        stand: m.standText(eintrag)
+      };
+    });
+    pruefe('Antwort der Recherche wird gelesen', w.abschnitte === 2 && w.news === 1, JSON.stringify(w));
+    pruefe('Quelle ohne Adresse fällt raus', w.quellen === 1, String(w.quellen));
+    pruefe('Dieselbe Meldung steht nur einmal', w.news === 1);
+    pruefe('Frischer Eintrag ist nicht fällig', w.faellig === false && w.stand === 'heute aktualisiert', w.stand);
+    pruefe('Newsdatum wird deutsch gezeigt', w.datum === '14.10.2026', w.datum);
+    pruefe('Ticker zeigt die Meldung mit Quelllink',
+      (await seite.locator('#newsKarte').isVisible())
+      && (await seite.locator('#newsListe a.news-titel').getAttribute('href')) === 'https://clinicaltrials.gov/study/NCT1'
+      && (await seite.locator('#newsListe a.news-titel').getAttribute('rel')) === 'noopener noreferrer');
+  }
+
   /* Setup: Ablagefelder */
   await seite.click('#tab-setup');
   await seite.waitForTimeout(100);
