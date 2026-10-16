@@ -29,6 +29,7 @@ src/js/
   analysis/             metrics (reine Rechnung), sparkline, report
   storage/              index (Fassade), local, github, claude-db, migrate
   ai/                   index (Fassade), briefing, context, prognose, claude-sample, anthropic
+  wissen/               modell, recherche, update, news — die Wissensdatenbank
   tools/                reconstitution — der Rekonstitutionsrechner
   export/               csv
 scripts/                serve, build-single, smoke-test
@@ -147,6 +148,22 @@ Kopie und ersetzt sie.
 
 Die Auswahl trifft `waehleRemote()` nach der Einstellung unter Setup. Auf `auto` gewinnt
 im Claude-Viewer die Datenbank, sonst GitHub, sofern eingerichtet.
+
+## Die Wissensdatenbank
+
+`wissen/` ist von der Erfassung getrennt und kennt sie nicht: `modell.js` legt
+die Form eines Eintrags fest, `recherche.js` den Auftrag an das Modell und das
+Lesen der Antwort, `update.js` entscheidet, wer fällig ist, und `news.js` führt
+die Meldungen zusammen. Keines dieser Module fasst das DOM an.
+
+Ein Eintrag gehört zu einem Stoff und trennt, was sich Anwender erhoffen, von
+dem, was Studien zeigen, und von dem, was üblicherweise angewendet wird. Diese
+Trennung ist der Zweck der Datenbank — in Forenbeiträgen geht sie durcheinander.
+
+Abgelegt wird über dieselbe Fassade wie Wochen und Prognosen: je Stoff eine
+Datei unter `wissen/`, die Newsliste als eine Datei daneben. Damit kommt jedes
+spätere Modul an den Bestand, ohne die Recherche anzufassen — die Oberfläche
+(`ui/wissen.js`) ist nur einer von mehreren möglichen Lesern.
 
 ## Die Analysequelle
 

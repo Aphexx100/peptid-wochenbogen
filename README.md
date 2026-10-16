@@ -45,7 +45,7 @@ die Architektur in [docs/ARCHITEKTUR.md](docs/ARCHITEKTUR.md).
 ```
 npm install          # esbuild und playwright, nur zum Bauen und Testen
 npm start            # http://localhost:8080
-npm test             # 302 Prüfungen in einem echten Browser
+npm test             # 334 Prüfungen in einem echten Browser
 npm run build        # dist/peptid-wochenbogen.html — eine Datei für Claude
 ```
 
@@ -70,6 +70,22 @@ Es geht nichts verloren, nur weil das Netz weg ist.
 > **Das Datenrepository muss privat sein.** Diese Seite darf öffentlich liegen — sie
 > enthält Code, keine Daten. Die Wochen enthalten Gesundheitsdaten und gehören nicht in
 > ein öffentliches Repository.
+
+## Wissensdatenbank
+
+Der Reiter **Wissen** hält zu jedem Stoff im Bogen fest, was über ihn bekannt
+ist — getrennt nach Herkunft: was sich Anwender erhoffen, was die Studienlage
+hergibt, was üblicherweise angewendet wird. Recherchiert wird im Netz (eigener
+Anthropic-Schlüssel nötig), geschrieben für einen interessierten Laien, und
+jede Aussage trägt ihre Quelle mit URL.
+
+Einträge veralten nach einer Woche. Der Bogen merkt das beim Start und sagt es;
+losgeschickt wird die Recherche auf Knopfdruck, weil sie Zeit und Guthaben
+kostet. Gespeichert wird je Stoff eine Datei (`daten/wissen/<stoff>.json`), die
+Meldungen daraus als Liste (`daten/news.json`).
+
+Was dabei an Neuem auftaucht, steht als **Newsticker** oben im Bogen: Datum,
+Stoff, ein Satz, ein Link zur Quelle.
 
 ## Analyse
 
