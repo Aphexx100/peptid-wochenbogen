@@ -49,6 +49,10 @@ async function laufe(browser, url, label, mitModulTest) {
   seite.on('pageerror', (e) => { if (!fremd(String(e))) fehler.push(String(e)); });
   seite.on('console', (m) => { if (m.type() === 'error' && !fremd(m.text())) fehler.push(m.text()); });
 
+  /* Die Exposition zeigt immer genau einen Tag. Vor dem Ausfuellen den
+     richtigen waehlen — derselbe Weg, den auch der Nutzer geht. */
+  const tag = (i) => seite.click(`#expoTag${i}`);
+
   const pruefe = (name, ok, detail) => {
     pruefungen.push({ label, name, ok });
     console.log(`${ok ? '  ok  ' : ' FEHL '} ${name}${ok || !detail ? '' : ` — ${detail}`}`);
@@ -73,7 +77,18 @@ async function laufe(browser, url, label, mitModulTest) {
   pruefe('Segmentfragen aufgebaut', segmente >= 60, `${segmente} gefunden`);
   pruefe('Kraftfelder aufgebaut', (await seite.locator('#kw0').count()) === 1);
   const expoZellen = await seite.locator('#s-expo input[type="number"]').count();
-  pruefe('Tagesraster: 7 Tage × 7 Substanzen + Alkohol', expoZellen === 56, `${expoZellen} Zellen`);
+  pruefe('Tagesansicht: 7 Tage × 7 Substanzen + Alkohol', expoZellen === 56, `${expoZellen} Zellen`);
+  /* Sichtbar ist immer genau ein Tag; die übrigen stehen im Dokument, damit
+     Lesen und Füllen über die Ids weiter eine ganze Woche sehen. */
+  const sichtbareTage = await seite.locator('#s-expo .tagblock:not([hidden])').count();
+  pruefe('Nur ein Tag sichtbar', sichtbareTage === 1
+    && (await seite.locator('#s-expo .tagblock').count()) === 7, `${sichtbareTage} sichtbar`);
+  pruefe('Tagesleiste mit sieben Tagen, heute gewählt',
+    (await seite.locator('#expoTagwahl button').count()) === 7
+    && (await seite.locator('#expoTagwahl button[aria-pressed="true"]').innerText()) === 'Heute');
+  pruefe('Felder stehen in Gruppen',
+    /WIRKSTOFFE|Wirkstoffe/.test(await seite.locator('#s-expo .tagblock:not([hidden])').innerText())
+    && (await seite.locator('#s-expo .tagblock:not([hidden]) .stoffgruppe').count()) === 4);
   pruefe('Kreatin und Protein stehen bei den Substanzen',
     (await seite.locator('#xkreatin0').count()) === 1 && (await seite.locator('#xprotein0').count()) === 1
     && (await seite.locator('#zkreatin0, #zprotein0').count()) === 0);
@@ -217,10 +232,13 @@ async function laufe(browser, url, label, mitModulTest) {
 
   /* Tägliche Zufuhr in der Exposition: Kreatin summiert, Protein gemittelt,
      Alkohol summiert in Litern. */
+  await tag(0);
   await seite.fill('#xkreatin0', '5');
-  await seite.fill('#xkreatin1', '5');
   await seite.fill('#xprotein0', '180');
+  await tag(1);
+  await seite.fill('#xkreatin1', '5');
   await seite.fill('#xprotein1', '160');
+  await tag(5);
   await seite.fill('#zalk5', '2');
   const zs = await seite.locator('#expoSum').innerText();
   pruefe('Kreatin als Wochensumme mit Tagen', /Kreatin 10 g an 2 Tagen/.test(zs), zs);
@@ -234,9 +252,15 @@ async function laufe(browser, url, label, mitModulTest) {
 
   /* Tagesraster: sieben GLOW-Tage eintragen, Zusammenfassung und
      Kupferhinweis rechnen mit; ein PT-141-Tag blendet die PT-Karte ein. */
-  for (let i = 0; i < 7; i++) await seite.fill(`#xglow${i}`, '2.8');
+  for (let i = 0; i < 7; i++) { await tag(i); await seite.fill(`#xglow${i}`, '2.8'); }
   const sum = await seite.locator('#expoSum').innerText();
-  pruefe('Tagesraster leitet die Wochensumme ab', /GLOW: 7 Injektionstage à 2,8 mg/.test(sum), sum.slice(0, 90));
+  pruefe('Tagesansicht leitet die Wochensumme ab', /GLOW: 7 Injektionstage à 2,8 mg/.test(sum), sum.slice(0, 90));
+  pruefe('Tage mit Eintrag sind in der Leiste markiert',
+    (await seite.locator('#expoTagwahl button[data-erfasst="1"]').count()) === 7);
+  await seite.click('#expoTag1');
+  pruefe('Anderer Tag zeigt seine eigenen Felder',
+    (await seite.locator('#tagblock1').isVisible()) && !(await seite.locator('#tagblock0').isVisible())
+    && (await seite.inputValue('#xglow1')) === '2.8');
   const cu = await seite.locator('#cuNote').innerText();
   pruefe('Kupferlast wird beziffert', /2,21 mg elementares Kupfer/.test(cu), cu.slice(0, 90));
   /* Wochengrafik: GLOW-Linie über die vergangenen Tage, Punkte an Injektionstagen. */
@@ -252,12 +276,15 @@ async function laufe(browser, url, label, mitModulTest) {
   pruefe('Wochengrafik zeigt Tooltip mit allen Wirkstoffen', (await seite.locator('.wg-tip .wg-tip-zeile').count()) === 5
     && /2,8 mg/.test(await seite.locator('.wg-tip').innerText()));
   pruefe('PT-Karte ohne PT-141-Tag verborgen', await seite.locator('#ptCard').isHidden());
+  await tag(2);
   await seite.fill('#xpt2', '1.75');
   pruefe('PT-Karte erscheint bei PT-141-Tag', await seite.locator('#ptCard').isVisible());
 
   /* Tagesnotizen: je Tag ein eigener Text, der mit Tagesangabe in die
      Wochenfelder und von dort in CSV und Datenblock wandert. */
+  await tag(2);
   await seite.fill('#nstellen2', 'leichte Rötung links');
+  await tag(4);
   await seite.fill('#nstellen4', 'kleiner Knoten');
   const breite = await seite.evaluate(() => {
     const w = document.querySelector('.card.wide').getBoundingClientRect().width;
@@ -328,6 +355,7 @@ async function laufe(browser, url, label, mitModulTest) {
   await setzeTag((heuteWt + 5) % 7);
   pruefe('Anderer Erfassungstag lädt die andere Woche, statt Werte zu verschieben',
     (await seite.inputValue('#xglow0')) === '' && (await seite.inputValue('#nstellen4')) === '');
+  await tag(2);
   await seite.fill('#xpt2', '1.75');
   pruefe('PT-Karte bleibt ohne Fragebogen zu', await seite.locator('#ptCard').isHidden());
   await seite.click('#gateOpen');
@@ -364,8 +392,9 @@ async function laufe(browser, url, label, mitModulTest) {
 
   /* Eigene Stoffe: im Bogen anlegen — mit Vial und ohne —, in der Grafik
      nur die Wirkstoffe, und wieder entfernen, ohne Werte zu verlieren. */
-  pruefe('Jede Spalte hat ein Kreuz zum Entfernen',
-    (await seite.locator('#s-expo .spaltweg').count()) === 7);
+  pruefe('Jeder Stoff hat ein Kreuz zum Entfernen — einmal, nicht je Tag',
+    (await seite.locator('#stoffListe .spaltweg').count()) === 7
+    && (await seite.locator('#s-expo .spaltweg').count()) === 0);
   await seite.click('#stoffNeu');
   pruefe('Formular für neue Stoffe öffnet', await seite.locator('#stoffForm').isVisible());
   await seite.fill('#snName', 'Retatrutid');
@@ -381,6 +410,7 @@ async function laufe(browser, url, label, mitModulTest) {
     && /\(I\.E\.\)/.test(await seite.locator('#xheretatrutid').innerText()));
   pruefe('Neuer Stoff steht bei den aktuellen Vials', (await seite.inputValue('#vMgeretatrutid')) === '20'
     && /10,00 mg\/ml/.test(await seite.locator('#vKonzeretatrutid').innerText()));
+  await tag(3);
   await seite.fill('#xeretatrutid3', '20');
   pruefe('Eingabe in I.E. wird in mg umgerechnet',
     /= 2 mg/.test(await seite.locator('#ceretatrutid3').innerText()));
@@ -395,6 +425,7 @@ async function laufe(browser, url, label, mitModulTest) {
   pruefe('Ohne Vial bleibt der Rechner aus', await seite.locator('#snVial').isHidden());
   await seite.click('#snAdd');
   await seite.waitForTimeout(400);
+  await tag(2);
   await seite.fill('#xemagnesium2', '400');
   pruefe('Supplement wird erfasst', /Magnesium: 1 Tag à 400 g/.test(await seite.locator('#expoSum').innerText()),
     await seite.locator('#expoSum').innerText());
@@ -716,6 +747,7 @@ async function laufe(browser, url, label, mitModulTest) {
     && (await seite.inputValue('#xtirz0')) === '');
   pruefe('Grafik springt mit in die frühere Woche',
     (await seite.locator('#wgBereich').innerText()).includes(`${vorwoche.slice(8, 10)}.${vorwoche.slice(5, 7)}.`));
+  await tag(0);
   await seite.fill('#xtirz0', '5');
   await seite.click('#wwVor');
   await seite.waitForTimeout(500);

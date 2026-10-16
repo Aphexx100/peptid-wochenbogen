@@ -17,6 +17,7 @@ import { keys } from '../state.js';
 import { iso, weekDays } from '../util/date.js';
 import { renderWeeklyGate } from '../ui/weekly.js';
 import { renderWochenGraph } from '../ui/wochengraph.js';
+import { tagleiste, tagName } from '../ui/tagleiste.js';
 
 /* ---- Tagesraster der Exposition ----
    Sieben Zeilen (aeltester Tag zuerst, letzter ist der Erfassungstag), eine
@@ -223,6 +224,7 @@ function renderMengen() {
 
 function expoChanged() {
   renderMengen();
+  renderTagleiste();
   renderExpoSummary();
   renderCu();
   const { tage, leer } = readExpo();
@@ -236,7 +238,100 @@ function expoChanged() {
   renderWeeklyGate();
 }
 
-/** Raster fuer die aktuelle Woche aufbauen. Bereits eingetragene Werte
+/* ---- Tagesansicht ----
+   Gezeigt wird immer genau ein Tag. Im Dokument stehen trotzdem alle sieben:
+   readExpo(), fuelleExpo() und refreshExpoUnits() lesen und schreiben die
+   Felder ueber ihre Ids, und eine Woche, von der sechs Siebtel fehlen,
+   waere fuer sie eine leere Woche. Versteckt wird deshalb nur angezeigt,
+   nicht ausgebaut.
+
+   Die Felder stehen in Gruppen — Wirkstoffe, Supplemente, Zufuhr, Notiz —
+   und brechen um, wenn der Platz nicht reicht. Ein neuer Stoff landet
+   dadurch von selbst in seiner Gruppe. */
+
+/** Welcher Tag gerade angezeigt wird. Leer heisst: noch nicht gewaehlt. */
+let offenerTag = '';
+
+/** Hat dieser Tag ueberhaupt einen Eintrag? Faerbt den Knopf in der Leiste. */
+function tagErfasst(i) {
+  const zahl = (id) => {
+    const el = document.getElementById(id);
+    return el && el.value.trim() !== '';
+  };
+  return stoffe().some((x) => zahl(zellId(x.k, i)))
+    || ZUFUHR.some((x) => zahl(zellIdZ(x.k, i)))
+    || EXPO_TEXT.some((x) => zahl(zellIdN(x.k, i)));
+}
+
+/** Nur den gewaehlten Tag zeigen und die Leiste nachfuehren. */
+export function zeigeTag(d) {
+  const tage = weekDays(state.weekKey);
+  offenerTag = tage.indexOf(d) >= 0 ? d : offenerTag;
+  const host = $('s-expo');
+  if (!host) return;
+  tage.forEach((tag, i) => {
+    const block = document.getElementById(`tagblock${i}`);
+    if (block) block.hidden = tag !== offenerTag;
+  });
+  renderTagleiste();
+}
+
+function renderTagleiste() {
+  const tage = weekDays(state.weekKey);
+  const heute = iso(new Date());
+  tagleiste($('expoTagwahl'), {
+    tage,
+    heute,
+    aktiv: offenerTag,
+    erfasst: (d) => tagErfasst(tage.indexOf(d)),
+    id: (d, i) => `expoTag${i}`,
+    onWahl: (d) => zeigeTag(d)
+  });
+}
+
+/** Vorgewaehlt ist heute; liegt heute nicht in der Woche, ihr letzter
+    vergangener Tag. */
+function startTag() {
+  const tage = weekDays(state.weekKey);
+  const heute = iso(new Date());
+  if (tage.indexOf(heute) >= 0) return heute;
+  const vergangen = tage.filter((d) => d <= heute);
+  return vergangen[vergangen.length - 1] || tage[6];
+}
+
+/** Ein Feld mit Beschriftung. Die Einheit traegt `data-einheit`, damit
+    refreshExpoUnits() sie findet, ohne das Feld neu zu bauen. */
+function feld(x, i, d, wd) {
+  const u = modus[x.k] > 0 ? 'I.E.' : x.u;
+  return `<div class="field">` +
+    `<label class="fl" for="${zellId(x.k, i)}">${x.n} ` +
+    `<span class="xeinheit" data-einheit="${x.k}">(${u})</span></label>` +
+    `<input type="number" id="${zellId(x.k, i)}" min="0" step="${modus[x.k] > 0 ? 0.5 : x.step}" ` +
+    `inputmode="decimal" aria-label="${x.n} (${u}) am ${wd} ${d}">` +
+    `<span class="xcalc" id="c${x.k}${i}"></span></div>`;
+}
+
+function gruppe(titel, inhalt) {
+  if (!inhalt) return '';
+  return `<div class="stoffgruppe"><span class="gruppenkopf">${titel}</span>` +
+    `<div class="feldgitter">${inhalt}</div></div>`;
+}
+
+/** Die Liste der Stoffe mit dem Kreuz zum Entfernen. Steht einmal da und
+    nicht siebenmal — ein Kreuz je Spalte, nicht je Spalte und Tag. */
+function buildStoffListe() {
+  const host = $('stoffListe');
+  if (!host) return;
+  host.innerHTML = stoffe().map((x) => {
+    const u = modus[x.k] > 0 ? 'I.E.' : x.u;
+    return `<span class="stoffchip" id="xh${x.k}"${x.kat === 'supp' ? ' data-supp="1"' : ''}>` +
+      `${x.n} <span class="xeinheit" data-einheit="${x.k}">(${u})</span>` +
+      `<button type="button" class="spaltweg" id="xw${x.k}" data-stoffweg="${x.k}" ` +
+      `title="${x.n} entfernen" aria-label="${x.n} entfernen">×</button></span>`;
+  }).join('');
+}
+
+/** Tagesansicht fuer die aktuelle Woche aufbauen. Bereits eingetragene Werte
     ueberleben den Neuaufbau (etwa wenn sich der Erfassungstag aendert). */
 export function buildExpo() {
   const host = $('s-expo');
@@ -265,40 +360,30 @@ export function buildExpo() {
   spalten.forEach((x) => { modus[x.k] = vialKonz(x.k); });
   const tage = weekDays(state.weekKey);
   const heute = iso(new Date());
-  const einheit = (x) => (modus[x.k] > 0 ? 'I.E.' : x.u);
-  /* Die Einheit darf nicht in die Grossschreibung der Kopfzeile geraten —
-     aus "µg" wuerde sonst optisch "MG", und das ist der Faktor tausend.
-     Das Kreuz neben dem Namen entfernt die Spalte; der erste Klick fragt
-     nach, erst der zweite entfernt (siehe ui/stoffe.js). */
-  let html = '<thead><tr><th>Tag</th>' + spalten.map((x) =>
-    `<th id="xh${x.k}"${x.kat === 'supp' ? ' data-supp="1" title="als Supplement oder Nahrungsmittel eingestuft — nicht in der Grafik"' : ''}>${x.n} ` +
-    `<span class="xeinheit" id="xu${x.k}" style="text-transform:none;letter-spacing:0">(${einheit(x)})</span>` +
-    (x.kat === 'supp' ? '<span class="xsupp">Supp.</span>' : '') +
-    `<button type="button" class="spaltweg" id="xw${x.k}" data-stoffweg="${x.k}" ` +
-    `title="Spalte ${x.n} entfernen" aria-label="Spalte ${x.n} entfernen">×</button></th>`).join('') +
-    ZUFUHR.map((x, j) =>
-      `<th class="${j ? '' : 'erste'}">${x.n} <span style="text-transform:none;letter-spacing:0">(${x.u})</span></th>`).join('') +
-    EXPO_TEXT.map((x, j) => `<th class="notiz${j ? '' : ' erste'}" title="${x.n}">${x.kurz}</th>`).join('') +
-    '</tr></thead><tbody>';
-  tage.forEach((d, i) => {
-    const wd = WTAG[new Date(`${d}T12:00:00`).getDay()];
-    html += `<tr${d === heute ? ' data-heute="1"' : ''}${d > heute ? ' data-zukunft="1"' : ''}>` +
-      `<td class="tag">${wd} ${d.slice(8, 10)}.${d.slice(5, 7)}.</td>` +
-      spalten.map((x) =>
-        `<td><input type="number" id="${zellId(x.k, i)}" min="0" ` +
-        `step="${modus[x.k] > 0 ? 0.5 : x.step}" inputmode="decimal" ` +
-        `aria-label="${x.n} (${einheit(x)}) am ${wd} ${d}">` +
-        `<span class="xcalc" id="c${x.k}${i}"></span></td>`).join('') +
-      ZUFUHR.map((x, j) =>
-        `<td class="${j ? '' : 'erste'}"><input type="number" id="${zellIdZ(x.k, i)}" min="0" ` +
-        `step="${x.step}" inputmode="decimal" aria-label="${x.n} (${x.u}) am ${wd} ${d}"></td>`).join('') +
-      EXPO_TEXT.map((x, j) =>
-        `<td class="notiz${j ? '' : ' erste'}"><input type="text" id="${zellIdN(x.k, i)}"` +
-        `${d === heute ? ` placeholder="${x.ph}"` : ''} ` +
-        `autocomplete="off" aria-label="${x.n} am ${wd} ${d}"></td>`).join('') +
-      '</tr>';
-  });
-  host.innerHTML = `${html}</tbody>`;
+
+  host.innerHTML = tage.map((d, i) => {
+    const wd = tagName(d);
+    const wirk = spalten.filter((x) => x.kat !== 'supp').map((x) => feld(x, i, d, wd)).join('');
+    const supp = spalten.filter((x) => x.kat === 'supp').map((x) => feld(x, i, d, wd)).join('');
+    const zufuhr = ZUFUHR.map((x) =>
+      `<div class="field"><label class="fl" for="${zellIdZ(x.k, i)}">${x.n} ` +
+      `<span class="xeinheit">(${x.u})</span></label>` +
+      `<input type="number" id="${zellIdZ(x.k, i)}" min="0" step="${x.step}" ` +
+      `inputmode="decimal" aria-label="${x.n} (${x.u}) am ${wd} ${d}"></div>`).join('');
+    const notiz = EXPO_TEXT.map((x) =>
+      `<div class="field weit"><label class="fl" for="${zellIdN(x.k, i)}">${x.n}</label>` +
+      `<input type="text" id="${zellIdN(x.k, i)}"${d === heute ? ` placeholder="${x.ph}"` : ''} ` +
+      `autocomplete="off" aria-label="${x.n} am ${wd} ${d}"></div>`).join('');
+    return `<div class="tagblock" id="tagblock${i}" data-tag="${d}"` +
+      `${d === heute ? ' data-heute="1"' : ''}${d > heute ? ' data-zukunft="1"' : ''} hidden>` +
+      `<h3 class="tagkopf">${d === heute ? 'Heute' : wd}` +
+      `${d > heute ? ' <span class="tagnote">noch nicht dran</span>' : ''}</h3>` +
+      gruppe('Wirkstoffe', wirk) + gruppe('Supplemente', supp) +
+      gruppe('Zufuhr', zufuhr) + gruppe('Notiz', notiz) +
+      '</div>';
+  }).join('');
+
+  buildStoffListe();
   spalten.forEach((x) => IDX.forEach((i) => {
     const el = document.getElementById(zellId(x.k, i));
     if (alt[x.k][i]) el.value = alt[x.k][i];
@@ -310,8 +395,11 @@ export function buildExpo() {
     el.addEventListener('input', expoChanged);
   }));
   EXPO_TEXT.forEach((x) => IDX.forEach((i) => {
-    if (altN[x.k][i]) document.getElementById(zellIdN(x.k, i)).value = altN[x.k][i];
+    const el = document.getElementById(zellIdN(x.k, i));
+    if (altN[x.k][i]) el.value = altN[x.k][i];
+    el.addEventListener('input', expoChanged);
   }));
+  zeigeTag(tage.indexOf(offenerTag) >= 0 ? offenerTag : startTag());
   expoChanged();
 }
 
@@ -462,8 +550,9 @@ export function refreshExpoUnits() {
       });
     }
     modus[x.k] = neu;
-    const span = document.getElementById(`xu${x.k}`);
-    if (span) span.textContent = `(${neu > 0 ? 'I.E.' : x.u})`;
+    const u = neu > 0 ? 'I.E.' : x.u;
+    document.querySelectorAll(`[data-einheit="${x.k}"]`)
+      .forEach((el) => { el.textContent = `(${u})`; });
     IDX.forEach((i) => {
       document.getElementById(zellId(x.k, i)).step = neu > 0 ? 0.5 : x.step;
     });
@@ -747,24 +836,18 @@ export function mergeHeute(praefix) {
   return map;
 }
 
-const tagName = (d) => `${WTAG[new Date(`${d}T12:00:00`).getDay()]} ${d.slice(8, 10)}.${d.slice(5, 7)}.`;
-
 /* Tagesleiste ueber den WHO-5-Fragen: sieben Tage der angezeigten Woche,
    kuenftige gesperrt, erfasste mit Punkt markiert. */
 function renderWhoTagwahl() {
-  const host = $('whoTagwahl');
   const heute = iso(new Date());
-  host.textContent = '';
-  weekDays(state.weekKey).forEach((d, i) => {
-    const b = document.createElement('button');
-    b.type = 'button';
-    b.id = `whoTag${i}`;
-    b.textContent = d === heute ? 'Heute' : tagName(d).slice(0, 6);
-    b.disabled = d > heute;
-    b.setAttribute('aria-pressed', d === whoTag ? 'true' : 'false');
-    if (tagesSaetze.who[d] || (d === whoTag && antwortSatz('who'))) b.dataset.erfasst = '1';
-    b.addEventListener('click', () => waehleWhoTag(d));
-    host.appendChild(b);
+  tagleiste($('whoTagwahl'), {
+    tage: weekDays(state.weekKey),
+    heute,
+    aktiv: whoTag,
+    gesperrt: (d) => d > heute,
+    erfasst: (d) => !!(tagesSaetze.who[d] || (d === whoTag && antwortSatz('who'))),
+    id: (d, i) => `whoTag${i}`,
+    onWahl: (d) => waehleWhoTag(d)
   });
   $('whoTagText').textContent = whoTag === heute ? 'Heute …' : `Am ${tagName(whoTag)} …`;
   $('whoTagName').textContent = whoTag === heute ? 'Heute' : tagName(whoTag);

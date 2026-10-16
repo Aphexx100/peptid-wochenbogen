@@ -119,9 +119,9 @@ export function initStoffeUi() {
     $(id).addEventListener('change', renderForm);
   });
 
-  /* Ein Zuhoerer an der Tabelle statt einer je Spalte: das Raster wird bei
-     jeder Aenderung neu aufgebaut, die Tabelle selbst bleibt stehen. */
-  $('s-expo').addEventListener('click', (ev) => {
+  /* Ein Zuhoerer an der Stoffliste statt einer je Kreuz: die Liste wird bei
+     jeder Aenderung neu aufgebaut, ihr Behaelter bleibt stehen. */
+  $('stoffListe').addEventListener('click', (ev) => {
     const b = ev.target.closest('[data-stoffweg]');
     if (!b) return;
     const k = b.dataset.stoffweg;

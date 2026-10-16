@@ -337,3 +337,32 @@ tbody tr:last-child td{border-bottom:none}
   .seg.prog-seg{flex-wrap:wrap;margin-top:.4rem}
   .seg.prog-seg button{flex:1 1 2.6rem;min-height:2.6rem}
 }
+
+/* Tagesansicht der Exposition: ein Tag, Felder in Gruppen, Umbruch wenn
+   der Platz nicht reicht. */
+.tagblock{border:1px solid var(--border-soft);border-radius:.6rem;padding:.9rem 1rem 1rem;
+  background:var(--surface)}
+.tagblock[hidden]{display:none!important}
+.tagblock[data-zukunft="1"]{opacity:.6}
+.tagkopf{margin:0 0 .8rem;font-size:.95rem;font-weight:600;display:flex;align-items:baseline;gap:.5rem}
+.tagblock[data-heute="1"] .tagkopf{color:var(--accent)}
+.tagnote{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:.66rem;
+  letter-spacing:.06em;color:var(--muted);font-weight:400}
+.stoffgruppe{margin-bottom:1rem}
+.stoffgruppe:last-child{margin-bottom:0}
+.gruppenkopf{display:block;font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:.62rem;
+  letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin-bottom:.4rem}
+.feldgitter{display:grid;gap:.6rem;grid-template-columns:repeat(auto-fill,minmax(9.5rem,1fr))}
+.feldgitter .field{margin:0}
+.feldgitter .field.weit{grid-column:1/-1}
+.feldgitter .xcalc{display:block;font-family:"IBM Plex Mono",ui-monospace,monospace;
+  font-size:.68rem;color:var(--muted);min-height:.95rem;padding:.15rem .1rem 0;
+  font-variant-numeric:tabular-nums}
+/* Liste der angelegten Stoffe mit dem Kreuz zum Entfernen. */
+.stoffliste{display:flex;flex-wrap:wrap;gap:.35rem;margin:1rem 0 .8rem}
+.stoffliste:empty{display:none}
+.stoffchip{display:inline-flex;align-items:center;gap:.25rem;font-size:.76rem;color:var(--ink-2);
+  padding:.25rem .3rem .25rem .6rem;border:1px solid var(--border);border-radius:.4rem;
+  background:var(--surface-2)}
+.stoffchip[data-supp="1"]{color:var(--muted)}
+.stoffchip .xeinheit{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:.68rem;color:var(--muted)}

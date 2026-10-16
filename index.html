@@ -98,11 +98,12 @@
 
   <div class="card wide">
     <h2><span class="step">02</span> Exposition — Tag für Tag</h2>
-    <p class="hint">Was tatsächlich gesetzt wurde, nicht was geplant war — <strong>je Tag die gesetzte Menge</strong>, leer gelassen heißt: an dem Tag nichts. Bei mehreren Injektionen desselben Wirkstoffs an einem Tag die Tagesgesamtmenge eintragen. Ist oben ein Vial hinterlegt, trägst du die <strong>aufgezogenen Einheiten (I.E.)</strong> ein, so wie du sie an der Spritze abliest — die Wirkstoffmenge steht darunter; ohne Vial gilt die Einheit im Spaltenkopf. Tirzepatid kommt aus dem Pen, DHEA aus Kapseln — beide laufen immer in mg. <strong>Kreatin</strong> und <strong>Protein</strong> stehen als Supplemente in derselben Tabelle, ganz rechts der <strong>Alkohol</strong> in <strong>Litern</strong> (eine 0,5-l-Flasche Bier also 0,5) — jeweils in der Zeile des Tages, an dem du sie aufgenommen hast, morgens also in die Zeile von gestern. Rechts je Tag ein Notizfeld für <strong>Auffälligkeiten an der Einstichstelle</strong>. Am besten trägst du jeden Tag direkt nach der Injektion ein — die restlichen Abschnitte kommen mit dem ausführlichen Fragebogen, den du oben erstellst, wann immer du Zeit hast. Weitere Stoffe legst du unter der Tabelle selbst an; das Kreuz im Spaltenkopf entfernt eine Spalte wieder.</p>
+    <p class="hint">Was gesetzt wurde, nicht was geplant war. Leer heißt: an dem Tag nichts. Mit hinterlegtem Vial trägst du <strong>I.E.</strong> ein, sonst die Einheit am Feld.</p>
 
-    <div class="tablewrap"><table class="expo" id="s-expo"></table></div>
-    <p class="hint" style="margin:.7rem 0 1rem">Kisspeptin wird im Graumarkt üblicherweise in <strong>Mikrogramm</strong> dosiert (50–200 µg), PT-141, GLOW und Tirzepatid in <strong>Milligramm</strong>. Beim GLOW ist die Gesamtmenge des Gemischs gemeint; wie viel davon GHK-Cu ist, legst du einmalig im Setup fest.</p>
+    <div class="tagwahl" id="expoTagwahl" role="group" aria-label="Tag wählen"></div>
+    <div id="s-expo"></div>
 
+    <div class="stoffliste" id="stoffListe"></div>
     <div class="gatebar" style="justify-content:flex-start;margin:0 0 .8rem">
       <button class="btn ghost small" id="stoffNeu" type="button" aria-expanded="false" aria-controls="stoffForm">+ Stoff hinzufügen</button>
       <span class="gatehint" id="stoffInfo"></span>
