@@ -34,9 +34,15 @@ export function ask(prompt, opts) {
   return aktiv.ask(prompt, opts);
 }
 
-/** Fehlercodes in Saetze uebersetzen, die dem Anwender etwas sagen. */
-export function errCopy(code) {
+/** Fehlercodes in Saetze uebersetzen, die dem Anwender etwas sagen.
+    `detail` ist die Meldung der Gegenstelle; sie sagt bei unbekannten
+    Fehlern mehr als jeder Satz, den wir uns hier ausdenken koennten. */
+export function errCopy(code, detail) {
   switch (code) {
+    case 'no_credit':
+      return 'Das Guthaben des API-Kontos ist aufgebraucht. Aufladen unter '
+        + 'console.anthropic.com → Plans & Billing. Ein Abo von claude.ai zählt dafür nicht — '
+        + 'API und Abo sind getrennte Konten.';
     case 'not_granted':
     case 'sampling_disabled':
     case 'not_declared':
@@ -54,6 +60,8 @@ export function errCopy(code) {
     case 'empty_completion':
       return 'Keine Antwort erhalten. Anfrage kürzer fassen.';
     default:
-      return 'Unterbrochen. Du kannst es erneut versuchen.';
+      return detail
+        ? `Unterbrochen: ${String(detail).slice(0, 300)}`
+        : 'Unterbrochen. Du kannst es erneut versuchen.';
   }
 }

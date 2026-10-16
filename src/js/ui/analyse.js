@@ -74,7 +74,7 @@ function run(prompt, a, ctlRef) {
       out.classList.remove('thinking');
       if (e && e.text) out.textContent = e.text;
       else if (e && e.code === 'cancelled') { out.hidden = true; out.textContent = ''; }
-      const msg = errCopy(e && e.code);
+      const msg = errCopy(e && e.code, e && e.message);
       if (msg) { info.textContent = msg; info.className = 'saveinfo bad'; }
     })
     .then(() => setBusy(a.btn, a.stop, false));

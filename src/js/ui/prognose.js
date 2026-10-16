@@ -136,7 +136,7 @@ async function schritt1() {
       out.hidden = true;
       melde('progIstInfo', false, 'Abgebrochen.');
     } else {
-      melde('progIstInfo', false, errCopy(e && e.code) || String(e.message || e));
+      melde('progIstInfo', false, errCopy(e && e.code, e && e.message) || String(e.message || e));
     }
   } finally {
     setBusy('progIst', 'progIstStop', false);
@@ -180,7 +180,7 @@ async function schritt2() {
       out.hidden = true;
       melde('progInfo', false, 'Abgebrochen.');
     } else {
-      melde('progInfo', false, errCopy(e && e.code) || String(e.message || e));
+      melde('progInfo', false, errCopy(e && e.code, e && e.message) || String(e.message || e));
     }
   } finally {
     setBusy('progErstellen', 'progStop', false);

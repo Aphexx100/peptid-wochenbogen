@@ -532,6 +532,24 @@ async function laufe(browser, url, label, mitModulTest) {
     await seite.locator('#wissenFaellig').innerText());
   pruefe('Ohne Analysequelle kein Auffrischen', (await seite.locator('#wissenUpdate').isDisabled())
     && (await seite.locator('#wissenOhneKi').isVisible()));
+  if (mitModulTest) {
+    /* Leeres API-Guthaben kommt als gewöhnlicher 400er. Die Meldung muss
+       sagen, dass das Abo dafür nicht zählt — sonst sucht man den Fehler
+       beim Schlüssel. */
+    const texte = await seite.evaluate(async () => {
+      const m = await import('./src/js/ai/index.js');
+      return {
+        guthaben: m.errCopy('no_credit'),
+        unbekannt: m.errCopy('error', 'something broke'),
+        ohneDetail: m.errCopy('error')
+      };
+    });
+    pruefe('Leeres Guthaben wird als solches benannt',
+      /Guthaben/.test(texte.guthaben) && /Plans & Billing/.test(texte.guthaben)
+      && /getrennte Konten/.test(texte.guthaben), texte.guthaben);
+    pruefe('Unbekannter Fehler zeigt den Originaltext',
+      /something broke/.test(texte.unbekannt) && !/something/.test(texte.ohneDetail), texte.unbekannt);
+  }
   await seite.click('#tab-bogen');
   pruefe('Ticker bleibt ohne News verborgen', await seite.locator('#newsKarte').isHidden());
 

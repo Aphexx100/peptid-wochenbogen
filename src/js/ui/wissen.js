@@ -157,7 +157,7 @@ async function starteLauf() {
     if (r.fehler.length) teile.push(`Fehlgeschlagen — ${r.fehler.join('; ')}`);
     melde(teile.join('. ') || 'Nichts zu tun.', !r.fehler.length);
   } catch (err) {
-    melde(err.code ? errCopy(err.code) : String(err.message || err), false);
+    melde(errCopy(err.code, err.message) || String(err.message || err), false);
   } finally {
     laeuft = null;
     $('wissenStop').hidden = true;

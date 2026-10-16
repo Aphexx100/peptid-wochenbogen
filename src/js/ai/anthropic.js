@@ -21,10 +21,15 @@ const MAX_TOKENS = 2000;
    eigenen Server und keine zweite Zugangsberechtigung. */
 const SUCH_WERKZEUG = { type: 'web_search_20250305', name: 'web_search', max_uses: 12 };
 
-const codeFor = (status) => {
+/* Aus Status und Fehlertext einen Code machen. Das leere Guthaben kommt als
+   gewoehnlicher 400er und waere ohne diesen Griff in den Text nicht von
+   einer kaputten Anfrage zu unterscheiden — fuer den Anwender ist es aber
+   der haeufigste Fall und der einzige mit einer klaren Abhilfe. */
+const codeFor = (status, detail = '') => {
   if (status === 401 || status === 403) return 'not_granted';
   if (status === 429) return 'rate_limited';
   if (status === 413) return 'prompt_too_large';
+  if (/credit balance|insufficient (credit|funds)|billing/i.test(detail)) return 'no_credit';
   return 'error';
 };
 
@@ -73,7 +78,7 @@ export const anthropicAi = {
         const j = await res.json();
         detail = (j.error && j.error.message) || '';
       } catch { /* Antwort ohne JSON-Koerper */ }
-      throw Object.assign(new Error(detail || `HTTP ${res.status}`), { code: codeFor(res.status) });
+      throw Object.assign(new Error(detail || `HTTP ${res.status}`), { code: codeFor(res.status, detail) });
     }
 
     const reader = res.body.getReader();
