@@ -40,7 +40,8 @@ export const ZUFUHR = [
    Medikamente) und abw (Abweichungen) sind 2026-09 entfallen; ihre schon
    erfassten Werte traegt model.js beim Speichern unveraendert weiter. */
 export const EXPO_TEXT = [
-  {k:"stellen",  n:"Einstichstellen — Auffälligkeiten", kurz:"Einstichstellen", ph:"Rötung, Knoten …"}
+  {k:"stellen", n:"Einstichstellen — Auffälligkeiten", kurz:"Einstichstellen", ph:"Rötung, Knoten …"},
+  {k:"tag",     n:"Kommentar zum Tag",                 kurz:"Kommentar",       ph:"was heute anders war …"}
 ];
 /** Entfallene Notizspalten — nur noch gelesen und weitergetragen. */
 export const EXPO_TEXT_ALT = ["sonstMed", "abw"];
@@ -70,7 +71,6 @@ export const BEREICHE = [
   {k:"schmerz", n:"Schmerzbild und Gelenke"},
   {k:"energie", n:"Energie und Wohlbefinden"},
   {k:"koerper", n:"Körperzusammensetzung und Kraft"},
-  {k:"sex",     n:"Sexualfunktion"},
   {k:"sicher",  n:"Sicherheit und Kontrollen"},
   {k:"umfeld",  n:"Umfeld und Confounder"}
 ];
@@ -86,13 +86,16 @@ export const GLOWZIEL = [
   {k:"gGelenkLast",n:"Gelenke unter Belastung",             lo:"schmerzhaft",  hi:"beschwerdefrei",b:"schmerz"},
   {k:"gWohl",     n:"Allgemeines Wohlbefinden",             lo:"schlecht",     hi:"sehr gut",     b:"wohl"}
 ];
+/* Zwei Umfaenge genuegen. Die Schluessel bleiben, damit bereits erfasste
+   Wochen ihre Werte behalten; nur die Beschriftung sagt jetzt, dass keine
+   Seite mehr unterschieden wird. Die entfallenen Masse (mArmL, mBeinR,
+   mBeinL) stehen weiter in alten Eintraegen und werden mitgeschleppt. */
 export const MASSE = [
-  {k:"mBrust",  n:"Brustumfang",              u:"cm"},
-  {k:"mArmR",   n:"Oberarm rechts",           u:"cm"},
-  {k:"mArmL",   n:"Oberarm links",            u:"cm"},
-  {k:"mBeinR",  n:"Oberschenkel rechts",      u:"cm"},
-  {k:"mBeinL",  n:"Oberschenkel links",       u:"cm"}
+  {k:"mBrust",  n:"Brustumfang",   u:"cm"},
+  {k:"mArmR",   n:"Oberarmumfang", u:"cm"}
 ];
+/** Entfallene Koerpermasse — nur noch gelesen und weitergetragen. */
+export const MASSE_ALT = ["mArmL", "mBeinR", "mBeinL"];
 export const WHO = [
   "war ich froh und guter Laune",
   "habe ich mich ruhig und entspannt gefühlt",
@@ -101,62 +104,12 @@ export const WHO = [
   "war mein Alltag voller Dinge, die mich interessieren"
 ];
 export const WHO_LEG = ["zu keinem Zeitpunkt","die ganze Zeit"];
-export const IIEF = [
-  {t:"Wie würden Sie Ihre Zuversicht einschätzen, eine Erektion zu bekommen und zu behalten?", lo:"sehr gering", hi:"sehr groß", zero:false},
-  {t:"Wenn Sie bei sexueller Stimulation Erektionen hatten, wie oft waren Ihre Erektionen hart genug für die Penetration?", lo:"fast nie", hi:"fast immer", zero:true, zeroLab:"keine sexuelle Stimulation"},
-  {t:"Wie oft waren Sie beim Geschlechtsverkehr in der Lage, Ihre Erektion nach der Penetration aufrechtzuerhalten?", lo:"fast nie", hi:"fast immer", zero:true, zeroLab:"kein Geschlechtsverkehr"},
-  {t:"Wie schwierig war es, die Erektion bis zur Vollendung des Geschlechtsverkehrs aufrechtzuerhalten?", lo:"äußerst schwierig", hi:"nicht schwierig", zero:true, zeroLab:"kein Geschlechtsverkehr"},
-  {t:"Wenn Sie versuchten, Geschlechtsverkehr zu haben, wie oft war er befriedigend für Sie?", lo:"fast nie", hi:"fast immer", zero:true, zeroLab:"kein Geschlechtsverkehr"}
-];
-export const MORGEN = [
-  {k:"mDauer",   n:"Typische Dauer bis zum Abklingen", lo:"wenige Minuten", hi:"mehrere Stunden"},
-  {k:"mStaerke", n:"Typische Stärke",                  lo:"schwach",        hi:"sehr stark"}
-];
-export const PT = [
-  {k:"ptMit",  n:"Verlangen an PT-141-Tagen",           lo:"sehr niedrig", hi:"sehr hoch"},
-  {k:"ptOhne", n:"Verlangen an Tagen ohne PT-141",      lo:"sehr niedrig", hi:"sehr hoch"},
-  {k:"ptNw",   n:"Nebenwirkungen an Anwendungstagen",   lo:"keine",        hi:"stark"}
-];
-export const PT_SIGNS = [
-  {k:"sStreck", n:"Drang, sich zu strecken oder zu dehnen"},
-  {k:"sGaehn",  n:"Gähnen"},
-  {k:"sSpann",  n:"Kurzes Anspannen der Muskulatur"},
-  {k:"sEnergie",n:"Gefühl von überschüssiger Energie oder Unruhe"},
-  {k:"sGaense", n:"Gänsehaut oder Kribbeln"},
-  {k:"sFlush",  n:"Flush oder Wärmegefühl"},
-  {k:"sUebel",  n:"Übelkeit"},
-  {k:"sKopf",   n:"Kopfschmerz"}
-];
-export const PIGMENT = [
-  {k:"pTempo", n:"Bräunungsgeschwindigkeit gegenüber früher", lo:"wie immer", hi:"deutlich schneller"},
-  {k:"pTiefe", n:"Erreichte Bräunungstiefe",                  lo:"wie immer", hi:"deutlich dunkler"},
-  {k:"pDauer", n:"Wie lange die Bräune anhält",               lo:"wie immer", hi:"deutlich länger"}
-];
-export const NEG = [
-  {k:"nGeruch", n:"Geruchssinn",  lo:"schlecht", hi:"sehr gut"},
-  {k:"nSeh",    n:"Sehschärfe",   lo:"schlecht", hi:"sehr gut"},
-  {k:"nHoer",   n:"Hörvermögen",  lo:"schlecht", hi:"sehr gut"}
-];
-export const WATCH = [
-  {k:"metall", n:"Metallischer Geschmack"},
-  {k:"uebel",  n:"Übelkeit"},
-  {k:"gi",     n:"Magen-Darm-Beschwerden"},
-  {k:"kopf",   n:"Kopfschmerz"},
-  {k:"flush",  n:"Flush oder Hitzewallung"},
-  {k:"fatigue",n:"Ungewöhnliche Müdigkeit"},
-  {k:"blut",   n:"Ungewöhnliche Blutergüsse"},
-  {k:"mal",    n:"Muttermal neu oder verändert"},
-  {k:"pigm",   n:"Hautverfärbung, Pigmentierung"},
-  {k:"knoten", n:"Knoten oder Verhärtung an Einstichstelle"},
-  {k:"rr",     n:"Blutdrucksymptome (Druck im Kopf, Schwindel)"},
-  {k:"stim",   n:"Ungewöhnliche Stimmungsschwankung"}
-];
-export const CONF_CHECKS = [
-  {k:"krank",  n:"Krankheit oder Infekt"},
-  {k:"reise",  n:"Reise oder Zeitzonenwechsel"},
-  {k:"wett",   n:"Wettkampf oder ungewohnte Belastung"},
-  {k:"diet",   n:"Ernährung deutlich verändert"}
-];
+/* 2026-11 entfallen: Sexualfunktion (IIEF-5), Morgenerektionen, die
+   PT-141-Karte samt Begleitphaenomenen, Pigmentierung, Negativkontrollen,
+   Beobachtungsliste und die Wochen-Confounder. Was davon weiter beobachtet
+   wird, steht jetzt als Fliesstext im Wochenkommentar (conf.sonst) oder im
+   Tageskommentar (dose.notizen.tag). Bereits erfasste Werte bleiben in den
+   gespeicherten Wochen stehen; Auswertung und CSV lesen sie nicht mehr. */
 export const MONTH = [
   {k:"foto", n:"Standardfotos (Gesicht, Scheitel) — gleiche Zeit, gleiches Licht, gleicher Abstand"},
   {k:"mole", n:"Muttermal-Übersichtsfotos (Rücken, Brust, Arme, Beine) — gleiche Bedingungen"},

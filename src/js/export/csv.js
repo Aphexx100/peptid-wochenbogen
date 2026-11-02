@@ -10,11 +10,11 @@ import { fmt } from '../util/format.js';
 import { weekNumber } from '../util/date.js';
 import { CU_ANTEIL } from '../constants.js';
 import {
-  KERN, GLOWZIEL, MASSE, MORGEN, PT_SIGNS, PIGMENT, NEG, WATCH, CONF_CHECKS
+  KERN, GLOWZIEL, MASSE
 } from '../schema.js';
 import { alleStoffe } from '../substanzen.js';
 import {
-  whoScore, iiefScore, hautMean, gelenkMean, kraftIndex, taillenQuotient, cuWeek,
+  whoScore, hautMean, gelenkMean, kraftIndex, taillenQuotient, cuWeek,
   tageKompakt, confTageKompakt, tageErfasst
 } from '../analysis/metrics.js';
 
@@ -31,20 +31,13 @@ export function buildCsv(){
     "PT-141 Anwendungen","PT-141 mg je Dosis","Kupfer mg/Woche",
     "Tirzepatid mg/Woche","DHEA Tage","DHEA mg je Dosis","Kreatin g/Woche","Tagesprotokoll","Sonstige Medikamente","Gewicht kg","Taille cm","Protein Ø g/Tag","Erwartung"]
     .concat(KERN.map(function(x){return x.n;}))
-    .concat(["WHO-5","WHO-5 Messtage","IIEF-5","IIEF-5 Messtage"])
-    .concat(["Morgen mit Erektion (0-7)"]).concat(MORGEN.map(function(x){return "Morgen: "+x.n;}))
-    .concat(["PT Verlangen mit","PT Verlangen ohne","PT Nebenwirkung","PT Dosis","PT Eintritt min","PT Dauer h","PT erkennbar","PT Auslösung"])
-    .concat(PT_SIGNS.map(function(x){return "PT: "+x.n;})).concat(["PT Ablauf Begleitphänomene"])
+    .concat(["WHO-5","WHO-5 Messtage"])
     .concat(GLOWZIEL.map(function(x){return x.n;})).concat(["Haut-Ø","Gelenke-Ø","Betroffene Gelenke"])
     .concat(MASSE.map(function(x){return x.n+" cm";})).concat(["Taille/Glieder"])
-    .concat([1,2,3,4].map(function(i){return "Kraft "+i+" (kg x Wdh)";})).concat(["Kraftindex"])
-    .concat(PIGMENT.map(function(x){return x.n;})).concat(["UV-Stunden","UV-Quelle","Muttermale"])
-    .concat(NEG.map(function(x){return x.n;}))
-    .concat(WATCH.map(function(x){return x.n;}))
-    .concat(["Beobachtung Detail","Training h/Woche","Schlaf Ø h","Alkohol l/Woche",
-             "Confounder-Tagesprotokoll","Stress"])
-    .concat(CONF_CHECKS.map(function(x){return x.n;}))
-    .concat(["Sonstiges","Was war anders","Was ohnehin erwartet","Abweichungen","Einstichstellen"])
+    .concat(["Bankdrücken kg","Bankdrücken max. Wdh.","Kraftindex"])
+    .concat(["Training h/Woche","Schlaf Ø h","Alkohol l/Woche","Confounder-Tagesprotokoll"])
+    .concat(["Wochenkommentar","Was war anders","Was ohnehin erwartet","Abweichungen",
+             "Einstichstellen","Tageskommentare"])
     .concat(eigene().reduce(function(sp,x){
       return sp.concat([x.n+" Tage", x.n+" "+x.u+" je Dosis"]);
     },[]));
@@ -62,32 +55,19 @@ export function buildCsv(){
            e.conf?e.conf.gew:"", e.conf?e.conf.bauch:"", e.conf?e.conf.protein:"",
            e.exp?e.exp.erwartung:""]
       .concat(KERN.map(function(x){return e.kern?e.kern[x.k]:"";}))
-      .concat([whoScore(e)===null?"":whoScore(e), tageErfasst(e.whoTage)||"",
-               iiefScore(e)===null?"":iiefScore(e), tageErfasst(e.iiefTage)||""])
-      .concat([e.morgen&&e.morgen.naechte!==null&&e.morgen.naechte!==undefined?e.morgen.naechte:""])
-      .concat(MORGEN.map(function(x){return e.morgen?e.morgen[x.k]:"";}))
-      .concat([e.pt?e.pt.ptMit:"",e.pt?e.pt.ptOhne:"",e.pt?e.pt.ptNw:"",e.pt?e.pt.dosis:"",
-               e.pt?e.pt.eintritt:"",e.pt?e.pt.dauer:"",e.pt?e.pt.blind:"",e.pt?e.pt.ausloesung:""])
-      .concat(PT_SIGNS.map(function(x){return (e.pt&&e.pt.signs&&e.pt.signs.indexOf(x.k)>=0)?"ja":"";}))
-      .concat([e.pt?e.pt.signsNote:""])
+      .concat([whoScore(e)===null?"":whoScore(e), tageErfasst(e.whoTage)||""])
       .concat(GLOWZIEL.map(function(x){return e.glow?e.glow[x.k]:"";}))
       .concat([hautMean(e)===null?"":fmt(hautMean(e),1),
                gelenkMean(e)===null?"":fmt(gelenkMean(e),1),
                e.glow?e.glow.ort:""])
       .concat(MASSE.map(function(x){return e.masse?e.masse[x.k]:"";}))
       .concat([taillenQuotient(e)===null?"":taillenQuotient(e).toFixed(2).replace(".",",")])
-      .concat([0,1,2,3].map(function(i){ var k=e.kraft&&e.kraft[i];
-               return (k&&k.kg&&k.reps)?(k.kg+" x "+k.reps):""; }))
-      .concat([kraftIndex(e)===null?"":kraftIndex(e)])
-      .concat(PIGMENT.map(function(x){return e.pigment?e.pigment[x.k]:"";}))
-      .concat([e.pigment?e.pigment.uv:"", e.pigment?e.pigment.quelle:"", e.pigment?e.pigment.naevi:""])
-      .concat(NEG.map(function(x){return e.neg?e.neg[x.k]:"";}))
-      .concat(WATCH.map(function(x){return (e.watch&&e.watch.indexOf(x.k)>=0)?"ja":"";}))
-      .concat([e.watchNote||"",e.conf?e.conf.train:"",e.conf?e.conf.schlaf:"",e.conf?e.conf.alk:"",
-               confTageKompakt(e),e.conf?e.conf.stress:""])
-      .concat(CONF_CHECKS.map(function(x){return (e.conf&&e.conf.flags&&e.conf.flags.indexOf(x.k)>=0)?"ja":"";}))
+      .concat([(e.kraft&&e.kraft[0]&&e.kraft[0].kg)||"", (e.kraft&&e.kraft[0]&&e.kraft[0].reps)||"",
+               kraftIndex(e)===null?"":kraftIndex(e)])
+      .concat([e.conf?e.conf.train:"",e.conf?e.conf.schlaf:"",e.conf?e.conf.alk:"",
+               confTageKompakt(e)])
       .concat([e.conf?e.conf.sonst:"", e.text?e.text.anders:"", e.text?e.text.ohnehin:"",
-               e.dose?e.dose.abw:"", e.dose?e.dose.stellen:""])
+               e.dose?e.dose.abw:"", e.dose?e.dose.stellen:"", e.dose?e.dose.tag:""])
       .concat(eigene().reduce(function(sp,x){
         var o=(e.dose&&e.dose.extra&&e.dose.extra[x.k])||{};
         return sp.concat([o.tage||"", o.dosis||""]);

@@ -15,7 +15,7 @@ import { initWeeklyGate } from './ui/weekly.js';
 import { wochenGraphNeu } from './ui/wochengraph.js';
 import { fillForm } from './form/model.js';
 import {
-  saveWeekAction, saveCfgZeit, saveCfgGlow, saveCfgUebungen, saveVials, fillSetup, wechsleWoche
+  saveWeekAction, saveCfgZeit, saveCfgGlow, saveVials, fillSetup, wechsleWoche
 } from './form/save.js';
 import { renderStatus } from './ui/status.js';
 import { initTabs } from './ui/tabs.js';
@@ -64,7 +64,6 @@ function wireEvents() {
   $('vialSave').addEventListener('click', saveVials);
   $('cfgSave').addEventListener('click', saveCfgZeit);
   $('cfgSave2').addEventListener('click', saveCfgGlow);
-  $('cfgSave3').addEventListener('click', saveCfgUebungen);
   $('expBtn').addEventListener('click', exportCsv);
   $('wwZurueck').addEventListener('click', () => wechsleWoche(plusTage(state.weekKey, -7)));
   $('wwVor').addEventListener('click', () => {
@@ -84,7 +83,6 @@ function uebernehmeCfg(c) {
   if (c.erwGelenk) state.cfg.erwGelenk = c.erwGelenk;
   if (c.erwWohl) state.cfg.erwWohl = c.erwWohl;
   if (c.ghk !== undefined) state.cfg.ghk = c.ghk;
-  if (c.uebungen && c.uebungen.length === 4) state.cfg.uebungen = c.uebungen;
   if (c.vials) state.cfg.vials = c.vials;
   if (c.stoffe) state.cfg.stoffe = c.stoffe;
   if (c.ausStoffe) state.cfg.ausStoffe = c.ausStoffe;

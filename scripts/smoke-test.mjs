@@ -72,9 +72,9 @@ async function laufe(browser, url, label, mitModulTest) {
 
   /* Aufbau: Regler und Segmente kommen aus schema.js, nicht aus dem HTML. */
   const regler = await seite.locator('[data-s]').count();
-  pruefe('Schieberegler aufgebaut', regler >= 20, `${regler} gefunden`);
+  pruefe('Schieberegler aufgebaut', regler >= 12, `${regler} gefunden`);
   const segmente = await seite.locator('[data-seg]').count();
-  pruefe('Segmentfragen aufgebaut', segmente >= 60, `${segmente} gefunden`);
+  pruefe('Segmentfragen aufgebaut', segmente >= 30, `${segmente} gefunden`);
   pruefe('Kraftfelder aufgebaut', (await seite.locator('#kw0').count()) === 1);
   const expoZellen = await seite.locator('#s-expo input[type="number"]').count();
   pruefe('Tagesansicht: 7 Tage × 7 Substanzen + Alkohol', expoZellen === 56, `${expoZellen} Zellen`);
@@ -95,8 +95,19 @@ async function laufe(browser, url, label, mitModulTest) {
   pruefe('Wochengrafik leer mit Hinweis', (await seite.locator('#wochenGraph svg').count()) === 0
     && /Noch keine Injektion/.test(await seite.locator('#wochenGraphLeer').innerText()));
   const notizZellen = await seite.locator('#s-expo input[type="text"]').count();
-  pruefe('Tagesraster: nur noch die Notizspalte Einstichstellen', notizZellen === 7
+  pruefe('Tagesansicht: Notiz zur Einstichstelle und Tageskommentar', notizZellen === 14
+    && (await seite.locator('#ntag0').count()) === 1
     && (await seite.locator('#nsonstMed0, #nabw0').count()) === 0, `${notizZellen} Zellen`);
+  pruefe('Entfallene Wochenkarten sind weg',
+    (await seite.locator('#s-iief, #s-morgen, #s-pt, #s-pigment, #s-neg, #s-watch, #s-confChecks, #ptCard').count()) === 0);
+  pruefe('Kraftwert auf eine Übung reduziert',
+    (await seite.locator('#kw0').count()) === 1 && (await seite.locator('#kw1, #ke0').count()) === 0
+    && /maximale Wiederholungen/.test(await seite.locator('#s-kraft').innerText()));
+  pruefe('Körpermaße auf vier Felder reduziert',
+    (await seite.locator('#mArmR').count()) === 1
+    && (await seite.locator('#mArmL, #mBeinR, #mBeinL').count()) === 0);
+  pruefe('Wochenkommentar ist ein Textfeld',
+    (await seite.locator('textarea#cSonst').count()) === 1);
   pruefe('Alte Wochenfelder für Notizen entfernt', (await seite.locator('#nSonstMed, #abw, #stellen').count()) === 0);
   const confZellen = await seite.locator('#s-confTage input').count();
   pruefe('Confounder-Tagesraster: nur noch Training und Schlaf', confZellen === 14, `${confZellen} Zellen`);
@@ -139,21 +150,20 @@ async function laufe(browser, url, label, mitModulTest) {
   /* Bereiche: ein Häkchen je Bereich, abwählen blendet die Karten aus, die
      Antworten darin bleiben erhalten. */
   const bwN = await seite.locator('#bereichWahl input').count();
-  pruefe('Bereichsleiste mit allen Bereichen', await seite.locator('#bereichBlock').isVisible() && bwN === 7,
+  pruefe('Bereichsleiste mit allen Bereichen', await seite.locator('#bereichBlock').isVisible() && bwN === 6,
     `${bwN} Häkchen`);
   pruefe('Alle Bereiche zunächst an',
-    (await seite.locator('#bereichWahl input:checked').count()) === 7);
+    (await seite.locator('#bereichWahl input:checked').count()) === 6);
   pruefe('GLOW ist in Hautbild und Gelenke geteilt',
     (await seite.locator('#s-glow-haut [data-s]').count()) === 2
     && (await seite.locator('#s-glow-schmerz [data-s]').count()) === 3
     && (await seite.locator('#s-glow-wohl [data-s]').count()) === 1);
-  await seite.uncheck('#bw-sex');
-  pruefe('Abgewählter Bereich verschwindet', await seite.locator('#s-iief').isHidden()
-    && await seite.locator('#s-morgen').isHidden());
+  await seite.uncheck('#bw-haut');
+  pruefe('Abgewählter Bereich verschwindet', await seite.locator('#s-glow-haut').isHidden());
   pruefe('Andere Bereiche bleiben stehen', await seite.locator('#s-kern').isVisible()
     && await seite.locator('#s-erwartung').isVisible());
-  await seite.check('#bw-sex');
-  pruefe('Wieder angehakt kommt der Bereich zurück', await seite.locator('#s-iief').isVisible());
+  await seite.check('#bw-haut');
+  pruefe('Wieder angehakt kommt der Bereich zurück', await seite.locator('#s-glow-haut').isVisible());
   pruefe('Knopf bietet danach das Ausblenden an',
     /Fragebogen ausblenden/.test(await seite.locator('#gateBar').innerText()));
   await seite.click('#gateOpen');
@@ -198,8 +208,6 @@ async function laufe(browser, url, label, mitModulTest) {
   await seite.click('#tab-bogen');
   for (let i = 0; i < 5; i++) await seite.click(`[data-seg="who${i}"][data-val="4"]`);
   pruefe('WHO-5 rechnet live', (await seite.locator('#whoScore').innerText()) === '80');
-  for (let i = 0; i < 5; i++) await seite.click(`[data-seg="iief${i}"][data-val="4"]`);
-  pruefe('IIEF-5 rechnet live', (await seite.locator('#iiefScore').innerText()) === '20');
   pruefe('WHO-5 zählt den Tag als Messtag',
     /Erfasst an 1 von 7 Tagen/.test(await seite.locator('#whoTage').innerText()));
   pruefe('WHO-5 weist den Wochenschnitt aus',
@@ -275,10 +283,8 @@ async function laufe(browser, url, label, mitModulTest) {
   await seite.hover('#wochenGraph rect.wg-hit', { position: { x: 4, y: 40 } });
   pruefe('Wochengrafik zeigt Tooltip mit allen Wirkstoffen', (await seite.locator('.wg-tip .wg-tip-zeile').count()) === 5
     && /2,8 mg/.test(await seite.locator('.wg-tip').innerText()));
-  pruefe('PT-Karte ohne PT-141-Tag verborgen', await seite.locator('#ptCard').isHidden());
   await tag(2);
   await seite.fill('#xpt2', '1.75');
-  pruefe('PT-Karte erscheint bei PT-141-Tag', await seite.locator('#ptCard').isVisible());
 
   /* Tagesnotizen: je Tag ein eigener Text, der mit Tagesangabe in die
      Wochenfelder und von dort in CSV und Datenblock wandert. */
@@ -297,6 +303,9 @@ async function laufe(browser, url, label, mitModulTest) {
 
   /* Speichern und nach dem Neuladen wiederfinden */
   await seite.fill('#cGew', '90.5');
+  await seite.fill('#cSonst', 'Urlaub, zwei Tage Zeitverschiebung');
+  await tag(3);
+  await seite.fill('#ntag3', 'früh raus, Kopf dumpf');
   await seite.click('#saveBtn');
   await seite.waitForTimeout(500);
   const info = await seite.locator('#saveInfo').innerText();
@@ -305,7 +314,12 @@ async function laufe(browser, url, label, mitModulTest) {
   await seite.reload({ waitUntil: 'networkidle' });
   await seite.waitForTimeout(500);
   pruefe('Tageseintrag überlebt das Neuladen', (await seite.inputValue('#xglow0')) === '2.8');
-  pruefe('IIEF-5 überlebt das Neuladen', (await seite.locator('#iiefScore').innerText()) === '20');
+  pruefe('WHO-5 überlebt das Neuladen', (await seite.locator('#whoScore').innerText()) === '80',
+    await seite.locator('#whoScore').innerText());
+  pruefe('Wochenkommentar überlebt das Neuladen',
+    /Zeitverschiebung/.test(await seite.inputValue('#cSonst')));
+  pruefe('Tageskommentar überlebt das Neuladen',
+    (await seite.inputValue('#ntag3')) === 'früh raus, Kopf dumpf');
   pruefe('Schlaf-Tageswert überlebt das Neuladen', (await seite.inputValue('#tschlaf0')) === '7');
   /* Nachtragen: der Fragebogen gilt für einen früheren Tag der Woche. */
   const gestern = await seite.evaluate(() => {
@@ -357,9 +371,7 @@ async function laufe(browser, url, label, mitModulTest) {
     (await seite.inputValue('#xglow0')) === '' && (await seite.inputValue('#nstellen4')) === '');
   await tag(2);
   await seite.fill('#xpt2', '1.75');
-  pruefe('PT-Karte bleibt ohne Fragebogen zu', await seite.locator('#ptCard').isHidden());
   await seite.click('#gateOpen');
-  pruefe('PT-Karte kommt mit dem Fragebogen zurück', await seite.locator('#ptCard').isVisible());
   await setzeTag(heuteWt);
   pruefe('Zurück beim Erfassungstag ist die gespeicherte Woche wieder da',
     (await seite.inputValue('#xglow0')) === '2.8' && (await seite.inputValue('#nstellen4')) === 'kleiner Knoten');
@@ -464,7 +476,8 @@ async function laufe(browser, url, label, mitModulTest) {
   /* Auswertung */
   await seite.click('#tab-aus');
   await seite.waitForTimeout(300);
-  pruefe('Auswertung zeigt den Primärendpunkt', (await seite.locator('#tLib').innerText()).includes('20'));
+  pruefe('Auswertung zeigt den Primärendpunkt als Kern-Ø',
+    /\/ 10/.test(await seite.locator('#tLib').innerText()), await seite.locator('#tLib').innerText());
   pruefe('Wochentabelle gefüllt', (await seite.locator('#weekTable tbody tr').count()) >= 1);
 
   /* Analyse: ohne Claude und ohne Schluessel bleibt der Datenblock einsehbar */
@@ -476,12 +489,15 @@ async function laufe(browser, url, label, mitModulTest) {
   pruefe('Datenblock nennt das Erwartungsfenster', ctx.includes('ERWARTUNGSFENSTER'));
   pruefe('Datenblock trägt das Tagesprotokoll', /TAGE: .*GLOW 2,8mg/.test(ctx));
   pruefe('Datenblock trägt die Zufuhr', /TAGE: .*Kreatin 5g \+ Protein 180g/.test(ctx)
-    && /Kreatin 10 g\/Woche an 2 Tagen/.test(ctx) && /Protein 170g/.test(ctx) && /Alkohol 2l,/.test(ctx));
+    && /Kreatin 10 g\/Woche an 2 Tagen/.test(ctx) && /Protein 170g/.test(ctx) && /Alkohol 2l/.test(ctx));
   pruefe('Datenblock trägt die eigenen Stoffe', /WEITERE STOFFE: .*Retatrutid 1 Tage à 2 mg/.test(ctx)
     && /Magnesium 1 Tage à 400 g \[Supplement\/Nahrungsmittel\]/.test(ctx),
     (ctx.match(/WEITERE STOFFE:[^|]*/) || [''])[0]);
   pruefe('Datenblock trägt die Confounder-Tage', /CONFOUNDER-TAGE .*Schlaf 7h/.test(ctx));
-  pruefe('Datenblock nennt die Messtage beim WHO-5', /WHO-5 80 \(Ø aus 1 Tagen\), IIEF-5 20(?! \()/.test(ctx));
+  pruefe('Datenblock nennt die Messtage beim WHO-5', /WHO-5 80 \(Ø aus 1 Tagen\)/.test(ctx));
+  pruefe('Datenblock nennt den neuen Primärendpunkt', /PRIMAERENDPUNKT Kern-Ø/.test(ctx));
+  pruefe('Datenblock trägt den Wochenkommentar', /WOCHENKOMMENTAR: Urlaub/.test(ctx),
+    (ctx.match(/WOCHENKOMMENTAR:[^|]*/) || [''])[0]);
   pruefe('Datenblock trägt Tagesnotizen mit Tagesangabe',
     /Einstichstellen: \w\w \d\d\.\d\d\.: leichte Rötung links; \w\w \d\d\.\d\d\.: kleiner Knoten/.test(ctx));
   pruefe('Analyse-Knöpfe ohne Quelle deaktiviert', await seite.locator('#askWeek').isDisabled());
@@ -636,7 +652,10 @@ async function laufe(browser, url, label, mitModulTest) {
     });
     const zeilen = csv.trim().split('\r\n');
     pruefe('CSV hat Kopfzeile und eine Datenzeile', zeilen.length === 2, `${zeilen.length} Zeilen`);
-    pruefe('CSV benutzt Semikolon', zeilen[0].split(';').length > 80, `${zeilen[0].split(';').length} Spalten`);
+    pruefe('CSV benutzt Semikolon', zeilen[0].split(';').length > 40, `${zeilen[0].split(';').length} Spalten`);
+    pruefe('CSV führt Bankdrücken und die Kommentare',
+      zeilen[0].includes('Bankdrücken max. Wdh.') && zeilen[0].includes('Wochenkommentar')
+      && zeilen[0].includes('Tageskommentare'));
     pruefe('CSV enthält den gespeicherten Wert', /90[.,]5/.test(zeilen[1]));
     pruefe('CSV führt das Tagesprotokoll', zeilen[0].includes('Tagesprotokoll') && /GLOW 2,8mg/.test(zeilen[1]));
     pruefe('CSV führt Notizen mit Tagesangabe', /\w\w \d\d\.\d\d\.: kleiner Knoten/.test(zeilen[1]));

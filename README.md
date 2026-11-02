@@ -21,8 +21,8 @@ Zum Korrigieren lässt sich der ganze Bogen auf eine frühere Woche umstellen; b
 WHO-5 wählt eine Tagesleiste den Tag.
 
 **Wann Zeit ist** kommt der ausführliche Fragebogen dazu: sechs Kernbereiche, die drei erwarteten
-GLOW-Wirkungen, Sexualfunktion (IIEF-5) und Morgenerektionen, Körpermaße und Kraftwerte,
-Pigmentierung, Negativkontrollen und die Beobachtungsliste. Bis dahin bleiben diese Fragen
+GLOW-Wirkungen, Körpermaße und der Kraftwert im Bankdrücken, dazu ein offener
+Kommentar zur Woche. Bis dahin bleiben diese Fragen
 verborgen. Der Knopf **Ausführlichen Fragebogen erstellen** öffnet sie. Eine Tagesleiste
 darunter sagt, für welchen Tag er gilt — vorgewählt heute, nachtragen lässt sich jeder
 vergangene Tag der Woche, für eine frühere Woche wird oben die Woche gewechselt.
@@ -45,7 +45,7 @@ die Architektur in [docs/ARCHITEKTUR.md](docs/ARCHITEKTUR.md).
 ```
 npm install          # esbuild und playwright, nur zum Bauen und Testen
 npm start            # http://localhost:8080
-npm test             # 334 Prüfungen in einem echten Browser
+npm test             # 344 Prüfungen in einem echten Browser
 npm run build        # dist/peptid-wochenbogen.html — eine Datei für Claude
 ```
 

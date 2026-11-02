@@ -1,7 +1,7 @@
 /* Die Auswertungsregeln, an die sich die KI halten muss.
 
    Dieser Text ist der eigentliche Wert der Analysefunktion: er legt fest,
-   dass Tirzepatid als dominanter Confounder benannt wird, dass der IIEF-5 der
+   dass Tirzepatid als dominanter Confounder benannt wird, dass Kern-Ø der
    Primaerendpunkt ist, dass Erwartung gegen Ergebnis und Negativkontrollen
    geprueft werden, und dass unter zehn Wochen ein Trend als Rauschen gilt.
 
@@ -25,13 +25,15 @@ export const BRIEFING =
 "1. Tirzepatid und der Gewichtsverlust sind der dominante Confounder. Gewichtsabnahme senkt die Aromatase, "+
 "senkt Estradiol und hebt LH und Testosteron - also genau das Muster, das den Peptiden zugeschrieben werden soll. "+
 "Nenne diesen Kandidaten bei jeder hormonellen oder metabolischen Veränderung ausdrücklich.\n"+
-"2. Primaerendpunkt ist der IIEF-5-Summenwert (5-25, erektile Funktion, Wochenrueckblick), ergaenzt um die "+
-"Morgenerektionen (0-7) und die PT-141-Bewertungen. Alles andere ist Kontext.\n"+
+"2. Primaerendpunkt ist Kern-Ø, der Mittelwert der sechs Kernbereiche (0-10, Wochenrueckblick). "+
+"Er misst breit und unscharf; sage das, wenn du ihn deutest. Alles andere ist Kontext.\n"+
 "3. Prüfe die Erwartungsspalte gegen das Ergebnis. Laufen sie gleich, spricht das für Erwartungseffekt statt Wirkstoff.\n"+
-"4. Prüfe die Negativkontrollen (Geruch, Sehen, Hören). Steigen sie mit, ist ein Anstieg global und nicht substanzspezifisch.\n"+
-"5. Verhaltenszaehlungen (Morgen mit spontaner Erektion, Anzahl PT-141-Anwendungen) sind belastbarer als Skalenwerte.\n"+
-"6. Beziehungs- und Gelegenheitskontext erklaeren Schwankungen der Sexualendpunkte oft besser als jede Substanz. "+
-"Es gibt dafuer kein eigenes Feld - lies die Freitextantworten am Ende jeder Woche.\n"+
+"4. Der Bogen hat seit 2026-11 KEINE Negativkontrollen mehr. Damit fehlt die eingebaute Gegenprobe gegen einen "+
+"globalen Anstieg. Nimm ersatzweise Schlaf, Training und Alkohol als Vergleichsreihen und sage ausdrücklich, "+
+"dass diese Gegenprobe schwächer ist als die entfallene.\n"+
+"5. Zaehlungen (Anwendungstage, Trainingsstunden, Messwerte) sind belastbarer als Skalenwerte.\n"+
+"6. WOCHENKOMMENTAR und TAGESKOMMENTARE sind die einzige Stelle, an der Lebensumstände, Beschwerden und "+
+"Auffälligkeiten stehen - seit die Beobachtungsliste entfallen ist. Lies sie zuerst und gewichte sie hoch.\n"+
 "6a. GLOW-ZIELE sind Hautbild, Gelenkbeschwerden und Wohlbefinden. Der Anwender hat vorab festgelegt, ab welcher "+
 "Woche er eine Besserung erwartet (siehe ERWARTUNGSFENSTER). Prüfe den beobachteten Zeitpunkt gegen diese Vorhersage: "+
 "Eine Besserung deutlich VOR dem Fenster spricht für Erwartungseffekt, eine im Fenster ist erklärungsbedürftiger. "+

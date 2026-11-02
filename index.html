@@ -207,127 +207,30 @@
     <p class="daylist" id="whoTage"></p>
   </div>
 
-  <div class="card weekly" data-bereich="sex">
-    <h2><span class="step">05</span> Sexualfunktion</h2>
-    <p class="hint">IIEF-5, deutscher Standardwortlaut. <em>In den letzten sieben Tagen …</em></p>
-    <div id="s-iief"></div>
-    <div class="score">IIEF-5 <b id="iiefScore">—</b> von 25</div>
-  </div>
-
-  <div class="card weekly" data-bereich="sex">
-    <h2><span class="step">05b</span> Morgendliche Erektionen</h2>
-    <p class="hint">Der wichtigste Einzelmarker in diesem ganzen Bogen. Spontane Erektionen im Schlaf und beim Aufwachen sind androgenabhängig und reagieren auf den Hormonstatus über Tage bis Wochen — nicht auf die Uhrzeit einer einzelnen Injektion. Damit trennen sie das Stehende vom Akuten: Was sich hier bewegt, gehört zur Dauergabe, nicht zu PT-141.</p>
-    <div id="s-morgenCount"></div>
-    <div id="s-morgen"></div>
-    <p class="hint" style="margin-top:.9rem"><em>Beim Zählen die volle Blase als Erklärung ausschließen — hält die Erektion nach dem Wasserlassen an, zählt sie.</em></p>
-  </div>
-
-  <div class="card cond weekly" id="ptCard" data-bereich="sex" data-faellig="0" hidden>
-    <h2><span class="step">06</span> PT-141 — der einzige echte Vergleich</h2>
-    <p class="hint">Weil PT-141 nicht täglich läuft, hast du hier Tage mit und Tage ohne — im selben Körper, in derselben Woche. Das ist der einzige Punkt im ganzen Protokoll, an dem eine Zuordnung möglich ist. Entsprechend sorgfältig ausfüllen.</p>
-    <div id="s-pt"></div>
-    <div class="grid2" style="margin-top:.4rem">
-      <div class="field"><label class="fl" for="ptDosis">Dosis je Anwendung (mg)</label><input type="text" id="ptDosis" placeholder="z. B. 0,75" inputmode="decimal"></div>
-      <div class="field"><label class="fl" for="ptEintritt">Wirkeintritt (Min.)</label><input type="number" id="ptEintritt" min="0" step="5" inputmode="numeric"></div>
-      <div class="field"><label class="fl" for="ptDauer">Wirkdauer (Std.)</label><input type="number" id="ptDauer" min="0" step="0.5" inputmode="decimal"></div>
-      <div class="field">
-        <label class="fl" for="ptBlind">Wäre der Tag ohne Wissen erkennbar gewesen?</label>
-        <select id="ptBlind">
-          <option value="">—</option>
-          <option value="ja">ja, eindeutig</option>
-          <option value="wahrscheinlich">wahrscheinlich</option>
-          <option value="unsicher">unsicher</option>
-          <option value="nein">nein</option>
-        </select>
-      </div>
-      <div class="field">
-        <label class="fl" for="ptAusloesung">Auslösung des Effekts</label>
-        <select id="ptAusloesung">
-          <option value="">—</option>
-          <option value="spontan">spontan, ohne sexuellen Reiz</option>
-          <option value="gemischt">teils spontan, teils reizgebunden</option>
-          <option value="reiz">nur bei sexuellem Reiz oder Gedanken</option>
-          <option value="garnicht">kein Effekt</option>
-        </select>
-      </div>
-    </div>
-    <p class="hint" style="margin-top:.8rem">Die Frage nach der Erkennbarkeit ist die wichtigste des ganzen Bogens: Wenn du an einem Anwendungstag nicht sagen könntest, dass es einer war, ist der beobachtete Effekt vermutlich nicht der Wirkstoff.</p>
-
-    <label class="fl" style="margin-top:1.2rem">Begleitphänomene an Anwendungstagen</label>
-    <p class="hint" style="margin:.1rem 0 .6rem">Strecken, Gähnen und Erektion bilden im Tiermodell <em>einen</em> melanocortin-induzierten Verhaltenskomplex über MC4-Rezeptoren im Nucleus paraventricularis — sie gehören zusammen. Treten sie gemeinsam auf, ist das ein rezeptorspezifisches Muster und damit ein deutlich stärkeres Signal als die Erektion allein.</p>
-    <div class="checks neutral" id="s-ptSigns"></div>
-    <div class="field" style="margin-top:.8rem">
-      <label class="fl" for="ptSignsNote">Zeitlicher Ablauf der Begleitphänomene</label>
-      <input type="text" id="ptSignsNote" placeholder="z. B. Strecken ab ca. 40 Min, vor der Erektion, hielt 2 Std">
-    </div>
-  </div>
-
-  <div class="card weekly" data-bereich="haut">
-    <h2><span class="step">06b</span> Pigmentierung</h2>
-    <p class="hint">MC1-Rezeptoren auf den Melanozyten sind derselbe Rezeptorpfad, über den auch die Bräunung läuft. Beschleunigte Bräunung ist damit ein peripherer Wirknachweis — und gleichzeitig der Grund, warum die Muttermal-Beobachtung ab jetzt zum Protokoll gehört.</p>
-    <div id="s-pigment"></div>
-    <div class="grid2" style="margin-top:.4rem">
-      <div class="field"><label class="fl" for="uvStd">UV-Exposition diese Woche (Std.)</label><input type="number" id="uvStd" min="0" step="0.5" inputmode="decimal"></div>
-      <div class="field">
-        <label class="fl" for="uvQuelle">Hauptquelle</label>
-        <select id="uvQuelle"><option value="">—</option><option>Sonne beiläufig</option><option>Sonne gezielt</option><option>Solarium</option><option>keine</option></select>
-      </div>
-    </div>
-    <div class="field" style="margin-top:.7rem">
-      <label class="fl" for="naevi">Muttermale — neue, veränderte, auffällige</label>
-      <input type="text" id="naevi" placeholder="Ort, was verändert, seit wann">
-    </div>
-    <div class="note" style="margin-top:.9rem">
-      <b>Einmalig und zeitkritisch:</b> Eine dermatoskopische Basisdokumentation deiner Muttermale ist jetzt mehr wert als in drei Monaten — je weiter die Pigmentierung fortschreitet, desto weniger sagt ein späterer Ausgangsbefund aus. Es geht nicht um Risiko, sondern um Lesbarkeit: Wenn alle Male nachdunkeln, verlierst du „ein Mal hat sich verändert" als Warnsignal, solange kein Vorher existiert.
-    </div>
-  </div>
-
-  <div class="card weekly" data-bereich="sicher">
-    <h2><span class="step">07</span> Negativkontrollen</h2>
-    <p class="hint">Bereiche, auf die keine dieser Substanzen einen Mechanismus hat. Steigen sie mit, ist der Anstieg global — also Erwartung, gute Wochen, besserer Schlaf. Bleiben sie flach, während die Kernbereiche steigen, ist das dein stärkstes Argument dafür, dass etwas Substanzspezifisches passiert.</p>
-    <div id="s-neg"></div>
-  </div>
-
-  <div class="card weekly" data-bereich="sicher">
-    <h2><span class="step">08</span> Beobachtungsliste</h2>
-    <p class="hint">Nur ankreuzen, wenn diese Woche tatsächlich aufgetreten. Bei einem Stack ist das Datum die einzige Zuordnung, die dir bleibt.</p>
-    <div class="checks" id="s-watch"></div>
-    <div class="field" style="margin-top:.8rem">
-      <label class="fl" for="watchNote">Wenn etwas angekreuzt: wann, wie stark, wie lange</label>
-      <input type="text" id="watchNote" placeholder="z. B. Di + Mi, leicht, je 2 Std nach Injektion">
-    </div>
-  </div>
-
   <div class="card weekly" data-bereich="koerper">
     <h2><span class="step">★</span> Körperzusammensetzung</h2>
-    <p class="hint">Der Tirzepatid-Endpunkt. Gewicht allein sagt nichts darüber, <em>was</em> abgenommen wurde — dafür braucht es die Umfänge und, wichtiger noch, die Kraftwerte.</p>
-    <div class="grid3">
+    <p class="hint">Der Tirzepatid-Endpunkt. Gewicht allein sagt nichts darüber, <em>was</em> abgenommen wurde — dafür braucht es die Umfänge und, wichtiger noch, den Kraftwert.</p>
+    <div class="grid2">
       <div class="field"><label class="fl" for="cGew">Gewicht (kg)</label><input type="number" id="cGew" min="0" step="0.1" inputmode="decimal"></div>
-      <div class="field"><label class="fl" for="cBauch">Taille / Bauch (cm)</label><input type="number" id="cBauch" min="0" step="0.5" inputmode="decimal"></div>
+      <div class="field"><label class="fl" for="cBauch">Taille (cm)</label><input type="number" id="cBauch" min="0" step="0.5" inputmode="decimal"></div>
       <div class="field"><label class="fl" for="mBrust">Brustumfang (cm)</label><input type="number" id="mBrust" min="0" step="0.5" inputmode="decimal"></div>
-      <div class="field"><label class="fl" for="mArmR">Oberarm rechts (cm)</label><input type="number" id="mArmR" min="0" step="0.5" inputmode="decimal"></div>
-      <div class="field"><label class="fl" for="mArmL">Oberarm links (cm)</label><input type="number" id="mArmL" min="0" step="0.5" inputmode="decimal"></div>
-      <div class="field"><label class="fl" for="mBeinR">Oberschenkel rechts (cm)</label><input type="number" id="mBeinR" min="0" step="0.5" inputmode="decimal"></div>
-      <div class="field"><label class="fl" for="mBeinL">Oberschenkel links (cm)</label><input type="number" id="mBeinL" min="0" step="0.5" inputmode="decimal"></div>
+      <div class="field"><label class="fl" for="mArmR">Oberarmumfang (cm)</label><input type="number" id="mArmR" min="0" step="0.5" inputmode="decimal"></div>
     </div>
 
     <div class="note" style="margin-top:1rem">
       <b>Damit die Zahlen etwas taugen:</b> immer am selben Wochentag im selben Abstand zur Tirzepatid-Injektion messen (die Wassereinlagerung schwankt über die Woche), morgens nüchtern vor dem Training, Muskel entspannt statt angespannt — such dir eins aus und bleib dabei. Messpunkt mit Abstand zu einem Knochenpunkt festlegen und notieren, etwa 15 cm über dem Ellenbogengelenk, sonst misst du jede Woche eine andere Stelle. Die Messfehlerspanne eines Maßbands liegt bei etwa einem halben bis einem Zentimeter — also in derselben Größenordnung wie die Veränderung, die du suchst.
     </div>
 
-    <label class="fl" style="margin-top:1.3rem">Kraftwerte — der bessere Muskelindikator</label>
-    <p class="hint" style="margin:.1rem 0 .7rem">Trag den schwersten Arbeitssatz der Woche ein. Verlust an kontraktilem Gewebe zeigt sich im Kraftwert Wochen früher als am Maßband, und die Streuung ist kleiner. Übungsnamen legst du im Setup fest.</p>
+    <label class="fl" style="margin-top:1.3rem">Bankdrücken — der bessere Muskelindikator</label>
+    <p class="hint" style="margin:.1rem 0 .7rem">Wie viele Wiederholungen schaffst du bei diesem Gewicht maximal? Verlust an Muskelgewebe zeigt sich darin Wochen früher als am Maßband, und die Streuung ist kleiner. Eine Übung, über Monate gleich ausgeführt, sagt mehr als vier wechselnde.</p>
     <div id="s-kraft"></div>
   </div>
 
   <div class="card weekly" data-bereich="umfeld">
-    <h2><span class="step">09</span> Confounder der Woche</h2>
-    <p class="hint">Training und Schlaf laufen täglich in Abschnitt 02b, Protein und Alkohol in 02. Hier bleibt, was sich nur über die Woche beurteilen lässt.</p>
-    <div id="s-conf"></div>
-    <div class="checks neutral" id="s-confChecks" style="margin-top:.9rem"></div>
-    <div class="field" style="margin-top:.8rem">
-      <label class="fl" for="cSonst">Sonstige Änderungen</label>
-      <input type="text" id="cSonst" placeholder="neues Supplement, Medikament, Urlaub, Zeitzone …">
+    <h2><span class="step">09</span> Kommentar zur Woche</h2>
+    <p class="hint">Optional und freiwillig. Hier steht, was in kein Feld passt: Krankheit, Reise, Wettkampf, ungewohnte Belastung, Stress, neue Medikamente oder Supplemente — und alles, was dir an dir selbst aufgefallen ist. Seit Beobachtungsliste und Negativkontrollen entfallen sind, ist dieses Feld die einzige Stelle dafür, und die Auswertung liest es zuerst.</p>
+    <div class="field">
+      <textarea id="cSonst" rows="5" placeholder="Was war diese Woche anders? Was ist dir aufgefallen?"></textarea>
     </div>
   </div>
 
@@ -350,34 +253,25 @@
 
   <div class="tiles">
     <div class="tile wide">
-      <span class="lab">IIEF-5 — Primärendpunkt</span>
-      <span class="val mono" id="tLib">—<span class="unit">/ 25</span></span>
+      <span class="lab">Kernbereiche Ø — Primärendpunkt</span>
+      <span class="val mono" id="tLib">—<span class="unit">/ 10</span></span>
       <p class="sub" id="tLibSub">Letzte erfasste Woche.</p>
     </div>
-    <div class="tile"><span class="lab">IIEF-5 — erste vs. letzte Wochen</span><span class="val mono" id="tLibDelta">—</span><p class="sub" id="tLibDeltaSub">Ab vier Wochen berechenbar.</p></div>
-    <div class="tile"><span class="lab">Morgen mit Erektion Ø</span><span class="val mono" id="tLibTage">—</span><p class="sub">von 7 — Zählwert, nicht Einschätzung</p></div>
+    <div class="tile"><span class="lab">Kern-Ø — erste vs. letzte Wochen</span><span class="val mono" id="tLibDelta">—</span><p class="sub" id="tLibDeltaSub">Ab vier Wochen berechenbar.</p></div>
     <div class="tile wide">
-      <span class="lab">Erwartung ↔ IIEF-5</span>
+      <span class="lab">Erwartung ↔ Kern-Ø</span>
       <span class="val mono" id="tCorr">—</span>
       <p class="sub" id="tCorrSub">Ab etwa sechs Wochen aussagekräftig.</p>
     </div>
     <div class="tile"><span class="lab">Gewicht</span><span class="val mono" id="tGew">—</span><p class="sub" id="tGewSub">Ab vier Wochen berechenbar.</p></div>
     <div class="tile"><span class="lab">Muskel — Erhalt</span><span class="val mono" id="tMuskel">—</span><p class="sub" id="tMuskelSub">Kraft und Umfang gegen den Gewichtsverlauf.</p></div>
     <div class="tile"><span class="lab">Wochen erfasst</span><span class="val mono" id="tWeeks">0</span><p class="sub">lückenlos ist besser als lang</p></div>
-    <div class="tile"><span class="lab">Morgen mit Erektion Ø</span><span class="val mono" id="tMorgen">—</span><p class="sub">von 7 — Androgen-Proxy</p></div>
     <div class="tile"><span class="lab">Erwartung Ø</span><span class="val mono" id="tExp">—</span><p class="sub">von 10</p></div>
     <div class="tile wide">
-      <span class="lab">Negativkontrollen — Drift</span>
+      <span class="lab">Schlaf ↔ Kern-Ø</span>
       <span class="val mono" id="tNeg">—</span>
       <p class="sub" id="tNegSub"></p>
     </div>
-  </div>
-
-  <div class="card">
-    <h2>PT-141 — Wochen mit gegen Wochen ohne</h2>
-    <p class="hint">Verlangen an Anwendungstagen gegen Tage ohne, gemittelt über alle Wochen mit mindestens einer Anwendung.</p>
-    <div class="tablewrap"><table id="ptTable"></table></div>
-    <div class="empty" id="ptEmpty">Noch keine Woche mit PT-141-Anwendung erfasst.</div>
   </div>
 
   <div class="card">
@@ -592,14 +486,6 @@
     <div class="btnrow" id="rcVialZiele" style="grid-template-columns:repeat(3,1fr);gap:.3rem;margin:0"></div>
     <p class="empty" id="rcVialLeer" hidden>Kein Stoff im Bogen wird rekonstituiert.</p>
     <p class="saveinfo" id="rcUebInfo"></p>
-  </div>
-
-  <div class="card">
-    <h2>Übungen für die Kraftwerte</h2>
-    <p class="hint">Vier Übungen, die du regelmäßig machst und die sich sauber vergleichen lassen — je eine für Beine, Rücken, Brust und Schultern ist ein brauchbarer Schnitt.</p>
-    <div class="grid2" id="s-kraftNamen"></div>
-    <div class="btnrow"><button class="btn ghost" id="cfgSave3">Übungen speichern</button></div>
-    <p class="saveinfo" id="cfgInfo3"></p>
   </div>
 
   <div class="card">

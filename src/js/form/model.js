@@ -8,13 +8,13 @@ import { state } from '../state.js';
 import { $ } from '../util/dom.js';
 import { weekNumber } from '../util/date.js';
 import {
-  KERN, GLOWZIEL, MASSE, MORGEN, PT, PT_SIGNS, PIGMENT, NEG, WATCH, CONF_CHECKS, MONTH, EXPO_TEXT_ALT
+  KERN, GLOWZIEL, MASSE, MASSE_ALT, MONTH, EXPO_TEXT_ALT
 } from '../schema.js';
-import { sVal, setS, segVal, setSeg, checked } from '../ui/controls.js';
+import { sVal, setS, checked } from '../ui/controls.js';
 import { wochenfragenOffen, fragebogenTag } from '../ui/weekly.js';
 import { ALK_MARKE } from '../storage/migrate.js';
 import {
-  recalcScores, readExpo, ableiten, fuelleExpo, setLegacyDose, getLegacyDose,
+  recalcScores, readExpo, ableiten, fuelleExpo, setLegacyDose, getLegacyDose, KRAFT_UEBUNG,
   readConfTage, ableitenConf, fuelleConfTage, setLegacyConf, getLegacyConf,
   readZufuhr, ableitenZufuhr, ableitenSupp, fuelleZufuhr,
   mergeHeute, tagesMittel, setTagesSaetze, startWhoTag, readNotizen, ableitenNotizen, fuelleNotizen
@@ -22,7 +22,7 @@ import {
 
 export function readForm(){
   var e={week:state.weekKey, nr:weekNumber(state.weekKey), saved:new Date().toISOString(),
-    exp:{}, kern:{}, who:[], iief:[], pt:{}, neg:{}, watch:[], conf:{}, text:{}};
+    exp:{}, kern:{}, who:[], conf:{}, text:{}};
   e.exp.erwartung=sVal("erwartung");
   /* Wochensummen aus dem Tagesraster ableiten. Ist das Raster leer und die
      Woche wurde vor der Umstellung als Wochensumme erfasst, bleiben die alten
@@ -74,32 +74,20 @@ export function readForm(){
   KERN.forEach(function(x){ e.kern[x.k]=sVal(x.k); });
   e.glow={ort:$("gGelenkOrt").value.trim()};
   GLOWZIEL.forEach(function(x){ e.glow[x.k]=sVal(x.k); });
+  /* Entfallene Masse bleiben am Eintrag stehen, statt beim naechsten
+     Speichern still zu verschwinden. */
   e.masse={}; MASSE.forEach(function(x){ e.masse[x.k]=$(x.k).value; });
-  e.kraft=[0,1,2,3].map(function(i){
-    return {name:state.cfg.uebungen[i]||"", kg:$("kw"+i).value, reps:$("kr"+i).value, rir:$("ke"+i).value};
-  });
+  var altM=(state.weeks[state.weekKey]||{}).masse||{};
+  MASSE_ALT.forEach(function(k){ if(altM[k]) e.masse[k]=altM[k]; });
+  /* Eine Uebung, zwei Zahlen. Die Liste bleibt eine Liste, damit
+     kraftIndex() und die CSV unveraendert weiterrechnen. */
+  e.kraft=[{name:KRAFT_UEBUNG, kg:$("kw0").value, reps:$("kr0").value}];
   /* WHO-5 wird taeglich erfasst: der Antwortsatz des gewaehlten Tags wird zu
      den bereits gespeicherten Tagen dieser Woche gelegt, e.who traegt das Mittel je
      Frage. Ein leerer Bogen loescht keinen Tag. Der IIEF-5 ist eine
      Wochenfrage mit einem Antwortsatz fuer die letzten sieben Tage. */
   e.whoTage=mergeHeute("who");
   e.who=tagesMittel(e.whoTage);
-  for(var j=0;j<5;j++) e.iief.push(segVal("iief"+j));
-  e.morgen={naechte:segVal("mNaechte")};
-  MORGEN.forEach(function(x){ e.morgen[x.k]=sVal(x.k); });
-  if(e.dose.pt>0){
-    PT.forEach(function(x){ e.pt[x.k]=sVal(x.k); });
-    e.pt.dosis=$("ptDosis").value.trim(); e.pt.eintritt=$("ptEintritt").value;
-    e.pt.dauer=$("ptDauer").value; e.pt.blind=$("ptBlind").value;
-    e.pt.ausloesung=$("ptAusloesung").value;
-    e.pt.signs=[]; PT_SIGNS.forEach(function(s){ if(checked(s.k)) e.pt.signs.push(s.k); });
-    e.pt.signsNote=$("ptSignsNote").value.trim();
-  }
-  e.pigment={uv:$("uvStd").value, quelle:$("uvQuelle").value, naevi:$("naevi").value.trim()};
-  PIGMENT.forEach(function(x){ e.pigment[x.k]=sVal(x.k); });
-  NEG.forEach(function(x){ e.neg[x.k]=sVal(x.k); });
-  WATCH.forEach(function(w){ if(checked(w.k)) e.watch.push(w.k); });
-  e.watchNote=$("watchNote").value.trim();
   /* Training, Schlaf, Protein und Alkohol kommen aus dem Tagesraster; Summe
      bei Training und Alkohol, Durchschnitt bei Schlaf und Protein. Alkohol
      zaehlt in Litern. Wie bei der Exposition bleiben die alten
@@ -122,7 +110,6 @@ export function readForm(){
   if(altW&&altW.conf&&altW.conf.vortagAlt) e.conf.vortagAlt=altW.conf.vortagAlt;
   else if(altT&&(altT.protein||altT.alk)&&!(altW.dose&&altW.dose.zufuhr))
     e.conf.vortagAlt={start:altT.start, protein:altT.protein||[], alk:altT.alk||[]};
-  CONF_CHECKS.forEach(function(c2){ if(checked(c2.k)) e.conf.flags.push(c2.k); });
   e.month=[]; MONTH.forEach(function(m){ if(checked(m.k)) e.month.push(m.k); });
   /* Die beiden Freitextfragen sind entfallen; bereits erfasste Antworten
      bleiben im gespeicherten Objekt und in CSV und Datenblock lesbar. */
@@ -143,9 +130,8 @@ export function readForm(){
    Vorgaben (meist 5) — gespeichert saehe das aus wie eine Antwort. Das
    taegliche Speichern uebernimmt deshalb fuer alles Woechentliche den
    zuletzt gespeicherten Stand dieser Woche, oder laesst es ganz weg. */
-var WOCHEN_FELDER=["exp","kern","glow","masse","kraft","iief","iiefTage","morgen","pt",
-                   "pigment","neg","watch","watchNote","month","bogenTag"];
-var WOCHEN_CONF=["gew","bauch","stress","sonst","flags"];
+var WOCHEN_FELDER=["exp","kern","glow","masse","kraft","month","bogenTag"];
+var WOCHEN_CONF=["gew","bauch","sonst"];
 function behalteWochenfragen(e, alt){
   alt=alt||{};
   WOCHEN_FELDER.forEach(function(k){
@@ -175,10 +161,8 @@ export function fillForm(e){
   GLOWZIEL.forEach(function(x){ setS(x.k, e.glow&&e.glow[x.k]); });
   $("gGelenkOrt").value=(e.glow&&e.glow.ort)||"";
   MASSE.forEach(function(x){ $(x.k).value=(e.masse&&e.masse[x.k])||""; });
-  [0,1,2,3].forEach(function(i){
-    var kf=(e.kraft&&e.kraft[i])||{};
-    $("kw"+i).value=kf.kg||""; $("kr"+i).value=kf.reps||""; $("ke"+i).value=kf.rir||"";
-  });
+  var kf=(e.kraft&&e.kraft[0])||{};
+  $("kw0").value=kf.kg||""; $("kr0").value=kf.reps||"";
   /* WHO-5: die Segmente zeigen den heutigen Tag — den gespeicherten Satz von
      heute, sonst leer. Wochen aus der Zeit vor der Tagesumstellung bringen
      ihren einen Satz als Stand des Erfassungstags mit. */
@@ -186,36 +170,16 @@ export function fillForm(e){
     ?ganzerTagAls(e.week,e.who):{});
   setTagesSaetze(wt);
   startWhoTag();
-  /* IIEF-5: ein Satz fuer die Woche. Aus den Tagen, in denen er taeglich lief,
-     steht hier ein Mittel je Frage — gerundet ist das die beste Vorbelegung,
-     die sich aus den echten Antworten ergibt. */
-  for(var j=0;j<5;j++){
-    var v=e.iief&&e.iief[j];
-    setSeg("iief"+j, (v===null||v===undefined)?null:Math.round(v));
-  }
-  setSeg("mNaechte", e.morgen?e.morgen.naechte:null);
-  MORGEN.forEach(function(x){ setS(x.k, e.morgen&&e.morgen[x.k]); });
-  PT.forEach(function(x){ setS(x.k, e.pt&&e.pt[x.k]); });
-  /* Fehlende Bloecke leeren die Felder, statt den Stand der zuvor
-     angezeigten Woche stehen zu lassen. */
-  var pt=e.pt||{}, pg=e.pigment||{}, cf=e.conf||{};
-  $("ptDosis").value=pt.dosis||""; $("ptEintritt").value=pt.eintritt||"";
-  $("ptDauer").value=pt.dauer||""; $("ptBlind").value=pt.blind||"";
-  $("ptAusloesung").value=pt.ausloesung||""; $("ptSignsNote").value=pt.signsNote||"";
-  $("uvStd").value=pg.uv||""; $("uvQuelle").value=pg.quelle||""; $("naevi").value=pg.naevi||"";
-  PIGMENT.forEach(function(x){ setS(x.k, e.pigment&&e.pigment[x.k], 0); });
-  NEG.forEach(function(x){ setS(x.k, e.neg&&e.neg[x.k]); });
   document.querySelectorAll("[data-c]").forEach(function(i){
-    var on=(e.watch&&e.watch.indexOf(i.dataset.c)>=0)||
-           (e.conf&&e.conf.flags&&e.conf.flags.indexOf(i.dataset.c)>=0)||
-           (e.month&&e.month.indexOf(i.dataset.c)>=0)||
-           (e.pt&&e.pt.signs&&e.pt.signs.indexOf(i.dataset.c)>=0);
+    var on=e.month&&e.month.indexOf(i.dataset.c)>=0;
     i.checked=!!on; i.parentElement.dataset.on=on?"1":"0";
   });
-  $("watchNote").value=e.watchNote||"";
   setLegacyConf(e.conf&&!e.conf.tage?e.conf:null);
   fuelleConfTage(e.conf||null);
+  /* Fehlende Bloecke leeren die Felder, statt den Stand der zuvor
+     angezeigten Woche stehen zu lassen. */
+  var cf=e.conf||{};
   $("cGew").value=cf.gew||""; $("cBauch").value=cf.bauch||"";
-  setS("cStress",cf.stress); $("cSonst").value=cf.sonst||"";
+  $("cSonst").value=cf.sonst||"";
   recalcScores();
 }

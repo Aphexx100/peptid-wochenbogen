@@ -3,7 +3,7 @@
    und Auswertung gemeinsam benutzt. Jede nimmt einen Eintrag und gibt eine
    Zahl oder null zurueck, wenn die Daten dafuer nicht reichen. */
 
-import { ZUFUHR, CONF_TAGE, KERN, NEG } from '../schema.js';
+import { ZUFUHR, CONF_TAGE, KERN } from '../schema.js';
 import { alleStoffe } from '../substanzen.js';
 import { mean } from '../util/format.js';
 
@@ -64,17 +64,22 @@ const summe = (arr, faktor) => {
 /** WHO-5, Rohsumme mal vier — Skala 0–100. Null, wenn ein Item fehlt. */
 export const whoScore = (e) => summe(e.who, 4);
 
-/** IIEF-5-Summenwert, Skala 5–25. Null, wenn ein Item fehlt. */
-export const iiefScore = (e) => summe(e.iief, 1);
+/* Der IIEF-5 ist 2026-11 aus dem Bogen entfallen. Bereits erfasste Wochen
+   tragen ihn noch; gelesen wird er nirgends mehr. */
 
 /** An wie vielen Tagen der Woche ein Instrument erfasst wurde. */
 export const tageErfasst = (map) => (map ? Object.keys(map).length : 0);
 
-/** Primaerendpunkt der Auswertung. */
-export const primary = (e) => iiefScore(e);
-
 export const kernMean = (e) => mean(KERN.map((x) => (e.kern ? e.kern[x.k] : null)));
-export const negMean = (e) => mean(NEG.map((x) => (e.neg ? e.neg[x.k] : null)));
+
+/* Primaerendpunkt der Auswertung. Bis 2026-11 war das der IIEF-5; seit er
+   aus dem Bogen ist, traegt der Mittelwert der sechs Kernbereiche diese
+   Rolle. Er misst breiter und unschaerfer — dafuer wird er jede Woche
+   erhoben, und das ist fuer einen Verlauf das Wichtigere. */
+export const primary = (e) => {
+  const v = kernMean(e);
+  return v === null ? null : +v.toFixed(2);
+};
 
 const ofKeys = (obj, ks) => (obj ? mean(ks.map((k) => obj[k])) : null);
 

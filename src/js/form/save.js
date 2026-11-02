@@ -9,7 +9,7 @@ import { currentWeekKey, weekNumber } from '../util/date.js';
 import { saveWeek as ablageWeek, saveConfig as ablageConfig } from '../storage/index.js';
 import { readForm, fillForm } from './model.js';
 import {
-  buildKraft, buildExpo, buildConfTage, renderCu, readVials, refreshExpoUnits,
+  buildExpo, buildConfTage, renderCu, readVials, refreshExpoUnits,
   readExpo, readZufuhr, readNotizen, readConfTage, mergeHeute
 } from './build.js';
 import { renderStatus } from '../ui/status.js';
@@ -104,13 +104,6 @@ export async function saveVials() {
   await persistCfg('vialInfo');
 }
 
-/** Die vier Uebungsnamen der Kraftwerte. */
-export async function saveCfgUebungen() {
-  state.cfg.uebungen = [0, 1, 2, 3].map((i) => $(`un${i}`).value.trim());
-  buildKraft();
-  await persistCfg('cfgInfo3');
-}
-
 /** Setup-Felder aus dem geladenen Zustand fuellen. */
 export function fillSetup() {
   $('cfgStart').value = state.cfg.start;
@@ -120,5 +113,4 @@ export function fillSetup() {
   $('cfgErwHaut').value = state.cfg.erwHaut;
   $('cfgErwGelenk').value = state.cfg.erwGelenk;
   $('cfgErwWohl').value = state.cfg.erwWohl;
-  [0, 1, 2, 3].forEach((i) => { $(`un${i}`).value = state.cfg.uebungen[i] || ''; });
 }

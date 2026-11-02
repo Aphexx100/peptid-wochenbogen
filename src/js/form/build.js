@@ -7,8 +7,7 @@ import { $ } from '../util/dom.js';
 import { fmt } from '../util/format.js';
 import { CU_ANTEIL, CU_RDA_MG_TAG } from '../constants.js';
 import {
-  EXPO, EXPO_TEXT, ZUFUHR, CONF_TAGE, KERN, GLOWZIEL, WHO, WHO_LEG, IIEF, MORGEN, PT, PT_SIGNS, PIGMENT, NEG,
-  WATCH, CONF_CHECKS, MONTH
+  EXPO, EXPO_TEXT, ZUFUHR, CONF_TAGE, KERN, GLOWZIEL, WHO, WHO_LEG, MONTH
 } from '../schema.js';
 import { stoffe, alleStoffe, vialStoffe, findeStoff } from '../substanzen.js';
 import { slider, segment, checkList, segVal, setSeg, setSegHandler } from '../ui/controls.js';
@@ -229,12 +228,6 @@ function expoChanged() {
   renderCu();
   const { tage, leer } = readExpo();
   renderWochenGraph(tage, leer && !!legacyDose);
-  const nPt = leer && legacyDose
-    ? Number(legacyDose.pt) || 0
-    : tage.pt.filter((v) => Number(v) > 0).length;
-  /* Sichtbar wird die PT-Karte erst durch das Wochentor — hier steht nur,
-     ob sie ueberhaupt faellig ist. */
-  $('ptCard').dataset.faellig = nPt > 0 ? '1' : '0';
   renderWeeklyGate();
 }
 
@@ -778,27 +771,22 @@ export function fuelleConfTage(conf) {
   renderConfSummary();
 }
 
-/** Vier Kraft-Slots; die Namen kommen aus dem Setup und sind aenderbar. */
+/* Eine Uebung genuegt. Bankdruecken ist der brauchbarste Einzelindikator:
+   es laesst sich ueber Jahre gleich ausfuehren, die Streuung ist klein, und
+   ein Verlust an Muskulatur zeigt sich darin frueher als am Massband.
+   Gefragt wird nach der maximalen Wiederholungszahl bei einem Gewicht —
+   zwei Zahlen, aus denen sich ein Index bilden laesst. */
+export const KRAFT_UEBUNG = 'Bankdrücken';
+
 export function buildKraft() {
   const host = $('s-kraft');
-  host.innerHTML = '';
-  state.cfg.uebungen.forEach((name, i) => {
-    const d = document.createElement('div');
-    d.className = 'grid3';
-    d.style.marginBottom = '.6rem';
-    d.innerHTML =
-      `<div class="field" style="grid-column:1/-1;margin:0 0 .3rem">` +
-      `<label class="fl" style="margin:0">${name || `Übung ${i + 1}`}</label></div>` +
-      `<div class="field"><label class="fl" for="kw${i}">kg</label>` +
-      `<input type="number" id="kw${i}" min="0" step="0.5" inputmode="decimal"></div>` +
-      `<div class="field"><label class="fl" for="kr${i}">Wiederholungen</label>` +
-      `<input type="number" id="kr${i}" min="0" step="1" inputmode="numeric"></div>` +
-      `<div class="field"><label class="fl" for="ke${i}">gefühlte Reserve</label>` +
-      `<select id="ke${i}"><option value="">—</option><option value="0">bis zum Versagen</option>` +
-      `<option value="1">1 Wdh. übrig</option><option value="2">2 Wdh. übrig</option>` +
-      `<option value="3">3+ Wdh. übrig</option></select></div>`;
-    host.appendChild(d);
-  });
+  host.innerHTML =
+    '<div class="grid2">' +
+    '<div class="field"><label class="fl" for="kw0">Gewicht (kg)</label>' +
+    '<input type="number" id="kw0" min="0" step="0.5" inputmode="decimal"></div>' +
+    '<div class="field"><label class="fl" for="kr0">maximale Wiederholungen</label>' +
+    '<input type="number" id="kr0" min="0" step="1" inputmode="numeric"></div>' +
+    '</div>';
 }
 
 /* ---- WHO-5: taeglich erfasst, woechentlich gemittelt ----
@@ -806,8 +794,7 @@ export function buildKraft() {
    zum Korrigieren jeder vergangene Tag. Gespeichert wird je Tag ein
    Antwortsatz (whoTage, Schluessel ist das Datum); der Wochenwert in e.who
    ist das Mittel je Frage ueber die erfassten Tage — damit rechnen
-   Auswertung, CSV und Datenblock unveraendert weiter. Der IIEF-5 ist eine
-   Wochenfrage (letzte sieben Tage) und hat nur einen Antwortsatz. */
+   Auswertung, CSV und Datenblock unveraendert weiter. */
 
 /** Gewaehlter Antwortsatz eines Fragebogens; null, wenn ein Item fehlt. */
 export function antwortSatz(praefix) {
@@ -906,11 +893,9 @@ function renderTagesInfo(praefix, scoreId, weekId, listId, faktor, max) {
     : 'Noch kein Tag erfasst — alle fünf Fragen beantworten, dann zählt der Tag.';
 }
 
-/** WHO-5 und IIEF-5 laufen live mit, sobald alle Items gesetzt sind. */
+/** Der WHO-5 laeuft live mit, sobald alle fuenf Items gesetzt sind. */
 export function recalcScores() {
   renderTagesInfo('who', 'whoScore', 'whoWeek', 'whoTage', 4, 100);
-  const iief = antwortSatz('iief');
-  $('iiefScore').textContent = iief ? String(iief.reduce((a, b) => a + b, 0)) : '—';
 }
 
 /* ---- Kupferlast ----
@@ -952,31 +937,9 @@ export function buildForm() {
 
   buildKraft();
 
-  const kn = $('s-kraftNamen');
-  [0, 1, 2, 3].forEach((i) => {
-    const d = document.createElement('div');
-    d.className = 'field';
-    d.innerHTML = `<label class="fl" for="un${i}">Übung ${i + 1}</label><input type="text" id="un${i}">`;
-    kn.appendChild(d);
-  });
-
   WHO.forEach((t, i) => segment($('s-who'), `who${i}`, `… ${t}`, 0, 5, WHO_LEG[0], WHO_LEG[1], null));
-  IIEF.forEach((q, i) =>
-    segment($('s-iief'), `iief${i}`, `${i + 1}. ${q.t}`, 1, 5, q.lo, q.hi, q.zero ? q.zeroLab : null));
-  segment($('s-morgenCount'), 'mNaechte',
-    'An wie vielen der letzten sieben Morgen war eine spontane Erektion vorhanden?',
-    0, 7, 'kein Morgen', 'jeden Morgen', null);
 
-  MORGEN.forEach((x) => slider($('s-morgen'), x.k, x.n, x.lo, x.hi, 5));
-  PT.forEach((x) => slider($('s-pt'), x.k, x.n, x.lo, x.hi, 5));
-  PIGMENT.forEach((x) => slider($('s-pigment'), x.k, x.n, x.lo, x.hi, 0));
-  NEG.forEach((x) => slider($('s-neg'), x.k, x.n, x.lo, x.hi, 5));
-
-  checkList($('s-ptSigns'), PT_SIGNS);
-  checkList($('s-watch'), WATCH);
-  checkList($('s-confChecks'), CONF_CHECKS);
   checkList($('s-month'), MONTH);
-  slider($('s-conf'), 'cStress', 'Stressbelastung dieser Woche', 'sehr niedrig', 'sehr hoch', 5);
 
   startWhoTag();
   renderCu();

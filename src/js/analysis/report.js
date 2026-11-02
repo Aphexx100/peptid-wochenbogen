@@ -1,6 +1,6 @@
 /* Die Auswertungsseite.
    Aufgeteilt in vier Bloecke, die unabhaengig voneinander rendern: Kacheln,
-   PT-141-Tabelle, Verlaufsgrafiken, Wochentabelle.
+   Verlaufsgrafiken, Wochentabelle.
    Wer eine Kennzahl ergaenzen will, fasst nur den zugehoerigen Block an —
    eine neue Verlaufsgrafik ist eine Zeile in buildSeries(). */
 
@@ -11,7 +11,7 @@ import { weekNumber } from '../util/date.js';
 import { KERN } from '../schema.js';
 import { sparkline } from './sparkline.js';
 import {
-  whoScore, iiefScore, kernMean, negMean, primary, hautMean, gelenkMean, wohlVal,
+  whoScore, primary, hautMean, gelenkMean, wohlVal,
   kraftIndex, taillenQuotient, pearson, drift, last
 } from './metrics.js';
 
@@ -24,29 +24,24 @@ function renderKacheln(list, libs, libV) {
   const mExp = mean(exps.filter((v) => v !== null && v !== undefined));
   $('tExp').textContent = mExp === null ? '—' : fmt(mExp, 1);
 
-  const mMorgen = mean(list.map((e) => (e.morgen ? e.morgen.naechte : null)));
-  $('tMorgen').textContent = mMorgen === null ? '—' : fmt(mMorgen, 1);
-
   const lastLib = last(libs);
-  $('tLib').innerHTML = (lastLib === null ? '—' : String(lastLib)) + '<span class="unit">/ 25</span>';
+  $('tLib').innerHTML = (lastLib === null ? '—' : fmt(lastLib, 1)) + '<span class="unit">/ 10</span>';
   $('tLibSub').textContent = libV.length
-    ? `Letzte erfasste Woche. Mittel über alle Wochen: ${fmt(mean(libV), 1)} von 25.`
+    ? `Letzte erfasste Woche. Mittel über alle Wochen: ${fmt(mean(libV), 1)} von 10.`
     : 'Letzte erfasste Woche.';
 
   const ld = drift(libV);
   if (ld !== null) {
     $('tLibDelta').textContent = (ld >= 0 ? '+' : '') + fmt(ld, 2);
     $('tLibDeltaSub').textContent =
-      Math.abs(ld) < 0.5
+      Math.abs(ld) < 0.3
         ? 'Kein nennenswerter Trend. Bei einem Wochenmaß ist das unter zehn Wochen normal.'
         : ld > 0
-          ? 'Aufwärtstrend. Gegen Negativkontrollen und Gewichtsverlauf gegenprüfen.'
-          : 'Abwärtstrend. Kontext- und Confounder-Spalten lesen.';
+          ? 'Aufwärtstrend. Gegen Erwartung, Schlaf und Gewichtsverlauf gegenprüfen.'
+          : 'Abwärtstrend. Confounder-Spalten und Wochenkommentar lesen.';
   } else {
     $('tLibDelta').textContent = '—';
   }
-
-  $('tLibTage').textContent = $('tMorgen').textContent;
   return exps;
 }
 
@@ -105,60 +100,29 @@ function renderKontrollen(list, libV) {
           ? 'Teilweiser Gleichlauf. Beobachten, ob er sich mit mehr Wochen verstärkt.'
           : 'Ergebnis verläuft weitgehend unabhängig von der Erwartung. Das ist das Muster, das du sehen willst.';
 
-  const negs = list.map(negMean).filter((v) => v !== null);
-  const d = drift(negs);
-  if (d === null) {
-    $('tNeg').textContent = '—';
-    $('tNegSub').textContent = 'Ab vier Wochen berechenbar.';
-    return;
-  }
-  const ldrift = drift(libV);
-  $('tNeg').textContent = (d >= 0 ? '+' : '') + fmt(d, 2);
-  $('tNegSub').textContent =
-    Math.abs(d) < 0.4
-      ? 'Kontrollen bleiben flach' +
-        (ldrift !== null && ldrift > 0.6
-          ? ' — während IIEF-5 steigt. Das ist der Befund, der zählt.'
-          : '. Erwartungsgetriebene Drift ist bisher nicht erkennbar.')
-      : 'Kontrollen bewegen sich mit. Ein Anstieg im Primärendpunkt ist dann vermutlich global, nicht substanzspezifisch.';
-}
-
-/* ---- PT-141 gesamt ---- */
-
-function renderPt(list) {
-  const ptw = list.filter(
-    (e) => e.dose && e.dose.pt > 0 && e.pt && e.pt.ptMit !== undefined && e.pt.ptMit !== null
-  );
-  const t = $('ptTable');
-  if (!ptw.length) {
-    t.innerHTML = '';
-    $('ptEmpty').hidden = false;
-    return;
-  }
-  $('ptEmpty').hidden = true;
-
-  const mm = mean(ptw.map((e) => e.pt.ptMit));
-  const mo = mean(ptw.map((e) => e.pt.ptOhne));
-  const mnw = mean(ptw.map((e) => e.pt.ptNw));
-  const blind = ptw.map((e) => e.pt.blind).filter(Boolean);
-  const erk = blind.filter((b) => b === 'ja' || b === 'wahrscheinlich').length;
-  const aus = ptw.map((e) => e.pt.ausloesung).filter(Boolean);
-  const reiz = aus.filter((a) => a === 'reiz').length;
-  const streck = ptw.filter(
-    (e) => e.pt.signs && (e.pt.signs.indexOf('sStreck') >= 0 || e.pt.signs.indexOf('sGaehn') >= 0)
-  ).length;
-
-  t.innerHTML =
-    '<tbody>' +
-    `<tr><td>Wochen mit Anwendung</td><td class="n">${ptw.length}</td></tr>` +
-    `<tr><td>Verlangen an Anwendungstagen</td><td class="n">${fmt(mm, 1)} / 10</td></tr>` +
-    `<tr><td>Verlangen an Tagen ohne</td><td class="n">${fmt(mo, 1)} / 10</td></tr>` +
-    `<tr><td><b>Differenz</b></td><td class="n"><b>${mm - mo >= 0 ? '+' : ''}${fmt(mm - mo, 1)}</b></td></tr>` +
-    `<tr><td>Nebenwirkungen Ø</td><td class="n">${mnw === null ? '—' : `${fmt(mnw, 1)} / 10`}</td></tr>` +
-    `<tr><td>Anwendungstag erkennbar</td><td class="n">${erk} von ${blind.length}</td></tr>` +
-    `<tr><td>Nur bei sexuellem Reiz ausgelöst</td><td class="n">${reiz} von ${aus.length}</td></tr>` +
-    `<tr><td>Wochen mit Strecken oder Gähnen</td><td class="n">${streck} von ${ptw.length}</td></tr>` +
-    '</tbody>';
+  /* Die Negativkontrollen sind 2026-11 aus dem Bogen gefallen. Damit fehlt
+     die eingebaute Gegenprobe gegen "alles steigt, weil die Woche gut war".
+     Was bleibt, ist der naechstliegende Ersatz: laeuft der Endpunkt mit dem
+     Schlaf, ist Schlaf die sparsamere Erklaerung. */
+  const sa = [];
+  const sb = [];
+  list.forEach((e) => {
+    const schlaf = e.conf ? num(e.conf.schlaf) : null;
+    const p = primary(e);
+    if (schlaf !== null && p !== null) {
+      sa.push(schlaf);
+      sb.push(p);
+    }
+  });
+  const rs = pearson(sa, sb);
+  $('tNeg').textContent = rs === null ? '—' : `r = ${fmt(rs, 2)}`;
+  $('tNegSub').textContent = rs === null
+    ? 'Ab sechs Wochen mit Schlafwerten berechenbar.'
+    : Math.abs(rs) >= 0.6
+      ? 'Endpunkt läuft eng mit dem Schlaf. Schlaf ist dann die sparsamere Erklärung.'
+      : Math.abs(rs) >= 0.3
+        ? 'Teilweiser Gleichlauf mit dem Schlaf. Im Blick behalten.'
+        : 'Endpunkt verläuft weitgehend unabhängig vom Schlaf.';
 }
 
 /* ---- Verlaufsgrafiken ----
@@ -168,21 +132,16 @@ function renderPt(list) {
 
 export function buildSeries(list, exps) {
   const series = [
-    { n: 'IIEF-5 (Primärendpunkt)', v: list.map(primary), max: 25 },
+    { n: 'Kernbereiche Ø (Primärendpunkt)', v: list.map(primary), max: 10 },
     { n: 'Gewicht (kg)', v: list.map((e) => (e.conf ? num(e.conf.gew) : null)), max: 'auto' },
     { n: 'Bauchumfang (cm)', v: list.map((e) => (e.conf ? num(e.conf.bauch) : null)), max: 'auto' },
-    { n: 'Morgen mit spontaner Erektion (von 7)', v: list.map((e) => (e.morgen ? e.morgen.naechte : null)), max: 7 },
     { n: 'Erwartung', v: exps, max: 10 },
-    { n: 'Kernbereiche Ø', v: list.map(kernMean), max: 10 },
     { n: 'WHO-5', v: list.map(whoScore), max: 100 },
     { n: 'Schlaf Ø (h/Nacht)', v: list.map((e) => (e.conf ? num(e.conf.schlaf) : null)), max: 'auto' },
     { n: 'Training (h/Woche)', v: list.map((e) => (e.conf ? num(e.conf.train) : null)), max: 'auto' },
     { n: 'Protein Ø (g/Tag)', v: list.map((e) => (e.conf ? num(e.conf.protein) : null)), max: 'auto' },
     { n: 'Kreatin (g/Woche)', v: list.map((e) => (e.dose ? num(e.dose.kreatin) : null)), max: 'auto' },
     { n: 'Alkohol (Liter/Woche)', v: list.map((e) => (e.conf ? num(e.conf.alk) : null)), max: 'auto' },
-    { n: 'Negativkontrollen Ø', v: list.map(negMean), max: 10 },
-    { n: 'Bräunungsgeschwindigkeit', v: list.map((e) => (e.pigment ? e.pigment.pTempo : null)), max: 10 },
-    { n: 'UV-Stunden', v: list.map((e) => (e.pigment && e.pigment.uv !== '' ? Number(e.pigment.uv) : null)), max: 20 },
     { n: 'GLOW-Ziel: Hautbild Ø', v: list.map(hautMean), max: 10 },
     { n: 'GLOW-Ziel: Gelenke Ø', v: list.map(gelenkMean), max: 10 },
     { n: 'GLOW-Ziel: Wohlbefinden', v: list.map(wohlVal), max: 10 },
@@ -232,16 +191,15 @@ function renderWeekTable(ks) {
         `<tr><td class="n">${nr ? `W${nr}` : '—'}</td><td class="n">${k}</td>` +
         `<td class="n">${e.dose ? e.dose.glow : '—'}/${e.dose ? e.dose.kiss : '—'}/${e.dose ? e.dose.pt : '—'}</td>` +
         `<td class="n">${fmt(e.exp ? e.exp.erwartung : null, 0)}</td>` +
-        `<td class="n">${primary(e) === null ? '—' : primary(e)}</td>` +
-        `<td class="n">${fmt(kernMean(e), 1)}</td>` +
+        `<td class="n">${fmt(primary(e), 1)}</td>` +
         `<td class="n">${whoScore(e) === null ? '—' : whoScore(e)}</td>` +
-        `<td class="n">${(e.watch && e.watch.length) || '—'}</td></tr>`
+        `<td class="n">${kraftIndex(e) === null ? '—' : kraftIndex(e)}</td></tr>`
       );
     })
     .join('');
   wt.innerHTML =
-    '<thead><tr><th>Wo.</th><th>Datum</th><th>G/K/P</th><th>Erw.</th><th>IIEF-5</th>' +
-    `<th>Kern</th><th>WHO-5</th><th>Flags</th></tr></thead><tbody>${rows}</tbody>`;
+    '<thead><tr><th>Wo.</th><th>Datum</th><th>G/K/P</th><th>Erw.</th><th>Kern-Ø</th>' +
+    `<th>WHO-5</th><th>Kraft</th></tr></thead><tbody>${rows}</tbody>`;
 }
 
 /* ---- Einstieg ---- */
@@ -259,7 +217,6 @@ export function renderAus() {
   const exps = renderKacheln(list, libs, libV);
   renderMuskel(list);
   renderKontrollen(list, libV);
-  renderPt(list);
   renderSparks(list, exps, labels);
   renderWeekTable(ks);
 }
