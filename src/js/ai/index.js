@@ -50,6 +50,8 @@ export function errCopy(code, detail) {
       return 'Analyse für dieses Konto nicht freigegeben.';
     case 'rate_limited':
       return 'Zu viele Anfragen. Später noch einmal versuchen.';
+    case 'overloaded':
+      return 'Die Gegenstelle ist überlastet. In ein paar Minuten noch einmal versuchen.';
     case 'session_expired':
       return 'Bitte neu bei Claude anmelden.';
     case 'prompt_too_large':

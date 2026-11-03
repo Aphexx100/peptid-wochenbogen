@@ -21,6 +21,7 @@
    Ausgegeben wird JSON, damit der Eintrag maschinell lesbar bleibt. */
 
 import { ABSCHNITTE } from './modell.js';
+import { jsonAusText } from '../util/json.js';
 
 const liste = (xs) => xs.map((x) => `- ${x}`).join('\n');
 
@@ -63,15 +64,22 @@ Menschen" ist eine vollwertige Antwort und die häufigste richtige.
 
 ANTWORTFORMAT
 
-Antworte ausschließlich mit JSON in genau dieser Form, ohne Text davor oder
-danach, ohne Code-Zaun:
+Wenn du mit dem Suchen fertig bist, beginnt deine Antwort unmittelbar mit der
+öffnenden Klammer. Kein Vorwort, kein Rückblick auf die Suche, kein Code-Zaun,
+kein Text hinter der schließenden Klammer. Halte dich kurz: jeder Abschnitt
+**ein bis zwei knappe Absätze**, zusammen höchstens 400 Wörter. Eine Antwort,
+die nicht in dein Ausgabebudget passt, bricht mitten im Satz ab und ist dann
+nur noch halb verwertbar.
 
 {"abschnitte":{
-${ABSCHNITTE.map((a) => `  "${a.k}": "${a.n} — ein bis drei Absätze."`).join(',\n')}
+${ABSCHNITTE.map((a) => `  "${a.k}": "${a.n} — knapp."`).join(',\n')}
  },
  "quellen":[{"titel":"…","url":"https://…","jahr":"2026","art":"studie|register|behoerde|review|community"}],
  "news":[{"datum":"2026-10-14","titel":"Kurz und konkret","kurz":"Ein bis zwei Sätze, was neu ist und warum es zählt.","url":"https://…","quelle":"PubMed"}]
 }
+
+Schreibe die Abschnitte in der gezeigten Reihenfolge und erst danach Quellen
+und News — bricht die Antwort doch ab, ist dann wenigstens der Text vollständig.
 
 Zu den Feldern:
 
@@ -85,21 +93,18 @@ Zu den Feldern:
   Mengenbereiche aus Studien und übliche Schemata aus Anwenderberichten,
   jeweils mit Herkunft. Beschreibung, keine Empfehlung — formuliere
   "in Studie X wurden … verwendet", nicht "nimm …".
-- **quellen**: höchstens 15, die tragfähigsten zuerst, jede mit erreichbarer
+- **quellen**: höchstens 10, die tragfähigsten zuerst, jede mit erreichbarer
   URL. Keine erfundenen Adressen; lieber eine Quelle weniger.
-- **news**: nur Meldungen aus den letzten zwölf Monaten, höchstens 5, jede
+- **news**: nur Meldungen aus den letzten zwölf Monaten, höchstens 3, jede
   mit URL und Datum im Format JJJJ-MM-TT. Ist nichts Neues zu finden, gib
   eine leere Liste zurück — erfinde nichts.`;
 }
 
-/** JSON aus der Antwort holen, auch wenn ein Code-Zaun drumherum steht. */
+/** JSON aus der Antwort holen — mit Code-Zaun drumherum, mit Vorrede davor
+    und auch dann, wenn die Antwort mitten im Satz abgebrochen ist: dann
+    zaehlt, was bis dahin fertig war. */
 export function parseWissen(text) {
-  const roh = String(text || '').trim();
-  const ohneZaun = roh.replace(/^```(?:json)?\s*/i, '').replace(/```\s*$/, '');
-  const a = ohneZaun.indexOf('{');
-  const b = ohneZaun.lastIndexOf('}');
-  if (a < 0 || b <= a) throw new Error('Keine verwertbare Antwort erhalten.');
-  const o = JSON.parse(ohneZaun.slice(a, b + 1));
+  const { wert: o, unvollstaendig } = jsonAusText(text);
 
   const abschnitte = {};
   ABSCHNITTE.forEach((x) => {
@@ -132,5 +137,5 @@ export function parseWissen(text) {
       quelle: String(n.quelle || '').slice(0, 80)
     }));
 
-  return { abschnitte, quellen, news };
+  return { abschnitte, quellen, news, unvollstaendig };
 }

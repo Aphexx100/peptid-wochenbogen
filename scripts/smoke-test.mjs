@@ -595,10 +595,12 @@ async function laufe(browser, url, label, mitModulTest) {
         news: liste.length,
         datum: n.newsDatum(liste[0]),
         faellig: m.faellig(eintrag),
-        stand: m.standText(eintrag)
+        stand: m.standText(eintrag),
+        unvollstaendig: g.unvollstaendig
       };
     });
     pruefe('Antwort der Recherche wird gelesen', w.abschnitte === 2 && w.news === 1, JSON.stringify(w));
+    pruefe('Vollstaendige Antwort gilt nicht als abgeschnitten', w.unvollstaendig === false);
     pruefe('Quelle ohne Adresse fällt raus', w.quellen === 1, String(w.quellen));
     pruefe('Dieselbe Meldung steht nur einmal', w.news === 1);
     pruefe('Frischer Eintrag ist nicht fällig', w.faellig === false && w.stand === 'heute aktualisiert', w.stand);
@@ -607,6 +609,59 @@ async function laufe(browser, url, label, mitModulTest) {
       (await seite.locator('#newsKarte').isVisible())
       && (await seite.locator('#newsListe a.news-titel').getAttribute('href')) === 'https://clinicaltrials.gov/study/NCT1'
       && (await seite.locator('#newsListe a.news-titel').getAttribute('rel')) === 'noopener noreferrer');
+
+    /* Abgeschnittene Antworten: das Ausgabebudget reisst mitten im JSON ab.
+       Vorher ging damit der ganze Eintrag verloren ("Expected ',' or '}'"),
+       jetzt muss retten, was fertig war. */
+    const flick = await seite.evaluate(async () => {
+      const r = await import('./src/js/wissen/recherche.js');
+      const j = await import('./src/js/util/json.js');
+      const mittenImSatz = r.parseWissen(
+        'Ich habe recherchiert, hier das Ergebnis:\n'
+        + '{"abschnitte":{"ueberblick":"Ein ganzer Abschnitt.","erhofft":"Noch einer.",'
+        + '"wirkweise":"Dieser Satz endet nie, weil das Budget mitten'
+      );
+      const inDerListe = r.parseWissen(
+        '{"abschnitte":{"ueberblick":"Nur einer."},"quellen":['
+        + '{"titel":"Studie A","url":"https://pubmed.ncbi.nlm.nih.gov/9","jahr":"2026","art":"studie"},'
+        + '{"titel":"Studie B","url":"https://pubmed'
+      );
+      let garnichts = '';
+      try {
+        r.parseWissen('Ich konnte dazu nichts finden.');
+      } catch (e) {
+        garnichts = e.message;
+      }
+      let leer = '';
+      try {
+        j.jsonAusText('{"abschnitte":{"ueberblick":');
+      } catch (e) {
+        leer = e.message;
+      }
+      const zaunUndNachrede = j.jsonAusText('```json\n{"a":1}\n```\nSo weit die Recherche.');
+      return {
+        satzAbschnitte: Object.keys(mittenImSatz.abschnitte).length,
+        satzHalb: mittenImSatz.unvollstaendig,
+        listeAbschnitte: Object.keys(inDerListe.abschnitte).length,
+        listeQuellen: inDerListe.quellen.length,
+        listeHalb: inDerListe.unvollstaendig,
+        garnichts,
+        leer,
+        nachredeWert: zaunUndNachrede.wert.a,
+        nachredeHalb: zaunUndNachrede.unvollstaendig
+      };
+    });
+    pruefe('Im Satz abgebrochene Antwort behaelt die fertigen Abschnitte',
+      flick.satzAbschnitte === 2 && flick.satzHalb === true, JSON.stringify(flick));
+    pruefe('In der Quellenliste abgebrochene Antwort behaelt Text und ganze Quelle',
+      flick.listeAbschnitte === 1 && flick.listeQuellen === 1 && flick.listeHalb === true,
+      JSON.stringify(flick));
+    pruefe('Antwort ohne JSON sagt das klar',
+      /Keine verwertbare Antwort/.test(flick.garnichts), flick.garnichts);
+    pruefe('Antwort mit kaputtem Rumpf sagt das klar',
+      /kein lesbares JSON/.test(flick.leer), flick.leer);
+    pruefe('Zaun und Nachrede stoeren nicht',
+      flick.nachredeWert === 1 && flick.nachredeHalb === false, JSON.stringify(flick));
   }
 
   /* Setup: Ablagefelder */

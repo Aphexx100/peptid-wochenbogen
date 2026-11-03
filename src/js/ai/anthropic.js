@@ -28,9 +28,20 @@ const SUCH_WERKZEUG = { type: 'web_search_20250305', name: 'web_search', max_use
 const codeFor = (status, detail = '') => {
   if (status === 401 || status === 403) return 'not_granted';
   if (status === 429) return 'rate_limited';
+  if (status === 500 || status === 503 || status === 529) return 'overloaded';
   if (status === 413) return 'prompt_too_large';
   if (/credit balance|insufficient (credit|funds)|billing/i.test(detail)) return 'no_credit';
   return 'error';
+};
+
+/* Lehnt das Modell das Ausgabebudget ab, steht seine Obergrenze in der
+   Meldung ("max_tokens: 16000 > 4096, which is the maximum allowed …").
+   Die holen wir uns heraus; ohne Treffer null, dann wird nicht nachgefasst. */
+const grenze = (detail = '') => {
+  if (!/max_tokens/i.test(detail)) return null;
+  const m = detail.match(/(\d{3,6})\s*,?\s*which is the maximum/i) || detail.match(/>\s*(\d{3,6})/);
+  const n = m ? Number(m[1]) : 0;
+  return n >= 256 && n <= 200000 ? n : null;
 };
 
 export const anthropicAi = {
@@ -48,36 +59,55 @@ export const anthropicAi = {
     const a = settings().anthropic;
     if (!a.key) throw Object.assign(new Error('kein Schlüssel'), { code: 'not_granted' });
 
+    const sende = (maxTokens) => fetch(URL_MESSAGES, {
+      method: 'POST',
+      signal: opts.signal,
+      headers: {
+        'content-type': 'application/json',
+        'x-api-key': a.key,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: a.model || 'claude-sonnet-4-5',
+        max_tokens: maxTokens,
+        stream: true,
+        ...(opts.recherche ? { tools: [SUCH_WERKZEUG] } : {}),
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+
+    /* Antwort und Fehlertext in einem Griff, damit der zweite Anlauf
+       unten dieselbe Behandlung bekommt wie der erste. */
+    const lies = async (r) => {
+      if (r.ok) return '';
+      try {
+        const j = await r.json();
+        return (j.error && j.error.message) || '';
+      } catch {
+        return '';
+      }
+    };
+
     let res;
+    let detail = '';
     try {
-      res = await fetch(URL_MESSAGES, {
-        method: 'POST',
-        signal: opts.signal,
-        headers: {
-          'content-type': 'application/json',
-          'x-api-key': a.key,
-          'anthropic-version': '2023-06-01',
-          'anthropic-dangerous-direct-browser-access': 'true'
-        },
-        body: JSON.stringify({
-          model: a.model || 'claude-sonnet-4-5',
-          max_tokens: opts.maxTokens || MAX_TOKENS,
-          stream: true,
-          ...(opts.recherche ? { tools: [SUCH_WERKZEUG] } : {}),
-          messages: [{ role: 'user', content: prompt }]
-        })
-      });
+      res = await sende(opts.maxTokens || MAX_TOKENS);
+      detail = await lies(res);
+      /* Das Ausgabebudget ist modellabhaengig: aeltere Modelle nehmen nur
+         4096 Token und lehnen die Anfrage sonst ab. Die Fehlermeldung nennt
+         ihre Obergrenze — also einmal damit nachfassen, statt den Anwender
+         ein Modell nachrechnen zu lassen. */
+      if (!res.ok && grenze(detail)) {
+        res = await sende(grenze(detail));
+        detail = await lies(res);
+      }
     } catch (err) {
       if (err && err.name === 'AbortError') throw Object.assign(new Error('abgebrochen'), { code: 'cancelled' });
       throw Object.assign(new Error(err.message || 'Netzfehler'), { code: 'error' });
     }
 
     if (!res.ok) {
-      let detail = '';
-      try {
-        const j = await res.json();
-        detail = (j.error && j.error.message) || '';
-      } catch { /* Antwort ohne JSON-Koerper */ }
       throw Object.assign(new Error(detail || `HTTP ${res.status}`), { code: codeFor(res.status, detail) });
     }
 

@@ -77,6 +77,17 @@ function karte(stoff) {
   h.appendChild(stand);
   c.appendChild(h);
 
+  /* Eine abgeschnittene Antwort ist kein stiller Mangel: der letzte
+     Abschnitt endet dann mitten im Satz, und wer das nicht weiss, liest
+     eine Luecke als Aussage. */
+  if (e.unvollstaendig && hatInhalt(e)) {
+    const p = document.createElement("p");
+    p.className = "gatehint bad";
+    p.textContent = "Die Antwort brach ab — der letzte Abschnitt ist unvollständig. "
+      + "Beim nächsten Auffrischen wird er neu geholt.";
+    c.appendChild(p);
+  }
+
   if (!hatInhalt(e)) {
     const p = document.createElement('p');
     p.className = 'empty';
@@ -149,11 +160,13 @@ async function starteLauf() {
     const r = await laufe(wissen, news, {
       signal: abbruch.signal,
       onStoff: (name, i, ges) => melde(`${name} … (${i + 1} von ${ges})`, undefined),
-      onSuche: () => { suchen += 1; melde(`Sucht … (${suchen} Abfragen)`, undefined); }
+      onSuche: () => { suchen += 1; melde(`Sucht … (${suchen} Abfragen)`, undefined); },
+      onZweiterAnlauf: (name) => melde(`${name} — zweiter Anlauf …`, undefined)
     });
     news = r.news;
     const teile = [];
     if (r.fertig.length) teile.push(`${r.fertig.length} aufgefrischt: ${r.fertig.join(', ')}`);
+    if (r.halb && r.halb.length) teile.push(`Unvollständig geblieben: ${r.halb.join(', ')}`);
     if (r.fehler.length) teile.push(`Fehlgeschlagen — ${r.fehler.join('; ')}`);
     melde(teile.join('. ') || 'Nichts zu tun.', !r.fehler.length);
   } catch (err) {

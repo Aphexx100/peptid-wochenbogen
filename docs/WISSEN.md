@@ -54,6 +54,13 @@ gilt ein Eintrag als veraltet (`FRIST_TAGE` in `src/js/wissen/modell.js`).
 `art` ist frei, üblich sind `studie`, `register`, `behoerde`, `review`,
 `community`.
 
+`unvollstaendig: true` steht in einem Eintrag, dessen Antwort das Ausgabebudget
+gesprengt hat: der letzte Abschnitt endet dann mitten im Satz. Der Eintrag wird
+trotzdem gespeichert — was fertig war, ist brauchbar — aber die Karte sagt es,
+und beim nächsten Auffrischen wird er neu geholt. Das Flicken abgeschnittener
+Antworten steckt in `src/js/util/json.js`; wer von Hand nachträgt, setzt das
+Feld gar nicht.
+
 Die Abschnitte sind Fließtext, keine Struktur. Das ist Absicht: die Quellenlage
 gibt keine Zahlenform her, und ein Schema würde eine Genauigkeit vortäuschen,
 die nicht da ist. Maschinell ausgewertet werden `quellen`, `news` und `stand`.
