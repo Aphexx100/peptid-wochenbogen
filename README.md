@@ -21,7 +21,9 @@ Oben im Bogen zeigt eine Grafik die Tagesmengen je Wirkstoff in mg — als Woche
 Blättern in frühere Wochen, als eigener Zeitraum oder als gesamter Verlauf. Supplemente
 und Nahrungsmittel werden erfasst, aber nicht gezeichnet. Bis 5 mg ist die Achse
 linear, darüber wird sie allmählich gestaucht, damit DHEA und hohe GLOW-Dosen die
-kleinen Mengen nicht auf die Nulllinie drücken.
+kleinen Mengen nicht auf die Nulllinie drücken. Ein Klick auf einen Namen in der
+Legende blendet seine Kurve aus oder ein; die Achse richtet sich dabei nur nach den
+sichtbaren Kurven.
 Zum Korrigieren lässt sich der ganze Bogen auf eine frühere Woche umstellen; beim
 WHO-5 wählt eine Tagesleiste den Tag.
 

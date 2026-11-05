@@ -277,7 +277,7 @@ async function laufe(browser, url, label, mitModulTest) {
   const wgGlow = await seite.locator('#wochenGraph path[data-serie="glow"]').count();
   const wgPunkte = await seite.locator('#wochenGraph circle.wg-punkt').count();
   pruefe('Wochengrafik zeichnet die GLOW-Linie mit sieben Punkten', wgGlow === 1 && wgPunkte === 7, `${wgLinien} Linien, ${wgPunkte} Punkte`);
-  pruefe('Wochengrafik zeigt nur Wirkstoffe', (await seite.locator('#wochenGraphLegende > span:not(.wg-hinweis)').count()) === 5
+  pruefe('Wochengrafik zeigt nur Wirkstoffe', (await seite.locator('#wochenGraphLegende > button.wg-schalter').count()) === 5
     && /GLOW 2,8/.test(await seite.locator('#wochenGraph').innerText()));
   pruefe('Wochengrafik zeichnet Bezier-Kurven',
     /C/.test(await seite.locator('#wochenGraph path[data-serie="glow"]').getAttribute('d')));
@@ -307,6 +307,25 @@ async function laufe(browser, url, label, mitModulTest) {
     && /gestaucht/.test(await seite.locator('#wochenGraphLegende').innerText()), achse.t.join(' '));
   pruefe('Kleine Mengen stehen höher als auf linearer Achse', achse.anteil > 0.25, String(achse.anteil));
   pruefe('Hoechstwert zeigt echte mg trotz Stauchung', /DHEA 25/.test(await seite.locator('#wochenGraph').innerText()));
+  /* Legende schaltet Kurven: DHEA aus, die Achse richtet sich nach dem
+     Rest und ist nicht mehr gestaucht; GLOW steht dann ganz oben. */
+  const glowAnteil = () => seite.evaluate(() => {
+    const y0 = Number(document.querySelector('#wochenGraph line.wg-basis').getAttribute('y1'));
+    const yTop = Math.min(...[...document.querySelectorAll('#wochenGraph line.wg-grid')].map((l) => Number(l.getAttribute('y1'))));
+    const c = [...document.querySelectorAll('#wochenGraph circle.wg-punkt')].find((x) => /--c-glow/.test(x.getAttribute('style')));
+    return (y0 - Number(c.getAttribute('cy'))) / (y0 - yTop);
+  });
+  await seite.click('#wochenGraphLegende button[data-serie="dhea"]');
+  pruefe('Ausgeblendeter Stoff verschwindet aus der Grafik',
+    (await seite.locator('#wochenGraph path[data-serie="dhea"]').count()) === 0
+    && (await seite.getAttribute('#wochenGraphLegende button[data-serie="dhea"]', 'aria-pressed')) === 'false');
+  const ohneDhea = await glowAnteil();
+  pruefe('Achse richtet sich nach den sichtbaren Kurven',
+    (await seite.locator('#wochenGraph line.wg-gestaucht').count()) === 0 && ohneDhea > 0.6, String(ohneDhea));
+  await seite.click('#wochenGraphLegende button[data-serie="dhea"]');
+  pruefe('Wieder eingeblendet kommt die Stauchung zurück',
+    (await seite.locator('#wochenGraph path[data-serie="dhea"]').count()) === 1
+    && (await seite.locator('#wochenGraph line.wg-gestaucht').count()) >= 1);
   await seite.fill('#xdhea1', '');
 
   /* PT-141 laeuft hoechstens einmal pro Woche: zugeklappt unter "Bei
@@ -466,7 +485,7 @@ async function laufe(browser, url, label, mitModulTest) {
   pruefe('Eingabe in I.E. wird in mg umgerechnet',
     /= 2 mg/.test(await seite.locator('#ceretatrutid3').innerText()));
   pruefe('Neuer Wirkstoff kommt in die Grafik',
-    (await seite.locator('#wochenGraphLegende > span:not(.wg-hinweis)').count()) === 6
+    (await seite.locator('#wochenGraphLegende > button.wg-schalter').count()) === 6
     && (await seite.locator('#wochenGraph path[data-serie="eretatrutid"]').count()) === 1);
 
   await seite.click('#stoffNeu');
@@ -481,7 +500,7 @@ async function laufe(browser, url, label, mitModulTest) {
   pruefe('Supplement wird erfasst', /Magnesium: 1 Tag à 400 g/.test(await seite.locator('#expoSum').innerText()),
     await seite.locator('#expoSum').innerText());
   pruefe('Supplement bleibt aus der Grafik',
-    (await seite.locator('#wochenGraphLegende > span:not(.wg-hinweis)').count()) === 6
+    (await seite.locator('#wochenGraphLegende > button.wg-schalter').count()) === 6
     && (await seite.locator('#wochenGraph path[data-serie="emagnesium"]').count()) === 0);
 
   await seite.click('#saveBtn');

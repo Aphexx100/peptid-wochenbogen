@@ -44,6 +44,21 @@ let beobachter = null;
 let verdrahtet = false;
 const ansicht = { modus: 'woche', zurueck: 0, von: '', bis: '' };
 
+/* Ausgeblendete Stoffe. Ein Klick auf den Legendeneintrag schaltet die
+   Kurve aus und ein; die Achse richtet sich nur nach den sichtbaren
+   Kurven — wer DHEA ausblendet, sieht die kleinen Mengen gross. Gemerkt
+   wird die Wahl nur in diesem Browser; geht das nicht, gilt sie bis zum
+   Neuladen. */
+const AUS_KEY = 'peptid-wochengraph-aus';
+const aus = new Set((() => {
+  try { return JSON.parse(localStorage.getItem(AUS_KEY) || '[]'); } catch (e) { return []; }
+})());
+function schalte(k) {
+  if (aus.has(k)) aus.delete(k); else aus.add(k);
+  try { localStorage.setItem(AUS_KEY, JSON.stringify([...aus])); } catch (e) { /* nur fuer diese Sitzung */ }
+  zeichne();
+}
+
 const zuMg = (x, v) => v * mgFaktor(x.u);
 const zahl = (v) => (+v.toFixed(v < 1 ? 3 : 2)).toLocaleString('de-DE');
 const wtag = (d) => WTAG[new Date(`${d}T12:00:00`).getDay()];
@@ -250,20 +265,28 @@ function zeichne() {
   steuerung(daten, tage);
 
   /* Die Legende wird jedes Mal neu aufgebaut: die Reihen koennen sich
-     aendern, sobald ein Stoff dazukommt oder eine Spalte verschwindet. */
-  const reihen = graphStoffe();
+     aendern, sobald ein Stoff dazukommt oder eine Spalte verschwindet.
+     Jeder Eintrag ist ein Schalter fuer seine Kurve. */
+  const alleReihen = graphStoffe();
   const legende = $('wochenGraphLegende');
   if (legende) {
     legende.textContent = '';
-    reihen.forEach((x) => {
-      const eintrag = document.createElement('span');
+    alleReihen.forEach((x) => {
+      const eintrag = document.createElement('button');
+      eintrag.type = 'button';
+      eintrag.className = 'wg-schalter';
+      eintrag.dataset.serie = x.k;
+      eintrag.setAttribute('aria-pressed', aus.has(x.k) ? 'false' : 'true');
+      eintrag.title = `${x.n} ${aus.has(x.k) ? 'einblenden' : 'ausblenden'}`;
       const key = document.createElement('span');
       key.className = 'wg-key';
       key.style.background = x.farbe;
       eintrag.append(key, document.createTextNode(x.n));
+      eintrag.addEventListener('click', () => schalte(x.k));
       legende.appendChild(eintrag);
     });
   }
+  const reihen = alleReihen.filter((x) => !aus.has(x.k));
 
   const rs = reihen.map((x) => {
     const roh = tage.map((d) => (daten.has(d) ? daten.get(d)[x.k] : null));
@@ -282,6 +305,14 @@ function zeichne() {
   host.textContent = '';
   if (!N || !(max > 0)) {
     leer.hidden = false;
+    if (N && aus.size && !reihen.length) {
+      leer.textContent = 'Alle Wirkstoffe ausgeblendet — in der Legende wieder einblenden.';
+      return;
+    }
+    if (N && aus.size) {
+      leer.textContent = 'Die eingeblendeten Wirkstoffe haben hier keine Werte — ausgeblendete in der Legende einblenden.';
+      return;
+    }
     leer.textContent = ansicht.modus === 'woche' && ansicht.zurueck === 0
       ? (letzte && letzte.legacy
         ? 'Diese Woche wurde noch als Wochensumme erfasst — es gibt keine Tageswerte zum Zeichnen.'
