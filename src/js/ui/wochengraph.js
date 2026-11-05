@@ -56,6 +56,35 @@ function el(name, attrs, eltern) {
   return e;
 }
 
+/* Gestauchte Achse: bis KNICK mg linear, darueber logarithmisch. DHEA
+   (25 mg) und hohe GLOW-Dosen druecken sonst alle anderen Wirkstoffe auf
+   die Nulllinie. f(v) = KNICK + STAUCH * ln(1 + (v - KNICK) / STAUCH) hat
+   am Knick dieselbe Steigung wie die Gerade darunter — die Achse knickt
+   nicht, sie wird nach oben hin allmaehlich enger. Beschriftung, Tooltip
+   und Hoechstwerte zeigen weiter die echten mg. */
+export const KNICK = 15;
+const STAUCH = 5;
+export const stauche = (v) => (v <= KNICK ? v : KNICK + STAUCH * Math.log(1 + (v - KNICK) / STAUCH));
+const OBEN = [20, 25, 30, 40, 50, 75, 100, 150, 200, 300, 500, 750, 1000, 1500, 2000, 5000, 10000];
+
+/** Achsenmarken in mg. Bis KNICK runde Schritte wie bisher, darueber nur
+    so viele runde Werte, wie sich nicht ueberlappen. */
+function marken(max, ih) {
+  if (max <= KNICK) {
+    const { s, top, n } = achse(max);
+    return { top, werte: Array.from({ length: n + 1 }, (_, k) => k * s), knick: false };
+  }
+  const top = OBEN.find((x) => x >= max) || Math.ceil(max / 10000) * 10000;
+  const unten = achse(KNICK);
+  const werte = Array.from({ length: unten.n + 1 }, (_, k) => k * unten.s);
+  const abstand = (a, b) => (ih * (stauche(b) - stauche(a))) / stauche(top);
+  OBEN.filter((x) => x > KNICK && x < top).forEach((x) => {
+    if (abstand(werte[werte.length - 1], x) >= 16 && abstand(x, top) >= 16) werte.push(x);
+  });
+  werte.push(top);
+  return { top, werte, knick: true };
+}
+
 /** Runde Achsenschritte: hoechstens vier Intervalle bis zum Maximum. */
 function achse(max) {
   const schritte = [0.1, 0.2, 0.25, 0.5, 1, 2, 2.5, 5, 10, 20, 25, 50, 100];
@@ -260,26 +289,36 @@ function zeichne() {
   }
   leer.hidden = true;
 
-  const { s, top, n } = achse(max);
   const iw = breite - RAND.l - RAND.r;
   const ih = HOEHE - RAND.o - RAND.u;
+  const { top, werte: achsWerte, knick } = marken(max, ih);
+  if (knick && legende) {
+    const h = document.createElement('span');
+    h.className = 'wg-hinweis';
+    h.textContent = `Achse über ${KNICK} mg gestaucht`;
+    legende.appendChild(h);
+  }
   const spalte = iw / N;
   const px = (i) => RAND.l + spalte * (i + 0.5);
-  const py = (v) => RAND.o + ih - (ih * v) / top;
+  const py = (v) => RAND.o + ih - (ih * stauche(v)) / stauche(top);
 
   const svg = el('svg', {
     viewBox: `0 0 ${breite} ${HOEHE}`, width: breite, height: HOEHE, role: 'img',
     'aria-label': `Tagesmengen in mg je Wirkstoff, ${tagMonat(tage[0])} bis ${tagMonat(tage[N - 1])}. ` +
+      (knick ? `Achse über ${KNICK} mg gestaucht. ` : '') +
       'Mit den Pfeiltasten tageweise lesen; die Werte stehen auch im Raster darunter.'
   }, host);
 
   /* Raster und Achse: Haarlinien, zurueckhaltend. */
-  for (let k = 0; k <= n; k++) {
-    const y = py(k * s);
-    el('line', { x1: RAND.l, x2: breite - RAND.r, y1: y, y2: y, class: k ? 'wg-grid' : 'wg-basis' }, svg);
+  /* Ueber dem Knick gestrichelt: dort ist der Abstand zweier Linien kein
+     gleiches mg-Intervall mehr. */
+  achsWerte.forEach((v, k) => {
+    const y = py(v);
+    const art = !k ? 'wg-basis' : (v > KNICK ? 'wg-grid wg-gestaucht' : 'wg-grid');
+    el('line', { x1: RAND.l, x2: breite - RAND.r, y1: y, y2: y, class: art }, svg);
     el('text', { x: RAND.l - 6, y: y + 3.5, class: 'wg-achse', 'text-anchor': 'end' }, svg)
-      .textContent = zahl(k * s);
-  }
+      .textContent = zahl(v);
+  });
 
   /* Tagesachse: in der Wochenansicht Wochentag und Datum, sonst nur so viele
      Daten, wie nebeneinander passen — gezaehlt vom letzten Tag her. */

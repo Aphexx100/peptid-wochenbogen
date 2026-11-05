@@ -19,7 +19,7 @@
    keinen Verlauf ueber drei Monate.
 
    Die Regeln aus briefing.js gelten weiter: Tirzepatid ist der dominante
-   Confounder, der IIEF-5 der Primaerendpunkt, unter zehn Wochen ist ein
+   Confounder, der Kern-Ø der Primaerendpunkt, unter zehn Wochen ist ein
    Trend Rauschen, und es gibt keine Dosierungsempfehlungen. */
 
 import { state, keys } from '../state.js';
@@ -102,7 +102,7 @@ danach, ohne Code-Zaun:
 {"stand":"Zwei bis vier Sätze zum Gesamtbild heute.",
  "aussagen":[
    {"id":"a1",
-    "bereich":"z. B. Hautbild, Gelenke, Sexualfunktion, Körperzusammensetzung, Sicherheit",
+    "bereich":"z. B. Hautbild, Gelenke, Energie, Körperzusammensetzung, Sicherheit",
     "aussage":"Eine einzelne, überprüfbare Aussage über den heutigen Zustand.",
     "grundlage":"daten | forschung | beides",
     "beleg":"Woraus folgt das? Bei Forschung die Quelle nennen, bei Daten die Zahlen.",

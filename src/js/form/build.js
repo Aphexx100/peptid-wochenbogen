@@ -192,6 +192,10 @@ function renderExpoSummary() {
     }
     const n = a[`n_${x.k}`];
     if (n === undefined) return `${x.n}: —`;
+    if (x.bedarf) {
+      const tg = weekDays(state.weekKey).filter((d, i) => Number(tage[x.k] && tage[x.k][i]) > 0).map(tagName);
+      return `${x.n}: ${n ? `${tg.join(', ')} à ${komma(a[`d_${x.k}`])} ${x.u}${n > 1 ? ' (mehr als einmal)' : ''}` : '—'}`;
+    }
     return `${x.n}: ${n ? `${n} Injektionstag${n > 1 ? 'e' : ''} à ${komma(a[`d_${x.k}`])} ${x.u}` : '—'}`;
   });
   el.innerHTML = `<b>Diese Woche:</b> ${teil.join(' · ')}<br>${zufuhrText()}`;
@@ -223,6 +227,7 @@ function renderMengen() {
 
 function expoChanged() {
   renderMengen();
+  renderBedarf();
   renderTagleiste();
   renderExpoSummary();
   renderCu();
@@ -304,6 +309,33 @@ function feld(x, i, d, wd) {
     `<span class="xcalc" id="c${x.k}${i}"></span></div>`;
 }
 
+/* Stoffe mit `bedarf` (PT-141) stehen zugeklappt am Ende des Tages: sie
+   laufen hoechstens einmal pro Woche und sollen die taegliche Routine
+   nicht verlaengern. Die Zeile darunter sagt, ob die Woche schon eine
+   Anwendung hat — renderBedarf() fuehrt sie nach. */
+function bedarfGruppe(inhalt, i) {
+  if (!inhalt) return '';
+  return `<details class="stoffgruppe bedarfgruppe" id="bedarf${i}">` +
+    `<summary class="gruppenkopf">Bei Bedarf <span class="bedarfnote" id="bedarfNote${i}"></span></summary>` +
+    `<div class="feldgitter">${inhalt}</div></details>`;
+}
+
+function renderBedarf() {
+  const tage = weekDays(state.weekKey);
+  const spalten = stoffe().filter((x) => x.bedarf);
+  IDX.forEach((i) => {
+    const note = document.getElementById(`bedarfNote${i}`);
+    if (!note) return;
+    const teile = spalten.map((x) => {
+      const an = IDX.filter((j) => Number((document.getElementById(zellId(x.k, j)) || {}).value) > 0);
+      if (an.indexOf(i) >= 0) return `${x.n} an diesem Tag eingetragen`;
+      if (an.length) return `${x.n} diese Woche am ${an.map((j) => tagName(tage[j])).join(', ')}`;
+      return `${x.n}, höchstens einmal pro Woche`;
+    });
+    note.textContent = `— ${teile.join(' · ')}`;
+  });
+}
+
 function gruppe(titel, inhalt) {
   if (!inhalt) return '';
   return `<div class="stoffgruppe"><span class="gruppenkopf">${titel}</span>` +
@@ -356,7 +388,8 @@ export function buildExpo() {
 
   host.innerHTML = tage.map((d, i) => {
     const wd = tagName(d);
-    const wirk = spalten.filter((x) => x.kat !== 'supp').map((x) => feld(x, i, d, wd)).join('');
+    const wirk = spalten.filter((x) => x.kat !== 'supp' && !x.bedarf).map((x) => feld(x, i, d, wd)).join('');
+    const bedarf = spalten.filter((x) => x.bedarf).map((x) => feld(x, i, d, wd)).join('');
     const supp = spalten.filter((x) => x.kat === 'supp').map((x) => feld(x, i, d, wd)).join('');
     const zufuhr = ZUFUHR.map((x) =>
       `<div class="field"><label class="fl" for="${zellIdZ(x.k, i)}">${x.n} ` +
@@ -372,7 +405,7 @@ export function buildExpo() {
       `<h3 class="tagkopf">${d === heute ? 'Heute' : wd}` +
       `${d > heute ? ' <span class="tagnote">noch nicht dran</span>' : ''}</h3>` +
       gruppe('Wirkstoffe', wirk) + gruppe('Supplemente', supp) +
-      gruppe('Zufuhr', zufuhr) + gruppe('Notiz', notiz) +
+      gruppe('Zufuhr', zufuhr) + gruppe('Notiz', notiz) + bedarfGruppe(bedarf, i) +
       '</div>';
   }).join('');
 
@@ -392,6 +425,11 @@ export function buildExpo() {
     if (altN[x.k][i]) el.value = altN[x.k][i];
     el.addEventListener('input', expoChanged);
   }));
+  /* Ein Tag mit Bedarfseintrag zeigt ihn offen. */
+  IDX.forEach((i) => {
+    const box = document.getElementById(`bedarf${i}`);
+    if (box && spalten.some((x) => x.bedarf && Number(alt[x.k][i]) > 0)) box.open = true;
+  });
   zeigeTag(tage.indexOf(offenerTag) >= 0 ? offenerTag : startTag());
   expoChanged();
 }

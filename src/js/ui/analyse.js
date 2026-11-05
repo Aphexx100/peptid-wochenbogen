@@ -26,10 +26,10 @@ const ANFRAGEN = [
     minWochen: 2, leerText: 'Mindestens zwei Wochen nötig.',
     aufgabe:
       'Werte die gesamte Serie aus. Gliedere in Absätzen, ohne Aufzählungszeichen, höchstens 600 Wörter, ' +
-      'in dieser Reihenfolge: (1) Primaerendpunkt IIEF-5 und Morgenerektionen — Verlauf und ob er belastbar ist. ' +
-      '(2) Erwartung gegen Ergebnis. (3) Negativkontrollen. (4) PT-141: Wochen mit gegen ohne, und ob die ' +
-      'Anwendungstage ohne Vorwissen erkennbar waren. ' +
-      '(5) Confounder, insbesondere Gewichtsverlauf und Tirzepatid. (6) Was als Nächstes zu messen wäre, ' +
+      'in dieser Reihenfolge: (1) Primaerendpunkt Kern-Ø — Verlauf und ob er belastbar ist. ' +
+      '(2) Die drei GLOW-Wirkungen (Haut, Gelenke, Wohlbefinden). (3) Erwartung gegen Ergebnis. ' +
+      '(4) Gegenprobe gegen Schlaf, Training und Alkohol, mit dem Hinweis, dass sie schwächer ist als echte Negativkontrollen. ' +
+      '(5) Confounder, insbesondere Gewichtsverlauf und Tirzepatid, und was die Kommentare dazu sagen. (6) Was als Nächstes zu messen wäre, ' +
       'um die offenste Frage zu klären. Schließe mit einem Satz dazu, was die Daten NICHT hergeben.'
   }
 ];

@@ -13,7 +13,11 @@
 export const EXPO = [
   {k:"glow", n:"GLOW",       u:"mg", step:0.1,  ph:"2,8"},
   {k:"kiss", n:"Kisspeptin", u:"µg", step:5,    ph:"100"},
-  {k:"pt",   n:"PT-141",     u:"mg", step:0.25, ph:"1,75"},
+  /* PT-141 laeuft anlassbezogen, hoechstens einmal pro Woche. `bedarf`
+     stellt es im Tag hinter die Notiz, zugeklappt, statt es jeden Tag
+     zwischen die Routine-Wirkstoffe zu setzen. Gespeichert wird es wie
+     jeder andere Stoff in dose.tage. */
+  {k:"pt",   n:"PT-141",     u:"mg", step:0.25, ph:"1,75", bedarf:true},
   {k:"tirz", n:"Tirzepatid", u:"mg", step:0.5,  ph:"2,5", vial:false},
   {k:"dhea", n:"DHEA",       u:"mg", step:5,    ph:"25", vial:false},
   /* Supplemente stehen in derselben Liste und derselben Tabelle wie die

@@ -5,9 +5,12 @@ und ohne Backend: erfassen, auswerten, exportieren, und auf Wunsch von einem
 Sprachmodell einordnen lassen.
 
 Der Bogen läuft in zwei Takten. **Täglich** erfasst er die Exposition (GLOW-Stack,
-Kisspeptin, PT-141, Tirzepatid aus dem Pen, DHEA als Kapsel), im selben Raster die
+Kisspeptin, Tirzepatid aus dem Pen, DHEA als Kapsel), im selben Raster die
 Supplemente (Kreatin, Protein) und den Alkohol in Litern, je Tag eine Notiz zu den
-Einstichstellen, Schlaf und Training vom Vortag sowie den WHO-5. Wer im Rekonstitutionsrechner sein aktuelles
+Einstichstellen, Schlaf und Training vom Vortag sowie den WHO-5. PT-141 läuft nur
+anlassbezogen, höchstens einmal pro Woche; es steht deshalb zugeklappt unter
+**Bei Bedarf** am Ende des Tages, nicht zwischen den täglichen Wirkstoffen.
+Wer im Rekonstitutionsrechner sein aktuelles
 Vial hinterlegt, trägt die Dosis als **aufgezogene Einheiten (I.E.)** ein und der Bogen
 rechnet die Wirkstoffmenge selbst aus.
 **Weitere Stoffe legst du im Bogen selbst an** — Name, Erfassung (Vial, mg, µg, g, l) und
@@ -16,7 +19,9 @@ danach als Spalte im Raster, in der CSV und in der Prognose; das Kreuz im Spalte
 nimmt eine Spalte wieder heraus, ohne erfasste Werte zu löschen.
 Oben im Bogen zeigt eine Grafik die Tagesmengen je Wirkstoff in mg — als Woche mit
 Blättern in frühere Wochen, als eigener Zeitraum oder als gesamter Verlauf. Supplemente
-und Nahrungsmittel werden erfasst, aber nicht gezeichnet.
+und Nahrungsmittel werden erfasst, aber nicht gezeichnet. Bis 15 mg ist die Achse
+linear, darüber wird sie allmählich gestaucht, damit DHEA und hohe GLOW-Dosen die
+kleinen Mengen nicht auf die Nulllinie drücken.
 Zum Korrigieren lässt sich der ganze Bogen auf eine frühere Woche umstellen; beim
 WHO-5 wählt eine Tagesleiste den Tag.
 
@@ -27,7 +32,7 @@ verborgen. Der Knopf **Ausführlichen Fragebogen erstellen** öffnet sie. Eine T
 darunter sagt, für welchen Tag er gilt — vorgewählt heute, nachtragen lässt sich jeder
 vergangene Tag der Woche, für eine frühere Woche wird oben die Woche gewechselt.
 Darunter steht je ein Häkchen für die **Bereiche** (Haut, Schmerzbild, Energie,
-Körperzusammensetzung, Sexualfunktion, Sicherheit, Umfeld): abgewählt verschwindet der
+Körperzusammensetzung, Sicherheit, Umfeld): abgewählt verschwindet der
 Bereich aus dem Bogen, seine gespeicherten Antworten bleiben unberührt. Ein sporadisch, aber ehrlich ausgefüllter Fragebogen ist mehr wert
 als ein Pflichttermin, der ausfällt. Die allgemeinen Erklärungen stehen im Reiter **Info**.
 Aus allem entstehen Verlaufsgrafiken, eine Wochentabelle und ein CSV-Export.
@@ -45,7 +50,7 @@ die Architektur in [docs/ARCHITEKTUR.md](docs/ARCHITEKTUR.md).
 ```
 npm install          # esbuild und playwright, nur zum Bauen und Testen
 npm start            # http://localhost:8080
-npm test             # 344 Prüfungen in einem echten Browser
+npm test             # 350 Prüfungen in einem echten Browser
 npm run build        # dist/peptid-wochenbogen.html — eine Datei für Claude
 ```
 
@@ -91,9 +96,12 @@ Stoff, ein Satz, ein Link zur Quelle.
 
 Der Bogen kann seine Daten mitsamt dem Protokollkontext an ein Sprachmodell geben. Die
 Auswertungsregeln stehen in `src/js/ai/briefing.js` und sind der eigentliche Wert der
-Funktion: Tirzepatid wird als dominanter Confounder benannt, der IIEF-5 ist der
-Primärendpunkt, Erwartung wird gegen Ergebnis geprüft, Negativkontrollen gegen den
-Endpunkt, und unter zehn Wochen gilt ein Trend als Rauschen.
+Funktion: Tirzepatid wird als dominanter Confounder benannt, Primärendpunkt ist der
+Kern-Ø (Mittelwert der sechs Kernbereiche, 0–10), Erwartung wird gegen Ergebnis
+geprüft, Wochen- und Tageskommentare werden zuerst gelesen, und unter zehn Wochen gilt
+ein Trend als Rauschen. Negativkontrollen gibt es seit 2026-11 nicht mehr; als
+schwächere Gegenprobe dienen Schlaf, Training und Alkohol, und das Briefing sagt der
+Analyse ausdrücklich, dass diese Gegenprobe schwächer ist.
 
 Als Claude-Artifact läuft das über die Sampling-Fähigkeit des Viewers. Auf GitHub Pages
 über die Anthropic-API mit eigenem Schlüssel — einzutragen unter Setup, gespeichert nur

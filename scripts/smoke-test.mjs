@@ -88,7 +88,8 @@ async function laufe(browser, url, label, mitModulTest) {
     && (await seite.locator('#expoTagwahl button[aria-pressed="true"]').innerText()) === 'Heute');
   pruefe('Felder stehen in Gruppen',
     /WIRKSTOFFE|Wirkstoffe/.test(await seite.locator('#s-expo .tagblock:not([hidden])').innerText())
-    && (await seite.locator('#s-expo .tagblock:not([hidden]) .stoffgruppe').count()) === 4);
+    && (await seite.locator('#s-expo .tagblock:not([hidden]) .stoffgruppe').count()) === 5
+    && (await seite.locator('#s-expo .tagblock:not([hidden]) .stoffgruppe:last-child.bedarfgruppe').count()) === 1);
   pruefe('Kreatin und Protein stehen bei den Substanzen',
     (await seite.locator('#xkreatin0').count()) === 1 && (await seite.locator('#xprotein0').count()) === 1
     && (await seite.locator('#zkreatin0, #zprotein0').count()) === 0);
@@ -259,7 +260,7 @@ async function laufe(browser, url, label, mitModulTest) {
     && (await seite.locator('#wochenGraph path[data-serie="protein"]').count()) === 0);
 
   /* Tagesraster: sieben GLOW-Tage eintragen, Zusammenfassung und
-     Kupferhinweis rechnen mit; ein PT-141-Tag blendet die PT-Karte ein. */
+     Kupferhinweis rechnen mit. */
   for (let i = 0; i < 7; i++) { await tag(i); await seite.fill(`#xglow${i}`, '2.8'); }
   const sum = await seite.locator('#expoSum').innerText();
   pruefe('Tagesansicht leitet die Wochensumme ab', /GLOW: 7 Injektionstage à 2,8 mg/.test(sum), sum.slice(0, 90));
@@ -276,15 +277,53 @@ async function laufe(browser, url, label, mitModulTest) {
   const wgGlow = await seite.locator('#wochenGraph path[data-serie="glow"]').count();
   const wgPunkte = await seite.locator('#wochenGraph circle.wg-punkt').count();
   pruefe('Wochengrafik zeichnet die GLOW-Linie mit sieben Punkten', wgGlow === 1 && wgPunkte === 7, `${wgLinien} Linien, ${wgPunkte} Punkte`);
-  pruefe('Wochengrafik zeigt nur Wirkstoffe', (await seite.locator('#wochenGraphLegende > span').count()) === 5
+  pruefe('Wochengrafik zeigt nur Wirkstoffe', (await seite.locator('#wochenGraphLegende > span:not(.wg-hinweis)').count()) === 5
     && /GLOW 2,8/.test(await seite.locator('#wochenGraph').innerText()));
   pruefe('Wochengrafik zeichnet Bezier-Kurven',
     /C/.test(await seite.locator('#wochenGraph path[data-serie="glow"]').getAttribute('d')));
   await seite.hover('#wochenGraph rect.wg-hit', { position: { x: 4, y: 40 } });
   pruefe('Wochengrafik zeigt Tooltip mit allen Wirkstoffen', (await seite.locator('.wg-tip .wg-tip-zeile').count()) === 5
     && /2,8 mg/.test(await seite.locator('.wg-tip').innerText()));
+  /* Achse: bis 15 mg linear, darueber gestaucht. DHEA 25 mg an einem Tag
+     loest die Stauchung aus; GLOW 2,8 mg steht dabei hoeher als auf einer
+     linearen Achse bis 25 mg. */
+  pruefe('Achse ohne Werte über 15 mg bleibt linear',
+    (await seite.locator('#wochenGraph line.wg-gestaucht').count()) === 0
+    && (await seite.locator('#wochenGraphLegende .wg-hinweis').count()) === 0);
+  await tag(1);
+  await seite.fill('#xdhea1', '25');
+  const achse = await seite.evaluate(() => {
+    const t = [...document.querySelectorAll('#wochenGraph text.wg-achse')].map((x) => x.textContent);
+    const basis = document.querySelector('#wochenGraph line.wg-basis');
+    const glow = [...document.querySelectorAll('#wochenGraph circle.wg-punkt')]
+      .filter((c) => /--c-glow/.test(c.getAttribute('style')));
+    const y0 = Number(basis.getAttribute('y1'));
+    const yTop = Math.min(...[...document.querySelectorAll('#wochenGraph line.wg-grid')].map((l) => Number(l.getAttribute('y1'))));
+    return { t, anteil: (y0 - Number(glow[0].getAttribute('cy'))) / (y0 - yTop) };
+  });
+  pruefe('Achse über 15 mg gestaucht, mit Hinweis',
+    (await seite.locator('#wochenGraph line.wg-gestaucht').count()) >= 1
+    && achse.t.indexOf('15') >= 0 && achse.t.indexOf('25') >= 0
+    && /gestaucht/.test(await seite.locator('#wochenGraphLegende').innerText()), achse.t.join(' '));
+  pruefe('Kleine Mengen stehen höher als auf linearer Achse', achse.anteil > 2.8 / 25 + 0.01, String(achse.anteil));
+  pruefe('Hoechstwert zeigt echte mg trotz Stauchung', /DHEA 25/.test(await seite.locator('#wochenGraph').innerText()));
+  await seite.fill('#xdhea1', '');
+
+  /* PT-141 laeuft hoechstens einmal pro Woche: zugeklappt unter "Bei
+     Bedarf", nicht zwischen den taeglichen Wirkstoffen. */
   await tag(2);
+  pruefe('PT-141 steht zugeklappt unter Bei Bedarf',
+    (await seite.locator('#bedarf2 #xpt2').count()) === 1
+    && !(await seite.locator('#xpt2').isVisible())
+    && (await seite.locator('#tagblock2 .stoffgruppe:not(.bedarfgruppe) #xpt2').count()) === 0);
+  await seite.click('#bedarf2 > summary');
   await seite.fill('#xpt2', '1.75');
+  await tag(4);
+  const bedarfNote = await seite.locator('#bedarfNote4').innerText();
+  pruefe('Anderer Tag nennt die PT-141-Anwendung der Woche', /PT-141 diese Woche am /.test(bedarfNote), bedarfNote);
+  pruefe('Zusammenfassung nennt den PT-141-Tag statt Injektionstage',
+    /PT-141: \w\w \d\d\.\d\d\. à 1,75 mg/.test(await seite.locator('#expoSum').innerText()),
+    await seite.locator('#expoSum').innerText());
 
   /* Tagesnotizen: je Tag ein eigener Text, der mit Tagesangabe in die
      Wochenfelder und von dort in CSV und Datenblock wandert. */
@@ -362,14 +401,14 @@ async function laufe(browser, url, label, mitModulTest) {
   pruefe('Notiz bleibt an ihrem Tag', (await seite.inputValue('#nstellen4')) === 'kleiner Knoten'
     && (await seite.inputValue('#nstellen3')) === '');
 
-  /* Die PT-Karte hat zwei Bedingungen — Anwendung UND offener Fragebogen.
-     Das Tor darf ihre eigene nicht überstimmen und umgekehrt. Geprüft in
+  /* Wochenwechsel mit offenem Fragebogen. Geprüft in
      einer fremden Woche (anderer Erfassungstag), damit die gespeicherte
      Woche unberührt bleibt; beim Zurückwechseln lädt sie wieder. */
   await setzeTag((heuteWt + 5) % 7);
   pruefe('Anderer Erfassungstag lädt die andere Woche, statt Werte zu verschieben',
     (await seite.inputValue('#xglow0')) === '' && (await seite.inputValue('#nstellen4')) === '');
   await tag(2);
+  if (!(await seite.locator('#xpt2').isVisible())) await seite.click('#bedarf2 > summary');
   await seite.fill('#xpt2', '1.75');
   await seite.click('#gateOpen');
   await setzeTag(heuteWt);
@@ -427,7 +466,7 @@ async function laufe(browser, url, label, mitModulTest) {
   pruefe('Eingabe in I.E. wird in mg umgerechnet',
     /= 2 mg/.test(await seite.locator('#ceretatrutid3').innerText()));
   pruefe('Neuer Wirkstoff kommt in die Grafik',
-    (await seite.locator('#wochenGraphLegende > span').count()) === 6
+    (await seite.locator('#wochenGraphLegende > span:not(.wg-hinweis)').count()) === 6
     && (await seite.locator('#wochenGraph path[data-serie="eretatrutid"]').count()) === 1);
 
   await seite.click('#stoffNeu');
@@ -442,7 +481,7 @@ async function laufe(browser, url, label, mitModulTest) {
   pruefe('Supplement wird erfasst', /Magnesium: 1 Tag à 400 g/.test(await seite.locator('#expoSum').innerText()),
     await seite.locator('#expoSum').innerText());
   pruefe('Supplement bleibt aus der Grafik',
-    (await seite.locator('#wochenGraphLegende > span').count()) === 6
+    (await seite.locator('#wochenGraphLegende > span:not(.wg-hinweis)').count()) === 6
     && (await seite.locator('#wochenGraph path[data-serie="emagnesium"]').count()) === 0);
 
   await seite.click('#saveBtn');

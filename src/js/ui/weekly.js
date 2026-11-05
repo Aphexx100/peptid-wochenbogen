@@ -1,8 +1,8 @@
 /* Der ausfuehrliche Fragebogen und wann er sichtbar ist.
 
    Taeglich erfasst werden Exposition, Zufuhr, Confounder und WHO-5. Alles
-   andere — Kernbereiche, GLOW-Ziele, Sexualfunktion, Koerpermasse,
-   Pigmentierung, Negativkontrollen, Beobachtungsliste, PT-141 — beurteilt
+   andere — Kernbereiche, GLOW-Ziele, Koerpermasse, Kraft und
+   der Kommentar zur Woche — beurteilt
    einen laengeren Zeitraum und steht deshalb nicht im taeglichen Weg.
 
    Frueher war dieser Teil an den Erfassungstag gebunden. Das setzt voraus,
@@ -163,8 +163,8 @@ function renderTagwahl(offen) {
 export function renderWeeklyGate() {
   const offen = wochenfragenOffen();
   document.querySelectorAll('.weekly').forEach((el) => {
-    /* Karten mit eigener Faelligkeit (PT-141 nur bei Anwendung, Monatskarte
-       jede vierte Woche) tragen `data-faellig`. Der Fragebogen schaltet sie
+    /* Karten mit eigener Faelligkeit (etwa die Monatskarte, nur jede vierte
+       Woche) tragen `data-faellig`. Der Fragebogen schaltet sie
        zusaetzlich frei, statt ihre Bedingung zu ueberstimmen — sonst
        gewinnt schlicht, wer zuletzt gerendert hat. */
     const an = offen && bereichAn(el.dataset.bereich);

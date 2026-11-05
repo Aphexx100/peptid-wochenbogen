@@ -43,8 +43,8 @@ Wöchentliche Karten in `index.html` tragen die Klasse `weekly` und sind bis zum
 Erfassungstag verborgen; `src/js/ui/weekly.js` schaltet sie frei. Eine Karte wird
 täglich, indem die Klasse verschwindet — mehr ist an der Sichtbarkeit nicht zu tun.
 
-Hat die Karte eine **eigene** Bedingung (die PT-141-Karte erscheint nur bei Anwendung,
-die Monatskarte jede vierte Woche), steht diese in `data-faellig` statt in `hidden`.
+Hat die Karte eine **eigene** Bedingung (etwa die Monatskarte, die nur jede vierte
+Woche erscheint), steht diese in `data-faellig` statt in `hidden`.
 Wer stattdessen `hidden` setzt, verliert: Karte und Wochentor überschreiben sich dann
 gegenseitig, je nachdem, wer zuletzt gerendert hat.
 
@@ -158,7 +158,7 @@ Anzeige dann in `report.js`, Ausgabe an die Analyse in `ai/context.js`.
 ## Die Auswertungsregeln ändern
 
 `src/js/ai/briefing.js`. Dort steht, worauf die Analyse achten muss — dass Tirzepatid der
-dominante Confounder ist, dass der IIEF-5 der Primärendpunkt ist, dass unter zehn Wochen
+dominante Confounder ist, dass der Kern-Ø der Primärendpunkt ist, dass unter zehn Wochen
 ein Trend als Rauschen gilt, dass keine Dosierungsempfehlungen gegeben werden.
 
 Das ist der wertvollste Text im Projekt. Wer die Fragestellung verschiebt, ändert ihn —

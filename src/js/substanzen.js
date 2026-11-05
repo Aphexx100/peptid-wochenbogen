@@ -55,6 +55,7 @@ function normiere(x, eigenIndex) {
     step: x.step || 0.5,
     vial: x.vial !== false,
     kat: x.kat === 'supp' ? 'supp' : 'wirk',
+    bedarf: !!x.bedarf,
     eigen: eigenIndex >= 0,
     farbe: eigenIndex >= 0 ? `var(--c-s${(eigenIndex % EIGEN_FARBEN) + 1})` : `var(--c-${x.k})`
   };

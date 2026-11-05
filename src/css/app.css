@@ -233,6 +233,8 @@ tbody tr:last-child td{border-bottom:none}
 .wg{position:relative;margin-top:.6rem}
 .wg svg{display:block;max-width:100%;overflow:visible}
 .wg-grid{stroke:var(--grid);stroke-width:1}
+.wg-gestaucht{stroke-dasharray:3 3}
+.wg-hinweis{color:var(--muted);font-style:italic}
 .wg-basis{stroke:var(--border);stroke-width:1}
 .wg-achse{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:10.5px;fill:var(--muted);font-variant-numeric:tabular-nums}
 .wg-achse.wg-heute{fill:var(--accent);font-weight:600}
@@ -350,6 +352,10 @@ tbody tr:last-child td{border-bottom:none}
   letter-spacing:.06em;color:var(--muted);font-weight:400}
 .stoffgruppe{margin-bottom:1rem}
 .stoffgruppe:last-child{margin-bottom:0}
+.bedarfgruppe{border-top:1px dashed var(--border-soft);padding-top:.6rem}
+.bedarfgruppe > summary{cursor:pointer;margin-bottom:0}
+.bedarfgruppe[open] > summary{margin-bottom:.4rem}
+.bedarfnote{text-transform:none;letter-spacing:0}
 .gruppenkopf{display:block;font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:.62rem;
   letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin-bottom:.4rem}
 .feldgitter{display:grid;gap:.6rem;grid-template-columns:repeat(auto-fill,minmax(9.5rem,1fr))}
