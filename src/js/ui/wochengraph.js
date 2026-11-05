@@ -63,7 +63,7 @@ function el(name, attrs, eltern) {
    nicht, sie wird nach oben hin allmaehlich enger. Beschriftung, Tooltip
    und Hoechstwerte zeigen weiter die echten mg. */
 export const KNICK = 15;
-const STAUCH = 5;
+const STAUCH = 2;
 export const stauche = (v) => (v <= KNICK ? v : KNICK + STAUCH * Math.log(1 + (v - KNICK) / STAUCH));
 const OBEN = [20, 25, 30, 40, 50, 75, 100, 150, 200, 300, 500, 750, 1000, 1500, 2000, 5000, 10000];
 
