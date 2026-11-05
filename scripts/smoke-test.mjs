@@ -284,10 +284,10 @@ async function laufe(browser, url, label, mitModulTest) {
   await seite.hover('#wochenGraph rect.wg-hit', { position: { x: 4, y: 40 } });
   pruefe('Wochengrafik zeigt Tooltip mit allen Wirkstoffen', (await seite.locator('.wg-tip .wg-tip-zeile').count()) === 5
     && /2,8 mg/.test(await seite.locator('.wg-tip').innerText()));
-  /* Achse: bis 15 mg linear, darueber gestaucht. DHEA 25 mg an einem Tag
+  /* Achse: bis 5 mg linear, darueber gestaucht. DHEA 25 mg an einem Tag
      loest die Stauchung aus; GLOW 2,8 mg steht dabei hoeher als auf einer
      linearen Achse bis 25 mg. */
-  pruefe('Achse ohne Werte über 15 mg bleibt linear',
+  pruefe('Achse ohne Werte über 5 mg bleibt linear',
     (await seite.locator('#wochenGraph line.wg-gestaucht').count()) === 0
     && (await seite.locator('#wochenGraphLegende .wg-hinweis').count()) === 0);
   await tag(1);
@@ -301,11 +301,11 @@ async function laufe(browser, url, label, mitModulTest) {
     const yTop = Math.min(...[...document.querySelectorAll('#wochenGraph line.wg-grid')].map((l) => Number(l.getAttribute('y1'))));
     return { t, anteil: (y0 - Number(glow[0].getAttribute('cy'))) / (y0 - yTop) };
   });
-  pruefe('Achse über 15 mg gestaucht, mit Hinweis',
+  pruefe('Achse über 5 mg gestaucht, mit Hinweis',
     (await seite.locator('#wochenGraph line.wg-gestaucht').count()) >= 1
-    && achse.t.indexOf('15') >= 0 && achse.t.indexOf('25') >= 0
+    && achse.t.indexOf('5') >= 0 && achse.t.indexOf('25') >= 0 && achse.t.indexOf('2,5') >= 0
     && /gestaucht/.test(await seite.locator('#wochenGraphLegende').innerText()), achse.t.join(' '));
-  pruefe('Kleine Mengen stehen höher als auf linearer Achse', achse.anteil > 2.8 / 25 + 0.01, String(achse.anteil));
+  pruefe('Kleine Mengen stehen höher als auf linearer Achse', achse.anteil > 0.25, String(achse.anteil));
   pruefe('Hoechstwert zeigt echte mg trotz Stauchung', /DHEA 25/.test(await seite.locator('#wochenGraph').innerText()));
   await seite.fill('#xdhea1', '');
 

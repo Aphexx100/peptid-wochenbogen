@@ -19,7 +19,7 @@ danach als Spalte im Raster, in der CSV und in der Prognose; das Kreuz im Spalte
 nimmt eine Spalte wieder heraus, ohne erfasste Werte zu löschen.
 Oben im Bogen zeigt eine Grafik die Tagesmengen je Wirkstoff in mg — als Woche mit
 Blättern in frühere Wochen, als eigener Zeitraum oder als gesamter Verlauf. Supplemente
-und Nahrungsmittel werden erfasst, aber nicht gezeichnet. Bis 15 mg ist die Achse
+und Nahrungsmittel werden erfasst, aber nicht gezeichnet. Bis 5 mg ist die Achse
 linear, darüber wird sie allmählich gestaucht, damit DHEA und hohe GLOW-Dosen die
 kleinen Mengen nicht auf die Nulllinie drücken.
 Zum Korrigieren lässt sich der ganze Bogen auf eine frühere Woche umstellen; beim

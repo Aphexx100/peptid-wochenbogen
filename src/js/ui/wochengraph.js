@@ -58,14 +58,15 @@ function el(name, attrs, eltern) {
 
 /* Gestauchte Achse: bis KNICK mg linear, darueber logarithmisch. DHEA
    (25 mg) und hohe GLOW-Dosen druecken sonst alle anderen Wirkstoffe auf
-   die Nulllinie. f(v) = KNICK + STAUCH * ln(1 + (v - KNICK) / STAUCH) hat
+   die Nulllinie. Knick bei 5 mg: darunter liegen die Einzeldosen von
+   Kisspeptin, PT-141 und Tirzepatid, die lesbar bleiben sollen. f(v) = KNICK + STAUCH * ln(1 + (v - KNICK) / STAUCH) hat
    am Knick dieselbe Steigung wie die Gerade darunter — die Achse knickt
    nicht, sie wird nach oben hin allmaehlich enger. Beschriftung, Tooltip
    und Hoechstwerte zeigen weiter die echten mg. */
-export const KNICK = 15;
+export const KNICK = 5;
 const STAUCH = 2;
 export const stauche = (v) => (v <= KNICK ? v : KNICK + STAUCH * Math.log(1 + (v - KNICK) / STAUCH));
-const OBEN = [20, 25, 30, 40, 50, 75, 100, 150, 200, 300, 500, 750, 1000, 1500, 2000, 5000, 10000];
+const OBEN = [10, 15, 20, 25, 30, 40, 50, 75, 100, 150, 200, 300, 500, 750, 1000, 1500, 2000, 5000, 10000];
 
 /** Achsenmarken in mg. Bis KNICK runde Schritte wie bisher, darueber nur
     so viele runde Werte, wie sich nicht ueberlappen. */
@@ -75,8 +76,9 @@ function marken(max, ih) {
     return { top, werte: Array.from({ length: n + 1 }, (_, k) => k * s), knick: false };
   }
   const top = OBEN.find((x) => x >= max) || Math.ceil(max / 10000) * 10000;
-  const unten = achse(KNICK);
-  const werte = Array.from({ length: unten.n + 1 }, (_, k) => k * unten.s);
+  /* Unter dem Knick ein Schritt, der genau auf KNICK aufgeht (bei 5 mg: 2,5). */
+  const s = [0.5, 1, 2.5, 5, 10].find((x) => KNICK / x <= 4 && Number.isInteger(KNICK / x)) || KNICK;
+  const werte = Array.from({ length: Math.round(KNICK / s) + 1 }, (_, k) => k * s);
   const abstand = (a, b) => (ih * (stauche(b) - stauche(a))) / stauche(top);
   OBEN.filter((x) => x > KNICK && x < top).forEach((x) => {
     if (abstand(werte[werte.length - 1], x) >= 16 && abstand(x, top) >= 16) werte.push(x);
